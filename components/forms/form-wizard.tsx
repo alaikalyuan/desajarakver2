@@ -247,6 +247,13 @@ export function FormWizard({
     try {
       const entry = buildEntry("draft");
       const saved = await saveFormEntry(entry);
+      // Keep the uploaded photo URL so the next save does not upload it again.
+      if (saved.data.photoPreview !== data.photoPreview) {
+        setData((current) => ({
+          ...current,
+          photoPreview: saved.data.photoPreview,
+        }));
+      }
       setSubmitNotice(
         `Draf ${saved.reference} tersimpan pada ${formatTimestamp(
           saved.updatedAt

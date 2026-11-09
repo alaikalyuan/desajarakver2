@@ -640,19 +640,28 @@ async function uploadPhotoIfNeeded(
   if (!parsed) return null;
 
   const supabase = createClient();
+  const bucket = supabase.storage.from(PHOTO_BUCKET);
   const path = `${userId}/${listingId}.${parsed.ext}`;
-  const { error } = await supabase.storage
-    .from(PHOTO_BUCKET)
-    .upload(path, parsed.blob, {
-      upsert: true,
-      contentType: parsed.blob.type,
-    });
+  const options = { upsert: false, contentType: parsed.blob.type };
+
+  // storage.objects only has INSERT and DELETE policies for this bucket (no
+  // SELECT/UPDATE), so `upsert: true` and remove() are both refused by RLS.
+  // A replacement photo for the same listing therefore gets a versioned name
+  // inside the user's own folder.
+  let finalPath = path;
+  let { error } = await bucket.upload(finalPath, parsed.blob, options);
+  if (error && /exists|duplicate/i.test(error.message)) {
+    finalPath = `${userId}/${listingId}-${Date.now().toString(36)}.${parsed.ext}`;
+    ({ error } = await bucket.upload(finalPath, parsed.blob, options));
+  }
 
   if (error) {
-    console.warn("Unggah foto gagal:", error);
-    return null;
+    console.error("Unggah foto gagal:", error);
+    throw new Error(
+      "Foto gagal diunggah. Gunakan JPG, PNG, atau WEBP maksimal 5 MB lalu coba lagi."
+    );
   }
-  return path;
+  return finalPath;
 }
 
 export async function saveFormEntry(entry: FormEntry): Promise<FormEntry> {
@@ -759,14 +768,19 @@ export async function saveFormEntry(entry: FormEntry): Promise<FormEntry> {
   }
 
   if (Object.keys(contactData).length > 0) {
-    await supabase.from("listing_contacts").upsert(
-      {
-        listing_id: entry.id,
-        contact: contactData,
-        updated_at: new Date().toISOString(),
-      },
-      { onConflict: "listing_id" }
-    );
+    // listing_contacts has only (listing_id, contact); see the initial migration.
+    const { error: contactError } = await supabase
+      .from("listing_contacts")
+      .upsert(
+        { listing_id: entry.id, contact: contactData },
+        { onConflict: "listing_id" }
+      );
+    if (contactError) {
+      console.error("Kontak gagal disimpan:", contactError);
+      throw new Error(
+        `${label} tersimpan, tetapi kontak gagal disimpan. Coba simpan ulang.`
+      );
+    }
   }
 
   const finalPhotoPreview = photoPath
