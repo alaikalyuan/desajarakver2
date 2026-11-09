@@ -1,0 +1,527 @@
+.usaha-dashboard-scope {
+  --green: #267447;
+  --green-dark: #185b35;
+  --green-light: #eaf5ed;
+  --text: #24352b;
+  --muted: #5c6b61;
+  --border: #e6ece7;
+  --background: #f7f9f7;
+  min-height: 100vh;
+  background: var(--background);
+  color: var(--text);
+  font-size: 14px;
+}
+
+.usaha-dashboard-scope .topbar {
+  height: 76px;
+  background: white;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 38px;
+}
+
+.usaha-dashboard-scope .brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--green-dark);
+  font-size: 20px;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.usaha-dashboard-scope .brand img {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+}
+
+.usaha-dashboard-scope .account {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+
+.usaha-dashboard-scope .account strong,
+.usaha-dashboard-scope .account small {
+  display: block;
+}
+
+.usaha-dashboard-scope .account strong {
+  font-size: 13px;
+}
+
+.usaha-dashboard-scope .account small {
+  color: var(--muted);
+  margin-top: 2px;
+  font-size: 11px;
+}
+
+.usaha-dashboard-scope .avatar {
+  width: 39px;
+  height: 39px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--green-light);
+  color: var(--green);
+  font-weight: 800;
+}
+
+.usaha-dashboard-scope .layout {
+  display: flex;
+  min-height: calc(100vh - 76px);
+}
+
+.usaha-dashboard-scope .sidebar {
+  width: 260px;
+  flex-shrink: 0;
+  background: white;
+  border-right: 1px solid var(--border);
+  padding: 26px 16px;
+  display: flex;
+  flex-direction: column;
+}
+
+.usaha-dashboard-scope .sidebar-label {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.3px;
+  color: #6b7a6f;
+  padding: 0 12px;
+  margin: 0 0 14px;
+}
+
+.usaha-dashboard-scope .menu-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: 0;
+  background: transparent;
+  color: #4c5a50;
+  padding: 12px;
+  margin-bottom: 5px;
+  text-align: left;
+  border-radius: 9px;
+  cursor: pointer;
+  transition: 0.2s;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.usaha-dashboard-scope .menu-item:hover {
+  background: #f4f8f4;
+  color: var(--green);
+}
+
+.usaha-dashboard-scope .menu-item.active {
+  background: var(--green-light);
+  color: var(--green-dark);
+  font-weight: 700;
+}
+
+.usaha-dashboard-scope .menu-count {
+  margin-left: auto;
+  padding: 2px 7px;
+  border-radius: 20px;
+  background: #f1a34b;
+  color: #241600;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.usaha-dashboard-scope .sidebar-bottom {
+  margin-top: auto;
+  padding: 20px 12px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.usaha-dashboard-scope .back-link {
+  color: var(--green);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.usaha-dashboard-scope .logout-btn {
+  border: 1px solid #f2c6c3;
+  background: #fff5f5;
+  color: #a42d29;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  text-align: left;
+}
+
+.usaha-dashboard-scope .main-content {
+  flex: 1;
+  min-width: 0;
+  padding: 29px 35px 40px;
+}
+
+.usaha-dashboard-scope .breadcrumb {
+  color: var(--muted);
+  font-size: 12px;
+  margin-bottom: 20px;
+}
+
+.usaha-dashboard-scope .welcome {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+  background: linear-gradient(115deg, #e8f5e9, #f5faf4);
+  border: 1px solid #dcebdd;
+  border-radius: 15px;
+  padding: 24px 28px;
+  margin-bottom: 23px;
+}
+
+.usaha-dashboard-scope .eyebrow {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  color: var(--green);
+  margin: 0 0 8px;
+}
+
+.usaha-dashboard-scope .welcome h1 {
+  font-size: 24px;
+  margin: 0 0 8px;
+  font-weight: 800;
+}
+
+.usaha-dashboard-scope .welcome p:last-child {
+  color: #4b5d50;
+  margin: 0;
+  line-height: 1.6;
+}
+
+.usaha-dashboard-scope .welcome-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.usaha-dashboard-scope .btn-green {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 16px;
+  border-radius: 8px;
+  background: var(--green);
+  color: white;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+  border: 1px solid var(--green);
+}
+
+.usaha-dashboard-scope .btn-green:hover {
+  background: var(--green-dark);
+}
+
+.usaha-dashboard-scope .btn-outline-green {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 16px;
+  border-radius: 8px;
+  background: white;
+  color: var(--green-dark);
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+  border: 1px solid #b8d8c1;
+}
+
+.usaha-dashboard-scope .btn-outline-green:hover {
+  background: var(--green-light);
+}
+
+.usaha-dashboard-scope .stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.usaha-dashboard-scope .stat-card {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 19px;
+  min-width: 0;
+}
+
+.usaha-dashboard-scope .stat-icon {
+  display: grid;
+  place-items: center;
+  width: 37px;
+  height: 37px;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 14px;
+}
+
+.usaha-dashboard-scope .stat-icon.green {
+  background: #e7f5e9;
+  color: #277344;
+}
+.usaha-dashboard-scope .stat-icon.orange {
+  background: #fff1df;
+  color: #9e5d10;
+}
+.usaha-dashboard-scope .stat-icon.blue {
+  background: #e8f1ff;
+  color: #285fa8;
+}
+.usaha-dashboard-scope .stat-icon.purple {
+  background: #f1eaff;
+  color: #6b41a8;
+}
+
+.usaha-dashboard-scope .stat-card p {
+  margin: 0 0 6px;
+  color: #5c6b61;
+  font-size: 12px;
+}
+
+.usaha-dashboard-scope .stat-card h2 {
+  margin: 0 0 6px;
+  font-size: 26px;
+  font-weight: 800;
+}
+
+.usaha-dashboard-scope .stat-card small {
+  color: #6b7a6f;
+  font-size: 11px;
+}
+
+.usaha-dashboard-scope .content-card {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 13px;
+  padding: 23px;
+  margin-bottom: 22px;
+}
+
+.usaha-dashboard-scope .section-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 15px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.usaha-dashboard-scope .section-heading h2 {
+  margin: 0 0 5px;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.usaha-dashboard-scope .section-heading p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.usaha-dashboard-scope .status-label {
+  background: #f1f4f1;
+  color: #4d5c50;
+  padding: 7px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.usaha-dashboard-scope .toolbar {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 19px;
+}
+
+.usaha-dashboard-scope .toolbar input,
+.usaha-dashboard-scope .toolbar select {
+  min-height: 42px;
+  border: 1px solid #dfe6e0;
+  border-radius: 8px;
+  background: white;
+  color: var(--text);
+  padding: 0 13px;
+  outline: none;
+}
+
+.usaha-dashboard-scope .toolbar input {
+  flex: 1;
+  min-width: 100px;
+}
+
+.usaha-dashboard-scope .toolbar input:focus,
+.usaha-dashboard-scope .toolbar select:focus {
+  border-color: var(--green);
+}
+
+.usaha-dashboard-scope .table-wrap {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.usaha-dashboard-scope table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.usaha-dashboard-scope thead {
+  background: #f7f9f7;
+}
+
+.usaha-dashboard-scope th {
+  color: #5c6b61;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.usaha-dashboard-scope th,
+.usaha-dashboard-scope td {
+  padding: 14px 12px;
+  border-bottom: 1px solid #edf0ed;
+}
+
+.usaha-dashboard-scope td {
+  font-size: 12px;
+}
+
+.usaha-dashboard-scope td:first-child {
+  font-weight: 600;
+}
+
+.usaha-dashboard-scope .status {
+  display: inline-block;
+  padding: 5px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.usaha-dashboard-scope .status.menunggu {
+  background: #fff2dc;
+  color: #8f5908;
+}
+
+.usaha-dashboard-scope .status.diproses {
+  background: #e7f0ff;
+  color: #245899;
+}
+
+.usaha-dashboard-scope .status.draf {
+  background: #eef0f2;
+  color: #4a5560;
+}
+
+.usaha-dashboard-scope .status.ditolak {
+  background: #fdeaea;
+  color: #9b2626;
+}
+
+.usaha-dashboard-scope .status.selesai {
+  background: #e5f5e8;
+  color: #1f6338;
+}
+
+.usaha-dashboard-scope .action-btn {
+  display: inline-block;
+  padding: 7px 11px;
+  border: 1px solid #cfe2d3;
+  border-radius: 6px;
+  background: white;
+  color: var(--green-dark);
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.usaha-dashboard-scope .action-btn:hover {
+  background: var(--green-light);
+}
+
+.usaha-dashboard-scope .empty-state {
+  padding: 40px 10px;
+  text-align: center;
+  color: var(--muted);
+}
+
+.usaha-dashboard-scope .notice {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.6;
+  margin-top: 18px;
+}
+
+.usaha-dashboard-scope .toast {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  background: #234f34;
+  color: white;
+  padding: 13px 18px;
+  border-radius: 9px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.18);
+  z-index: 50;
+}
+
+@media (max-width: 1100px) {
+  .usaha-dashboard-scope .stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .usaha-dashboard-scope .main-content {
+    padding: 25px 22px;
+  }
+}
+
+@media (max-width: 768px) {
+  .usaha-dashboard-scope .topbar {
+    height: 67px;
+    padding: 0 16px;
+  }
+  .usaha-dashboard-scope .layout {
+    display: block;
+  }
+  .usaha-dashboard-scope .sidebar {
+    width: 100%;
+    padding: 12px;
+    border-right: 0;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    flex-direction: row;
+    overflow-x: auto;
+    gap: 6px;
+  }
+  .usaha-dashboard-scope .sidebar-label,
+  .usaha-dashboard-scope .sidebar-bottom {
+    display: none;
+  }
+  .usaha-dashboard-scope .menu-item {
+    width: auto;
+    white-space: nowrap;
+    margin: 0;
+  }
+  .usaha-dashboard-scope .main-content {
+    padding: 20px 14px 30px;
+  }
+  .usaha-dashboard-scope .toolbar {
+    flex-direction: column;
+  }
+}

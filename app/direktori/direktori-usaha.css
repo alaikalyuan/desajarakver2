@@ -1,0 +1,3475 @@
+/* =========================
+   DIRECTORY PAGE
+   ========================= */
+
+.directory-page {
+    max-width: 1200px;
+    margin: auto;
+
+    padding: 150px 60px 80px;
+}
+
+
+/* =========================
+   HEADER
+   ========================= */
+
+.directory-header {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.section-label {
+    color: #2d6a4f;
+
+    font-size: 11px;
+    font-weight: 600;
+
+    letter-spacing: 3px;
+
+    margin-bottom: 10px;
+}
+
+.directory-header h1 {
+    color: #0f2d1f;
+
+    font-size: 42px;
+    font-weight: 700;
+
+    margin-bottom: 12px;
+}
+
+.section-description {
+    color: #666;
+
+    font-size: 15px;
+    font-weight: 300;
+}
+
+
+/* =========================
+   TABS
+   ========================= */
+
+.directory-tabs {
+    display: flex;
+    gap: 8px;
+
+    border-bottom: 1px solid #e4e8e5;
+
+    margin-bottom: 35px;
+}
+
+.tab-button {
+    border: none;
+    background: transparent;
+
+    font-family: 'Poppins', sans-serif;
+
+    color: #666;
+
+    font-size: 14px;
+    font-weight: 500;
+
+    padding: 12px 18px;
+
+    cursor: pointer;
+
+    border-bottom: 2px solid transparent;
+
+    transition: 0.2s;
+}
+
+.tab-button:hover {
+    color: #2d6a4f;
+}
+
+.tab-button.active {
+    color: #2d6a4f;
+
+    font-weight: 600;
+
+    border-bottom-color: #2d6a4f;
+}
+
+
+/* =========================
+   TAB CONTENT
+   ========================= */
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+
+/* =========================
+   TOOLBAR
+   ========================= */
+
+.toolbar {
+    display: flex;
+
+    justify-content: space-between;
+    align-items: end;
+
+    gap: 30px;
+
+    margin-bottom: 25px;
+}
+
+.toolbar h2 {
+    color: #0f2d1f;
+
+    font-size: 24px;
+    font-weight: 700;
+
+    margin-bottom: 5px;
+}
+
+.toolbar p {
+    color: #777;
+
+    font-size: 13px;
+    font-weight: 300;
+}
+.toolbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.secondary-button {
+    border: none;
+    background: #2d6a4f;
+    color: white;
+
+    padding: 11px 16px;
+
+    border-radius: 7px;
+
+    font-family: 'Poppins', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    white-space: nowrap;
+}
+
+.secondary-button:hover {
+    background: #1b3a2d;
+}
+
+/* =========================
+   SEARCH
+   ========================= */
+
+.search-box input {
+    width: 280px;
+
+    border: 1px solid #d7ddd9;
+
+    border-radius: 8px;
+
+    padding: 11px 14px;
+
+    font-family: 'Poppins', sans-serif;
+    font-size: 13px;
+
+    outline: none;
+}
+
+.search-box input:focus {
+    border-color: #2d6a4f;
+}
+
+
+/* =========================
+   CARDS
+   ========================= */
+
+.card-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+    width: 100%;
+    align-items: stretch;
+}
+.directory-card {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    height: 100%;
+    box-sizing: border-box;
+    padding: 12px;
+    background: #fff;
+    border: 1px solid #dfe8e2;
+    border-radius: 10px;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.directory-card:hover {
+    transform: translateY(-3px);
+
+    box-shadow:
+        0 10px 30px rgba(15, 45, 31, 0.08);
+}
+.card-image {
+     display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Card top */
+
+.card-top {
+    display: flex;
+
+    justify-content: flex-end;
+    align-items: start;
+
+    gap: 20px;
+
+    margin-bottom: 18px;
+}
+
+.card-category {
+    color: #2d6a4f;
+
+    font-size: 11px;
+    font-weight: 600;
+
+    letter-spacing: 1px;
+}
+
+.status {
+    display: inline-flex;
+
+    align-items: center;
+    justify-content: center;
+
+    padding: 5px 9px;
+
+    border-radius: 20px;
+
+    font-size: 10px;
+    font-weight: 600;
+}
+
+/* BARU - Biru */
+
+.status-baru {
+    background: #e8f1ff;
+    color: #2f63a8;
+}
+
+/* DALAM PROSES - Hijau */
+
+.status-proses {
+    background: #e4f3eb;
+    color: #28734d;
+}
+
+/* SELESAI - Abu-abu */
+
+.status-selesai {
+    background: #eeeeee;
+    color: #666666;
+}
+
+/* =========================
+   CARD IMAGE
+   ========================= */
+
+.card-image-wrapper {
+    position: relative;
+
+    width: 100%;
+
+    aspect-ratio: 16 / 9;
+
+    margin-bottom: 10px;
+
+    border-radius: 7px;
+
+    overflow: hidden;
+
+    background: #f5f6f5;
+}
+
+.card-image {
+    width: 100%;
+    height: 100%;
+
+    object-fit: contain;
+
+    display: block;
+}
+
+.card-image-wrapper .status {
+    position: absolute;
+
+    top: 10px;
+    right: 10px;
+
+    z-index: 2;
+}
+
+/* Card title */
+
+.directory-card h3 {
+    color: #0f2d1f;
+
+    font-size: 19px;
+    font-weight: 700;
+
+    margin-bottom: 8px;
+}
+
+.card-subtitle {
+    color: #555;
+
+    font-size: 14px;
+    font-weight: 600;
+
+    margin-bottom: 20px;
+}
+
+
+/* Card information */
+
+.info-list {
+    display: grid;
+
+    grid-template-columns: repeat(2, 1fr);
+
+    gap: 15px;
+
+    margin-bottom: 20px;
+}
+
+.info-item small {
+    display: block;
+
+    color: #888;
+
+    font-size: 10px;
+
+    margin-bottom: 4px;
+}
+
+.info-item strong {
+    color: #333;
+
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.card-note {
+    flex: 1;
+    margin-bottom: 20px;
+}
+
+.card-note small {
+    display: block;
+    color: #888;
+    font-size: 10px;
+    margin-bottom: 5px;
+}
+
+.card-note p {
+    color: #555;
+    font-size: 12px;
+    line-height: 1.6;
+}
+/* Card button */
+
+.card-button {
+    width: 100%;
+    margin-top: auto;
+    border: none;
+    padding: 11px 16px;
+    border-radius: 7px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s;
+    box-sizing: border-box;
+}
+/* Ajukan Penawaran */
+
+.button-offer {
+    background: #2d6a4f;
+    color: white;
+}
+
+.button-offer:hover {
+    background: #1b3a2d;
+}
+
+
+/* Lihat Detail */
+
+.button-status {
+    background: #eef1ef;
+    color: #2d6a4f;
+
+    border: 1px solid #d8e0db;
+}
+
+.button-status:hover {
+    background: #e2e9e5;
+}
+
+
+
+/* =========================
+   MODAL
+   ========================= */
+
+.modal {
+    display: none;
+
+    position: fixed;
+
+    inset: 0;
+
+    background: rgba(0, 0, 0, 0.5);
+
+    z-index: 2000;
+
+    align-items: center;
+    justify-content: center;
+
+    padding: 20px;
+}
+
+.modal.show {
+    display: flex;
+}
+
+.modal-content {
+    position: relative;
+
+    width: 100%;
+    max-width: 650px;
+
+    max-height: 90vh;
+
+    overflow-y: auto;
+
+    background: white;
+
+    border-radius: 14px;
+
+    padding: 35px;
+}
+.modal-image-wrapper {
+    position: relative;
+
+    width: 100%;
+
+    aspect-ratio: 16 / 9;
+
+    margin-bottom: 18px;
+
+    border-radius: 10px;
+
+    overflow: hidden;
+
+    background: #f5f6f5;
+}
+
+.modal-image {
+    width: 100%;
+    height: 100%;
+
+    object-fit: contain;
+
+    display: block;
+}
+
+.modal-image-wrapper .modal-status {
+    position: absolute;
+
+    top: 12px;
+    right: 12px;
+
+    z-index: 2;
+}
+
+.modal-close {
+    position: absolute;
+
+    top: 15px;
+    right: 20px;
+
+    border: none;
+
+    background: transparent;
+
+    font-size: 28px;
+
+    color: #555;
+
+    cursor: pointer;
+}
+
+.modal-content h2 {
+    color: #0f2d1f;
+
+    font-size: 25px;
+    font-weight: 700;
+
+    margin-bottom: 8px;
+}
+
+.modal-partner {
+    color: #333;
+
+    font-size: 16px;
+    font-weight: 600;
+
+    line-height: 1.5;
+
+    margin-bottom: 16px;
+}
+
+.modal-content h4 {
+    color: #2d6a4f;
+
+    font-size: 15px;
+    font-weight: 600;
+
+    margin-top: 20px;
+    margin-bottom: 7px;
+}
+
+.modal-content p {
+    color: #333;
+
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+
+/* =========================
+   STATUS MODAL
+   ========================= */
+
+.modal-status {
+    display: inline-flex;
+
+    align-items: center;
+    justify-content: center;
+
+    padding: 6px 12px;
+
+    border-radius: 999px;
+
+    font-family: 'Poppins', sans-serif;
+    font-size: 10px;
+    font-weight: 600;
+    line-height: 1.2;
+
+    margin-bottom: 10px;
+}
+
+.modal-status.status-baru {
+    background: #e8f1ff;
+    color: #2f63a8;
+}
+
+.modal-status.status-proses {
+    background: #e4f3eb;
+    color: #28734d;
+}
+
+.modal-status.status-selesai {
+    background: #eeeeee;
+    color: #666666;
+}
+
+
+/* =========================
+   INFORMASI PERMINTAAN
+   ========================= */
+
+.modal-info-grid {
+    display: flex;
+    flex-direction: column;
+
+    gap: 8px;
+
+    margin-top: 0;
+}
+
+.modal-info-grid > div {
+    display: flex;
+
+    align-items: baseline;
+
+    gap: 6px;
+
+    flex-wrap: nowrap;
+
+    white-space: nowrap;
+
+    overflow-x: auto;
+    overflow-y: hidden;
+
+    padding-bottom: 2px;
+}
+
+.modal-info-grid small {
+    color: #333;
+
+    font-size: 13px;
+    font-weight: 600;
+
+    line-height: 1.5;
+
+    flex-shrink: 0;
+}
+
+.modal-info-grid strong {
+    color: #333;
+
+    font-size: 13px;
+    font-weight: 400;
+
+    line-height: 1.5;
+
+    flex-shrink: 0;
+}
+
+
+/* =========================
+   INFORMASI MITRA
+   ========================= */
+
+.modal-contact {
+    margin-top: 4px;
+}
+
+.modal-contact p {
+    margin-bottom: 6px;
+
+    color: #333;
+
+    font-size: 13px;
+    font-weight: 400;
+
+    line-height: 1.5;
+}
+
+.modal-contact strong {
+    color: #333;
+
+    font-weight: 600;
+}
+
+.modal-action {
+    margin-top: 25px;
+}
+
+.modal-action button {
+    width: 100%;
+
+    border: none;
+
+    background: #2d6a4f;
+    color: white;
+
+    padding: 12px;
+
+    border-radius: 8px;
+
+    font-family: 'Poppins', sans-serif;
+
+    font-size: 13px;
+    font-weight: 600;
+
+    cursor: pointer;
+}
+/* =========================
+   TABLET
+   ========================= */
+
+@media (max-width: 1024px) {
+
+    .card-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+}
+
+
+/* =========================
+   MOBILE
+   ========================= */
+
+@media (max-width: 768px) {
+
+    .directory-page {
+        padding: 120px 20px 60px;
+    }
+
+    .directory-header h1 {
+        font-size: 32px;
+    }
+
+    .toolbar {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 18px;
+    }
+
+    .toolbar-actions {
+        width: 100%;
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .secondary-button {
+        width: 100%;
+    }
+
+    .search-box {
+        width: 100%;
+    }
+
+    .search-box input {
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .card-grid {
+        grid-template-columns: 1fr;
+        gap: 18px;
+    }
+
+    .info-list {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .modal-content {
+        padding: 28px 22px;
+    }
+
+}
+.local-privacy-note{font-size:10px;color:#64796b;margin-top:8px}
+.local-directory-card[hidden]{display:none}
+
+/* Layout Penawaran Desa */
+#penawaran .offer-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+}
+
+#penawaran .offer-layout {
+    display: grid;
+    grid-template-columns: 190px minmax(0, 1fr) 210px;
+    gap: 12px;
+    align-items: stretch;
+}
+
+#penawaran .offer-filter,
+#penawaran .offer-results,
+#penawaran .offer-information {
+    border: 1px solid #dce7e0;
+    border-radius: 7px;
+    background: #fff;
+    padding: 12px;
+}
+
+#penawaran .offer-filter {
+    background: #fbfdfc;
+}
+
+#penawaran .offer-filter h4 {
+    font-size: 12px;
+    margin: 8px 0;
+    color: #174d3b;
+}
+
+#penawaran .offer-filter label {
+    display: flex;
+    gap: 7px;
+    align-items: center;
+    margin: 9px 0;
+    font-size: 12px;
+}
+
+#penawaran .offer-filter input[type="checkbox"] {
+    accent-color: #087f5b;
+}
+
+#penawaran .offer-filter select {
+    width: 100%;
+    padding: 9px;
+    border: 1px solid #dce7e0;
+    border-radius: 5px;
+    margin-bottom: 12px;
+    background: white;
+}
+
+#penawaran .offer-filter button {
+    width: 100%;
+    padding: 10px;
+    margin-top: 7px;
+    border: 1px solid #dce7e0;
+    border-radius: 5px;
+    background: #087f5b;
+    color: white;
+    cursor: pointer;
+}
+
+#penawaran .offer-filter button + button {
+    background: white;
+    color: #174d3b;
+}
+
+#penawaran .offer-results {
+    padding: 0;
+    min-height: 450px;
+}
+
+#penawaran .offer-results-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 12px;
+    border-bottom: 1px solid #edf1ee;
+    flex-wrap: wrap;
+}
+
+#penawaran .offer-results-header p {
+    font-size: 12px;
+    margin: 0;
+}
+
+#penawaran .offer-view {
+    padding: 9px;
+    border: none;
+    border-radius: 5px;
+    background: white;
+    color: #315b49;
+    cursor: pointer;
+}
+
+#penawaran .offer-view.active {
+    background: #087f5b;
+    color: white;
+}
+
+#penawaran .offer-empty-state {
+    min-height: 400px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    text-align: center;
+    box-sizing: border-box;
+}
+
+#penawaran .offer-empty-icon {
+    font-size: 55px;
+    margin-bottom: 12px;
+}
+
+#penawaran .offer-empty-state h3 {
+    font-size: 16px;
+    margin: 0 0 8px;
+    color: #183e30;
+}
+
+#penawaran .offer-empty-state p {
+    max-width: 320px;
+    font-size: 12px;
+    line-height: 1.7;
+    color: #718078;
+}
+
+#penawaran .offer-information {
+    align-self: start;
+    background: #fbfdfc;
+}
+
+#penawaran .offer-information h4 {
+    font-size: 13px;
+    line-height: 1.5;
+    color: #174d3b;
+}
+
+#penawaran .offer-information p {
+    font-size: 11px;
+    line-height: 1.7;
+    color: #718078;
+}
+
+#penawaran .offer-create-button {
+    display: block;
+    padding: 11px 8px;
+    background: #087f5b;
+    color: white;
+    text-decoration: none;
+    text-align: center;
+    border-radius: 5px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+#penawaran .offer-info-note {
+    margin-top: 14px;
+    padding: 10px;
+    border-radius: 5px;
+    background: #effaf6;
+    color: #527366;
+    font-size: 10px;
+    line-height: 1.7;
+}
+
+@media (max-width: 850px) {
+    #penawaran .offer-layout {
+        grid-template-columns: 170px minmax(0, 1fr);
+    }
+
+    #penawaran .offer-information {
+        grid-column: 1 / -1;
+    }
+}
+
+@media (max-width: 600px) {
+    #penawaran .offer-layout {
+        grid-template-columns: 1fr;
+    }
+
+    #penawaran .offer-information {
+        grid-column: auto;
+    }
+}
+
+/* Grid produk Penawaran Desa */
+#penawaran .offer-product-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+    align-items: stretch;
+    width: 100%;
+}
+
+#penawaran .offer-product-grid .directory-card {
+    padding: 10px;
+    border-radius: 8px;
+}
+
+#penawaran .offer-product-grid .card-image-wrapper {
+    aspect-ratio: 16 / 9;
+    margin-bottom: 8px;
+}
+
+#penawaran .offer-product-grid .card-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+#penawaran #offerEmptyState {
+    display: none;
+    min-height: 300px;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    text-align: center;
+}
+
+#penawaran #offerEmptyState.show {
+    display: flex;
+}
+
+@media (max-width: 900px) {
+    #penawaran .offer-product-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 600px) {
+    #penawaran .offer-product-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Toolbar pencarian Penawaran Desa */
+#penawaran .offer-search-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    margin: 0 0 12px;
+    box-sizing: border-box;
+}
+
+#penawaran .offer-search-input {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+    min-width: 0;
+    height: 42px;
+    padding: 0 12px;
+    border: 1px solid #dce7e1;
+    border-radius: 7px;
+    background: #fff;
+    box-sizing: border-box;
+}
+
+#penawaran .offer-search-input span {
+    color: #006747;
+    font-size: 20px;
+}
+
+#penawaran .offer-search-input input {
+    width: 100%;
+    min-width: 0;
+    height: 100%;
+    padding: 0;
+    border: none;
+    outline: none;
+    background: transparent;
+    font: inherit;
+    font-size: 12px;
+}
+
+#penawaran #searchOfferButton {
+    flex: 0 0 95px;
+    height: 42px;
+    border: none;
+    border-radius: 6px;
+    background: #087f5b;
+    color: #fff;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+#penawaran .offer-sort {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: auto;
+    white-space: nowrap;
+    font-size: 12px;
+}
+
+#penawaran #sortOffer {
+    height: 42px;
+    min-width: 125px;
+    padding: 0 10px;
+    border: 1px solid #dce7e1;
+    border-radius: 6px;
+    background: #fff;
+}
+
+@media (max-width: 700px) {
+    #penawaran .offer-search-bar {
+        flex-wrap: wrap;
+    }
+
+    #penawaran .offer-search-input {
+        flex-basis: 100%;
+    }
+
+    #penawaran .offer-sort {
+        margin-left: 0;
+    }
+}
+
+/* RINGKASAN PENAWARAN */
+.offer-summary {
+    background: #fff;
+    border: 1px solid #dfe8e2;
+    border-radius: 10px;
+    padding: 12px;
+    margin-bottom: 10px;
+    min-width: 0;
+    box-sizing: border-box;
+}
+
+.offer-summary h4 {
+    color: #0f2d1f;
+    font-size: 13px;
+    font-weight: 700;
+    margin: 0 0 12px;
+}
+
+.summary-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px 8px;
+}
+
+.summary-item {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    min-width: 0;
+}
+
+.summary-icon {
+    font-size: 20px;
+}
+
+.summary-item strong {
+    display: block;
+    font-size: 18px;
+    color: #075c43;
+}
+
+.summary-item small {
+    display: block;
+    font-size: 10px;
+    color: #64748b;
+}
+
+.commodity-row {
+    display: grid;
+    grid-template-columns: 82px minmax(0, 1fr) 16px;
+    align-items: center;
+    gap: 6px;
+    margin: 10px 0;
+    font-size: 11px;
+}
+
+.commodity-track {
+    height: 14px;
+    background: #f1f5f2;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.commodity-bar {
+    height: 100%;
+    border-radius: 4px;
+}
+
+.bar-green { background: #087653; }
+.bar-yellow { background: #f5b51b; }
+.bar-lime { background: #65a930; }
+.bar-orange { background: #c66b25; }
+.bar-purple { background: #8844c7; }
+
+.commodity-row strong {
+    text-align: right;
+    color: #0f2d1f;
+}
+
+/* Perbaikan panel informasi kanan */
+.offer-summary {
+    width: 100%;
+    height: auto;
+    min-height: 0;
+    padding: 12px;
+    margin-bottom: 10px;
+    box-sizing: border-box;
+    align-self: start;
+}
+
+.offer-summary h4 {
+    margin-top: 0;
+    margin-bottom: 12px;
+}
+
+.summary-grid {
+    gap: 12px 8px;
+}
+
+.summary-item {
+    align-items: flex-start;
+}
+
+/* Panel informasi mengikuti tinggi konten */
+.offer-information {
+    height: auto;
+    align-self: start;
+}
+
+.offer-content-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 230px;
+    gap: 14px;
+    align-items: start;
+    width: 100%;
+}
+
+.offer-results {
+    min-width: 0;
+}
+
+.offer-right-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-width: 0;
+}
+
+.offer-right-sidebar .offer-summary,
+.offer-right-sidebar .offer-information {
+    width: 100%;
+    margin: 0;
+    box-sizing: border-box;
+}
+
+.offer-product-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+}
+
+@media (max-width: 1000px) {
+    .offer-content-layout {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .offer-right-sidebar {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 600px) {
+    .offer-right-sidebar {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .offer-product-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+/* ==========================================
+   REVISI UI - PERMINTAAN MITRA
+   Ditambahkan tanpa mengubah styling
+   khusus Penawaran Desa
+========================================== */
+
+/* Layout halaman lebih fleksibel */
+.directory-page {
+    width: 100%;
+    max-width: 1440px;
+    box-sizing: border-box;
+    margin-inline: auto;
+    padding: 140px clamp(20px, 3vw, 48px) 80px;
+}
+
+/* Jarak dan ukuran card permintaan */
+#permintaan #requestList {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 18px;
+    width: 100%;
+    align-items: stretch;
+}
+
+#permintaan #requestList .directory-card {
+    min-width: 0;
+    height: 100%;
+    padding: 16px;
+    border: 1px solid #dce7df;
+    border-radius: 14px;
+    background: #ffffff;
+    box-shadow: 0 2px 8px rgba(15, 45, 31, 0.035);
+    transition: border-color 0.2s, box-shadow 0.2s,
+        transform 0.2s;
+}
+
+#permintaan #requestList .directory-card:hover {
+    transform: translateY(-2px);
+    border-color: #b7d0bf;
+    box-shadow: 0 8px 24px rgba(15, 45, 31, 0.08);
+}
+
+/* Foto komoditas */
+#permintaan #requestList .card-image-wrapper {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    margin-bottom: 14px;
+    border-radius: 10px;
+    overflow: hidden;
+    background: #f0f3f0;
+}
+
+#permintaan #requestList .card-image {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+}
+
+/* Badge status lebih terbaca */
+#permintaan #requestList .status {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 28px;
+    padding: 6px 11px;
+    border-radius: 999px;
+    font-family: "Poppins", sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.3;
+    white-space: nowrap;
+}
+
+#permintaan #requestList .status-baru {
+    background: #e6f0ff;
+    color: #245a9a;
+}
+
+#permintaan #requestList .status-proses {
+    background: #ddf4e7;
+    color: #216b45;
+}
+
+#permintaan #requestList .status-selesai {
+    background: #ecefed;
+    color: #525e56;
+}
+
+/* Judul dan informasi tetap sama, hanya diperjelas */
+#permintaan #requestList .directory-card h3 {
+    margin: 0 0 8px;
+    color: #103c2b;
+    font-size: 19px;
+    font-weight: 700;
+    line-height: 1.45;
+}
+
+#permintaan #requestList .card-subtitle {
+    margin-bottom: 18px;
+    color: #34483b;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.6;
+    overflow-wrap: anywhere;
+}
+
+#permintaan #requestList .info-list {
+    gap: 14px 12px;
+    margin-bottom: 18px;
+}
+
+#permintaan #requestList .info-item small {
+    color: #748176;
+    font-size: 11px;
+    line-height: 1.5;
+}
+
+#permintaan #requestList .info-item strong {
+    color: #293b30;
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 1.6;
+    overflow-wrap: anywhere;
+}
+
+#permintaan #requestList .card-note {
+    flex: 1;
+    margin-bottom: 18px;
+}
+
+#permintaan #requestList .card-note small {
+    color: #748176;
+    font-size: 11px;
+}
+
+#permintaan #requestList .card-note p {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    overflow: hidden;
+    color: #4e5c52;
+    font-size: 12px;
+    line-height: 1.7;
+}
+
+/* Tempat dua tombol akan dibuat oleh JavaScript */
+#permintaan #requestList .card-actions {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
+    gap: 9px;
+    margin-top: auto;
+    padding-top: 4px;
+}
+
+#permintaan #requestList .card-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    width: 100%;
+    min-width: 0;
+    min-height: 42px;
+    margin-top: 0;
+    padding: 10px 9px;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    font-family: "Poppins", sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.4;
+    text-align: center;
+    white-space: normal;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s,
+        color 0.2s;
+}
+
+/* Tombol Lihat Detail */
+#permintaan #requestList .button-detail {
+    border-color: #2d6a4f;
+    background: #ffffff;
+    color: #245d40;
+}
+
+#permintaan #requestList .button-detail:hover {
+    background: #edf5f0;
+}
+
+/* Tombol Ajukan Penawaran */
+#permintaan #requestList .button-offer {
+    border-color: #2d6a4f;
+    background: #2d6a4f;
+    color: #ffffff;
+}
+
+#permintaan #requestList .button-offer:hover {
+    border-color: #214f39;
+    background: #214f39;
+}
+
+/* Tombol untuk permintaan yang sudah selesai */
+#permintaan #requestList .button-disabled,
+#permintaan #requestList .card-button:disabled {
+    border-color: #e0e5e1;
+    background: #ecefed;
+    color: #87928a;
+    opacity: 1;
+    cursor: not-allowed;
+}
+
+/* Modal detail permintaan */
+#detailModal .modal-content {
+    width: 100%;
+    max-width: 760px;
+    max-height: 90vh;
+    padding: clamp(20px, 3vw, 32px);
+    border-radius: 16px;
+}
+
+#detailModal .modal-image-wrapper {
+    width: 100%;
+    aspect-ratio: 16 / 8;
+    margin-bottom: 20px;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #f0f3f0;
+}
+
+#detailModal .modal-image {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+}
+
+#detailModal .modal-status {
+    min-height: 30px;
+    padding: 7px 12px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+#detailModal .modal-content h2 {
+    margin-bottom: 8px;
+    color: #103c2b;
+    font-size: 25px;
+    line-height: 1.4;
+}
+
+#detailModal .modal-partner {
+    margin-bottom: 20px;
+    color: #34483b;
+    font-size: 15px;
+    font-weight: 600;
+}
+
+/* Informasi detail tidak perlu digeser horizontal */
+#detailModal .modal-info-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+}
+
+#detailModal .modal-info-grid > div {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 5px;
+    min-width: 0;
+    padding: 12px;
+    border: 1px solid #e4eae5;
+    border-radius: 9px;
+    background: #fafcfa;
+    white-space: normal;
+    overflow: visible;
+}
+
+#detailModal .modal-info-grid small {
+    color: #68776b;
+    font-size: 11px;
+    font-weight: 500;
+    line-height: 1.5;
+}
+
+#detailModal .modal-info-grid strong {
+    color: #263b2d;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.6;
+    overflow-wrap: anywhere;
+}
+
+/* Tombol tindakan di bawah modal */
+#detailModal .modal-action {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 24px;
+    padding-top: 18px;
+    border-top: 1px solid #e5ebe6;
+}
+
+#detailModal .modal-action button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 44px;
+    padding: 11px 18px;
+    border: 1px solid #2d6a4f;
+    border-radius: 8px;
+    background: #2d6a4f;
+    color: #ffffff;
+    font-family: "Poppins", sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+#detailModal .modal-action button:hover:not(:disabled) {
+    background: #214f39;
+}
+
+#detailModal .modal-action button:disabled {
+    border-color: #e0e5e1;
+    background: #ecefed;
+    color: #87928a;
+    cursor: not-allowed;
+}
+
+/* Tablet */
+@media (max-width: 1100px) {
+    #permintaan #requestList {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+    }
+}
+
+/* HP */
+@media (max-width: 680px) {
+    #permintaan #requestList {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 16px;
+    }
+
+    #permintaan #requestList .directory-card {
+        padding: 14px;
+    }
+
+    #permintaan #requestList .directory-card h3 {
+        font-size: 18px;
+    }
+
+    #permintaan #requestList .card-actions {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    #detailModal .modal-info-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    #detailModal .modal-content {
+        padding: 20px 16px;
+    }
+
+    #detailModal .modal-content h2 {
+        font-size: 21px;
+    }
+
+    #detailModal .modal-action {
+        flex-direction: column;
+    }
+
+    #detailModal .modal-action button {
+        width: 100%;
+    }
+}
+
+/* Ikon SVG dalam modal detail */
+#detailModal .modal-inline-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    vertical-align: -3px;
+    margin-right: 5px;
+    color: #2d6a4f;
+}
+
+#detailModal .modal-inline-icon svg {
+    display: inline-block;
+    flex-shrink: 0;
+}
+
+#detailModal .modal-contact p {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    line-height: 1.8;
+    overflow-wrap: anywhere;
+}
+
+#detailModal .modal-contact p .modal-inline-icon {
+    margin-top: 3px;
+}
+
+#detailModal .modal-contact-locked {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 16px;
+    border: 1px solid #dce7df;
+    border-radius: 10px;
+    background: #f5f9f6;
+}
+
+#detailModal .modal-lock-icon {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border-radius: 9px;
+    background: #e4f1e8;
+    color: #2d6a4f;
+}
+
+#detailModal .modal-contact-locked strong {
+    display: block;
+    margin-bottom: 5px;
+    color: #174a33;
+    font-size: 13px;
+}
+
+#detailModal .modal-contact-locked p {
+    margin: 0 0 8px;
+    color: #617166;
+    font-size: 12px;
+    line-height: 1.7;
+}
+
+#detailModal .modal-contact-locked a {
+    color: #246747;
+    font-size: 12px;
+    font-weight: 600;
+    text-decoration: underline;
+}
+
+/* =====================================
+   DETAIL PERMINTAAN — PROGRESS PANEL
+===================================== */
+
+#detailModal .fulfillment-panel {
+    margin-top: 22px;
+    padding: 20px;
+    border: 1px solid #c6dfcf;
+    border-radius: 13px;
+    background: #f3f8f4;
+    box-sizing: border-box;
+}
+
+#detailModal .fulfillment-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    margin-bottom: 19px;
+}
+
+#detailModal .fulfillment-heading h4 {
+    margin: 0;
+    color: #174a33;
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1.5;
+}
+
+#detailModal .fulfillment-percent {
+    display: inline-flex;
+    flex-shrink: 0;
+    justify-content: center;
+    align-items: center;
+    min-width: 68px;
+    min-height: 44px;
+    padding: 8px 12px;
+    border-radius: 10px;
+    background: #176b49;
+    color: #ffffff;
+    font-size: 20px;
+    font-weight: 700;
+    line-height: 1;
+    box-sizing: border-box;
+}
+
+/* Track abu-hijau sebagai latar bar */
+#detailModal .fulfillment-track {
+    display: block;
+    width: 100%;
+    height: 12px;
+    margin: 0;
+    overflow: hidden;
+    border-radius: 999px;
+    background: #d5e3d9;
+    box-shadow: inset 0 1px 2px rgba(20, 55, 35, 0.10);
+}
+
+/* Bagian kebutuhan yang sudah terpenuhi */
+#detailModal .fulfillment-track span {
+    display: block;
+    height: 100%;
+    max-width: 100%;
+    border-radius: inherit;
+    background: #218653;
+    transition: width 0.3s ease;
+}
+
+/* Hanya tampilkan sisa kebutuhan */
+#detailModal .fulfillment-stats {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 14px;
+    margin-top: 17px;
+    padding-top: 14px;
+    border-top: 1px solid #d5e4d9;
+}
+
+#detailModal .fulfillment-stats span {
+    color: #405f4b;
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 1.6;
+}
+
+#detailModal .fulfillment-stats strong {
+    color: #174a33;
+    font-size: 17px;
+    font-weight: 700;
+    line-height: 1.5;
+    text-align: right;
+    overflow-wrap: anywhere;
+}
+
+@media (max-width: 600px) {
+    #detailModal .fulfillment-panel {
+        padding: 16px;
+    }
+
+    #detailModal .fulfillment-heading h4 {
+        font-size: 14px;
+    }
+
+    #detailModal .fulfillment-percent {
+        min-width: 60px;
+        min-height: 40px;
+        font-size: 18px;
+    }
+
+    #detailModal .fulfillment-stats span {
+        font-size: 12px;
+    }
+
+    #detailModal .fulfillment-stats strong {
+        font-size: 15px;
+    }
+}
+
+
+/* =========================================
+   PENAWARAN DESA — REVISI TAMPILAN
+   ========================================= */
+
+/* Panel filter */
+#penawaran .offer-filters-panel {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+    margin: 0 0 20px;
+    padding: 18px;
+    background: #ffffff;
+    border: 1px solid #dce7df;
+    border-radius: 12px;
+}
+
+#penawaran .offer-filters-panel[hidden],
+#penawaran .offer-empty-state[hidden] {
+    display: none !important;
+}
+
+#penawaran .offer-filter-field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
+}
+
+#penawaran .offer-filter-field label {
+    color: #244b37;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+#penawaran .offer-filter-field select {
+    width: 100%;
+    min-height: 42px;
+    padding: 10px 12px;
+    border: 1px solid #d7ddd9;
+    border-radius: 8px;
+    background: #ffffff;
+    color: #24392d;
+    font-family: 'Poppins', sans-serif;
+    font-size: 13px;
+}
+
+#penawaran .offer-filter-field select:focus {
+    outline: 2px solid #b7d0bf;
+    outline-offset: 1px;
+    border-color: #2d6a4f;
+}
+
+#penawaran .offer-filter-actions {
+    display: flex;
+    align-items: end;
+    gap: 10px;
+}
+
+/* Jumlah penawaran */
+#penawaran .offer-results-header {
+    margin: 0 0 16px;
+}
+
+#penawaran #offerCount {
+    color: #64796b;
+    font-size: 13px;
+}
+
+/* Grid kartu penawaran */
+#penawaran #offerList.offer-product-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    align-items: stretch;
+    gap: 18px;
+    width: 100%;
+}
+
+/* Samakan karakter kartu dengan Permintaan Mitra */
+#penawaran #offerList .directory-card {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    height: 100%;
+    padding: 16px;
+    border: 1px solid #dce7df;
+    border-radius: 14px;
+    background: #ffffff;
+    box-shadow: 0 2px 8px rgba(15, 45, 31, 0.035);
+    transition: border-color 0.2s, box-shadow 0.2s,
+        transform 0.2s;
+}
+
+#penawaran #offerList .directory-card:hover {
+    transform: translateY(-2px);
+    border-color: #b7d0bf;
+    box-shadow: 0 8px 24px rgba(15, 45, 31, 0.08);
+}
+
+#penawaran #offerList .card-image-wrapper {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    margin-bottom: 14px;
+    overflow: hidden;
+    border-radius: 10px;
+    background: #f0f3f0;
+}
+
+#penawaran #offerList .card-image {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+}
+
+#penawaran #offerList .card-subtitle {
+    color: #64796b;
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+#penawaran #offerList .offer-card-description {
+    margin-top: 12px;
+    color: #52665a;
+    font-size: 13px;
+    line-height: 1.7;
+}
+
+#penawaran #offerList .offer-card-meta {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    margin-top: 16px;
+}
+
+#penawaran #offerList .offer-card-meta > div {
+    min-width: 0;
+    padding: 10px;
+    border-radius: 8px;
+    background: #f5f8f5;
+}
+
+#penawaran #offerList .offer-card-meta small {
+    display: block;
+    margin-bottom: 4px;
+    color: #718078;
+    font-size: 11px;
+}
+
+#penawaran #offerList .offer-card-meta strong {
+    display: block;
+    overflow-wrap: anywhere;
+    color: #244b37;
+    font-size: 13px;
+}
+
+#penawaran #offerList .offer-availability {
+    display: inline-flex;
+    align-self: flex-start;
+    margin: 0 0 10px;
+    padding: 5px 9px;
+    border-radius: 20px;
+    background: #edf5f0;
+    color: #276749;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+#penawaran #offerList .offer-card-footer {
+    margin-top: auto;
+    padding-top: 16px;
+}
+
+#penawaran #offerList .offer-card-footer .card-button {
+    width: 100%;
+}
+
+/* Kondisi tidak ada hasil */
+#penawaran .offer-empty-state {
+    min-height: 220px;
+    padding: 28px 20px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+#penawaran .offer-empty-state h3 {
+    margin-bottom: 8px;
+    color: #183e30;
+    font-size: 16px;
+}
+
+#penawaran .offer-empty-state p {
+    max-width: 380px;
+    color: #718078;
+    font-size: 13px;
+    line-height: 1.7;
+}
+
+/* Responsif */
+@media (max-width: 900px) {
+    #penawaran #offerList.offer-product-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 680px) {
+    #penawaran .offer-filters-panel {
+        grid-template-columns: minmax(0, 1fr);
+        padding: 14px;
+    }
+
+    #penawaran .offer-filter-actions {
+        align-items: stretch;
+    }
+
+    #penawaran .offer-filter-actions button {
+        flex: 1;
+    }
+
+    #penawaran #offerList.offer-product-grid {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 16px;
+    }
+
+    #penawaran #offerList .directory-card {
+        padding: 14px;
+    }
+}
+
+
+/* =========================================
+   FIX LAYOUT DIREKTORI USAHA
+   ========================================= */
+
+html {
+    scrollbar-gutter: stable;
+}
+
+.directory-page {
+    width: min(1232px, calc(100% - 52px));
+    max-width: 1232px;
+    margin-inline: auto;
+    box-sizing: border-box;
+}
+
+.directory-tabs,
+.tab-content,
+#permintaan,
+#penawaran,
+#requestList,
+#offerList {
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+}
+
+#permintaan .toolbar,
+#penawaran .toolbar {
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+}
+
+/* Navbar sejajar dengan batas kiri dan kanan konten */
+.header .navbar {
+    width: min(1232px, calc(100% - 52px));
+    max-width: 1232px;
+    margin-inline: auto;
+    padding: 14px 0 !important;
+    box-sizing: border-box;
+    position: relative;
+}
+
+/* =========================================
+   FILTER PERMINTAAN MITRA
+   ========================================= */
+
+#permintaan .request-toolbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+}
+
+#permintaan .request-toolbar-actions .search-box {
+    width: 256px;
+    min-width: 160px;
+}
+
+#permintaan .request-filter-wrap {
+    position: relative;
+    flex: 0 0 auto;
+}
+
+#permintaan .request-filter-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    min-height: 40px;
+    white-space: nowrap;
+    cursor: pointer;
+    background: #fff;
+    border: 1px solid #244b37;
+    color: #244b37;
+}
+
+#permintaan .request-filters-panel {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    z-index: 1100;
+    width: min(520px, calc(100vw - 32px));
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+    padding: 16px;
+    background: #fff;
+    border: 1px solid #e0e8e2;
+    border-radius: 12px;
+    box-shadow: 0 12px 32px rgba(15, 45, 31, 0.14);
+    box-sizing: border-box;
+}
+
+#permintaan .request-filters-panel[hidden] {
+    display: none !important;
+}
+
+#permintaan .request-filter-column {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+}
+
+#permintaan .request-filter-column h4 {
+    margin: 0 0 5px;
+    color: #193d2c;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+#permintaan .request-filter-option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    width: 100%;
+    min-height: 30px;
+    padding: 7px 9px;
+    border: 0;
+    border-radius: 7px;
+    background: #fff;
+    color: #52665a;
+    text-align: left;
+    font: inherit;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+#permintaan .request-filter-option:hover {
+    background: #f4f7f4;
+}
+
+#permintaan .request-filter-option.active {
+    background: #eaf3ed;
+    color: #24593d;
+    font-weight: 600;
+}
+
+/* ==================================================
+   FINAL OVERRIDES — DIREKTORI USAHA
+   Menyelaraskan Permintaan Mitra dan Penawaran Desa
+   ================================================== */
+
+/* 1. Samakan garis kiri-kanan navbar dan konten */
+.header .navbar {
+    width: 100%;
+    max-width: 1440px;
+    margin-inline: auto;
+    padding: 20px clamp(20px, 3vw, 48px) !important;
+    box-sizing: border-box;
+}
+
+.directory-page {
+    width: 100%;
+    max-width: 1440px;
+    margin-inline: auto;
+    padding: 140px clamp(20px, 3vw, 48px) 80px;
+    box-sizing: border-box;
+}
+
+.directory-tabs,
+#permintaan,
+#penawaran {
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+}
+
+/* Kedua tab memakai lebar toolbar dan konten yang konsisten */
+#permintaan .toolbar,
+#penawaran .toolbar {
+    position: relative;
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+}
+
+#permintaan #requestList,
+#penawaran #offerList {
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+}
+
+/* 2. Hilangkan tulisan jumlah penawaran desa.
+   Elemen tetap ada agar JavaScript tidak error. */
+#penawaran .offer-results-header {
+    display: none !important;
+}
+
+/* 3. Samakan tombol Filter kedua tab:
+   latar putih, garis hijau, tulisan hijau */
+#permintaan #toggleRequestFilters,
+#penawaran #toggleOfferFilters {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    min-height: 40px;
+    padding: 10px 16px;
+    border: 1px solid #2d6a4f;
+    border-radius: 8px;
+    background: #ffffff;
+    color: #245d40;
+    font-family: "Poppins", sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+#permintaan #toggleRequestFilters:hover,
+#penawaran #toggleOfferFilters:hover {
+    background: #edf5f0;
+    color: #1b5137;
+}
+
+/* 4. Samakan visual panel filter kedua tab */
+#permintaan .request-filters-panel,
+#penawaran .offer-filters-panel {
+    z-index: 1100;
+    width: min(520px, calc(100vw - 32px));
+    padding: 14px;
+    border: 1px solid #e0e8e2;
+    border-radius: 12px;
+    background: #ffffff;
+    box-shadow: 0 12px 32px rgba(15, 45, 31, 0.14);
+    box-sizing: border-box;
+}
+
+#permintaan .request-filters-panel[hidden],
+#penawaran .offer-filters-panel[hidden] {
+    display: none !important;
+}
+
+/* Panel Penawaran dibuka di bawah toolbar,
+   mengikuti pola panel Permintaan Mitra. */
+#penawaran .offer-filters-panel {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: clamp(20px, 3vw, 48px);
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+    margin: 0;
+}
+
+/* Judul kolom filter */
+#permintaan .request-filter-column h4,
+#penawaran .offer-filter-field label {
+    display: block;
+    margin: 0 0 5px;
+    color: #193d2c;
+    font-family: "Poppins", sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.5;
+}
+
+/* Pilihan status/lokasi pada Permintaan Mitra */
+#permintaan .request-filter-option,
+#penawaran .offer-filter-option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    width: 100%;
+    min-height: 32px;
+    padding: 7px 9px;
+    border: 0;
+    border-radius: 7px;
+    background: #ffffff;
+    color: #52665a;
+    text-align: left;
+    font-family: "Poppins", sans-serif;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+#permintaan .request-filter-option:hover,
+#penawaran .offer-filter-option:hover {
+    background: #f4f7f4;
+}
+
+#permintaan .request-filter-option.active,
+#penawaran .offer-filter-option.active {
+    background: #eaf3ed;
+    color: #24593d;
+    font-weight: 600;
+}
+
+/* Angka jumlah pilihan filter */
+#permintaan .request-filter-count,
+#penawaran .offer-filter-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 5px;
+    border-radius: 20px;
+    background: #edf1ee;
+    color: #466251;
+    font-family: "Poppins", sans-serif;
+    font-size: 10px;
+    line-height: 1;
+}
+
+/* Field dropdown pada Penawaran Desa */
+#penawaran .offer-filter-field {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    min-width: 0;
+}
+
+#penawaran .offer-filter-field select {
+    width: 100%;
+    min-height: 42px;
+    padding: 10px 12px;
+    border: 1px solid #d7ddd9;
+    border-radius: 8px;
+    background: #ffffff;
+    color: #24392d;
+    font-family: "Poppins", sans-serif;
+    font-size: 12px;
+    box-sizing: border-box;
+}
+
+#penawaran .offer-filter-field select:focus {
+    outline: 2px solid #b7d0bf;
+    outline-offset: 1px;
+    border-color: #2d6a4f;
+}
+
+/* Area tombol Terapkan dan Reset */
+#permintaan .request-filter-footer,
+#penawaran .offer-filter-actions {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    padding-top: 4px;
+}
+
+#permintaan #resetRequestFilters,
+#penawaran #applyOfferFilters,
+#penawaran #resetOfferFilters {
+    min-height: 34px;
+    padding: 8px 13px;
+    border-radius: 7px;
+    font-family: "Poppins", sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+/* 5. Layout konsisten pada layar kecil */
+@media (max-width: 768px) {
+    .header .navbar {
+        width: 100%;
+        max-width: 1440px;
+        padding: 12px clamp(20px, 3vw, 48px) !important;
+    }
+
+    .directory-page {
+        width: 100%;
+        max-width: 1440px;
+        padding: 120px clamp(20px, 3vw, 48px) 60px;
+    }
+
+    #permintaan .toolbar,
+    #penawaran .toolbar {
+        gap: 14px;
+    }
+
+    #permintaan .request-toolbar-actions,
+    #penawaran .toolbar-actions {
+        min-width: 0;
+    }
+
+    #penawaran .offer-filters-panel {
+        top: calc(100% + 8px);
+        right: 0;
+        width: min(520px, calc(100vw - 32px));
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+        padding: 12px;
+    }
+}
+
+@media (max-width: 480px) {
+    #penawaran .offer-filters-panel {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    #permintaan .request-filters-panel,
+    #penawaran .offer-filters-panel {
+        padding: 12px;
+    }
+
+    #permintaan .request-filter-footer,
+    #penawaran .offer-filter-actions {
+        justify-content: stretch;
+    }
+
+    #permintaan .request-filter-footer button,
+    #penawaran .offer-filter-actions button {
+        flex: 1;
+    }
+}
+
+#permintaan .request-filter-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 5px;
+    border-radius: 20px;
+    background: #edf1ee;
+    color: #466251;
+    font-size: 10px;
+}
+
+#permintaan .request-filter-footer {
+    grid-column: 1 / -1;
+    display: flex;
+    justify-content: flex-end;
+    padding-top: 4px;
+}
+
+#permintaan #resetRequestFilters {
+    min-height: 32px;
+    padding: 7px 12px;
+    font-size: 11px;
+    cursor: pointer;
+}
+
+/* Hindari elemen kartu memperlebar tab */
+#permintaan #requestList,
+#penawaran #offerList {
+    min-width: 0;
+}
+
+/* =========================================
+   RESPONSIVE: TABLET DAN PONSEL
+   ========================================= */
+
+@media (max-width: 680px) {
+    .directory-page {
+        width: calc(100% - 32px);
+    }
+
+    .header .navbar {
+        width: calc(100% - 32px);
+        padding: 12px 0 !important;
+    }
+
+    #permintaan .toolbar,
+    #penawaran .toolbar {
+        align-items: stretch;
+        flex-direction: column;
+        gap: 14px;
+    }
+
+    #permintaan .request-toolbar-actions,
+    #penawaran .toolbar-actions {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        width: 100%;
+        gap: 9px;
+    }
+
+    #permintaan #addRequestButton,
+    #penawaran #addOfferButton {
+        grid-column: 1 / -1;
+        width: 100%;
+        white-space: normal;
+    }
+
+    #permintaan .request-toolbar-actions .search-box,
+    #penawaran .toolbar-actions .search-box {
+        width: 100%;
+        min-width: 0;
+    }
+
+    #permintaan .request-filters-panel {
+        width: min(520px, calc(100vw - 32px));
+        right: 0;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+        padding: 12px;
+    }
+}
+
+
+/* =========================================
+   PENYEMPURNAAN DIREKTORI USAHA
+   ========================================= */
+
+/* 1. Posisi panel Penawaran Desa */
+#penawaran .offer-toolbar-wrap {
+    position: relative;
+    width: 100%;
+    min-width: 0;
+    margin-bottom: 25px;
+}
+
+#penawaran .offer-toolbar-wrap > .toolbar {
+    margin-bottom: 0;
+}
+
+/* Samakan tombol Filter di kedua tab */
+#permintaan #toggleRequestFilters,
+#penawaran #toggleOfferFilters {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    min-height: 40px;
+    padding: 10px 14px;
+    border: 1px solid #2d6a4f;
+    border-radius: 8px;
+    background: #ffffff;
+    color: #245d40;
+    font-family: "Poppins", sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+#permintaan #toggleRequestFilters:hover,
+#penawaran #toggleOfferFilters:hover {
+    background: #edf5f0;
+}
+
+/* 2. Panel filter tampil dekat dengan tombol Filter */
+#permintaan .request-filter-wrap,
+#penawaran .offer-toolbar-wrap {
+    position: relative;
+}
+
+#permintaan .request-filters-panel {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    width: min(520px, calc(100vw - 32px));
+    z-index: 1200;
+    box-sizing: border-box;
+}
+
+#penawaran .offer-filters-panel {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    width: min(520px, calc(100vw - 32px));
+    margin: 0;
+    padding: 14px;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+    gap: 12px 16px;
+    border: 1px solid #e0e8e2;
+    border-radius: 12px;
+    background: #ffffff;
+    box-shadow: 0 12px 30px rgba(15, 45, 31, 0.14);
+    z-index: 1200;
+    box-sizing: border-box;
+}
+
+#permintaan .request-filters-panel[hidden],
+#penawaran .offer-filters-panel[hidden] {
+    display: none !important;
+}
+
+/* 3. Samakan judul dan pilihan di panel */
+#permintaan .request-filter-column h4,
+#penawaran .offer-filter-column h4 {
+    margin: 0 0 6px;
+    color: #193d2c;
+    font-family: "Poppins", sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.5;
+}
+
+#permintaan .request-filter-option,
+#penawaran .offer-filter-option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    width: 100%;
+    min-height: 32px;
+    padding: 6px 9px;
+    border: 0;
+    border-radius: 7px;
+    background: #ffffff;
+    color: #52665a;
+    font-family: "Poppins", sans-serif;
+    font-size: 12px;
+    line-height: 1.5;
+    text-align: left;
+    cursor: pointer;
+    box-sizing: border-box;
+}
+
+#permintaan .request-filter-option:hover,
+#penawaran .offer-filter-option:hover {
+    background: #f4f7f4;
+}
+
+#permintaan .request-filter-option.active,
+#penawaran .offer-filter-option.active {
+    background: #eaf3ed;
+    color: #24593d;
+    font-weight: 600;
+}
+
+/* Angka jumlah pada setiap pilihan */
+#permintaan .request-filter-count,
+#penawaran .offer-filter-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 5px;
+    border-radius: 20px;
+    background: #edf1ee;
+    color: #466251;
+    font-family: "Poppins", sans-serif;
+    font-size: 10px;
+    line-height: 1;
+    box-sizing: border-box;
+}
+
+/* 4. Ukuran tombol Terapkan dan Reset dibuat konsisten */
+#permintaan .request-filter-footer,
+#penawaran .offer-filter-actions {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    padding-top: 4px;
+}
+
+#permintaan #applyRequestFilters,
+#permintaan #resetRequestFilters,
+#penawaran #applyOfferFilters,
+#penawaran #resetOfferFilters {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: auto;
+    min-width: 0;
+    min-height: 34px;
+    margin: 0;
+    padding: 7px 12px;
+    border: 1px solid #2d6a4f;
+    border-radius: 7px;
+    background: #2d6a4f;
+    color: #ffffff;
+    font-family: "Poppins", sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1.4;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+#permintaan #applyRequestFilters:hover,
+#permintaan #resetRequestFilters:hover,
+#penawaran #applyOfferFilters:hover,
+#penawaran #resetOfferFilters:hover {
+    background: #1b5137;
+    border-color: #1b5137;
+}
+
+/* 5. Status Permintaan Mitra lebih mudah dibedakan */
+#permintaan #requestList .status-baru,
+#detailModal .modal-status.status-baru {
+    background: #e5efff;
+    color: #2454a6;
+    border: 1px solid #bfd3fb;
+}
+
+/* Dalam Proses = amber */
+#permintaan #requestList .status-proses,
+#detailModal .modal-status.status-proses {
+    background: #fff0cc;
+    color: #875300;
+    border: 1px solid #f0d28d;
+}
+
+/* Selesai = hijau */
+#permintaan #requestList .status-selesai,
+#detailModal .modal-status.status-selesai {
+    background: #dff4e7;
+    color: #176b42;
+    border: 1px solid #b9e2c8;
+}
+
+/* Status Penawaran Desa dibedakan secara khusus:
+   Aktif hijau, Ditutup merah lembut. */
+#penawaran #offerList .offer-status-aktif,
+#detailModal .modal-status.offer-status-aktif {
+    background: #dff4e7;
+    color: #176b42;
+    border: 1px solid #b9e2c8;
+}
+
+#penawaran #offerList .offer-status-ditutup,
+#detailModal .modal-status.offer-status-ditutup {
+    background: #fde8e8;
+    color: #a13232;
+    border: 1px solid #f3c2c2;
+}
+
+/* Tampilan filter di ponsel */
+@media (max-width: 480px) {
+    #permintaan .request-filters-panel,
+    #penawaran .offer-filters-panel {
+        width: min(520px, calc(100vw - 32px));
+        padding: 12px;
+        gap: 12px;
+    }
+
+    #permintaan .request-filter-option,
+    #penawaran .offer-filter-option {
+        padding: 6px 7px;
+        font-size: 11px;
+    }
+
+    #permintaan #applyRequestFilters,
+    #permintaan #resetRequestFilters,
+    #penawaran #applyOfferFilters,
+    #penawaran #resetOfferFilters {
+        min-height: 34px;
+        padding: 7px 10px;
+        font-size: 10px;
+    }
+}
+
+
+/* =========================================
+   FINAL FIX: NAVBAR, TOOLBAR, DAN FILTER
+   ========================================= */
+
+/* Samakan batas dalam navbar dengan isi halaman */
+.header .navbar {
+    width: min(1232px, calc(100% - 52px));
+    max-width: 1232px;
+    margin-inline: auto;
+    padding: 14px clamp(20px, 3vw, 48px) !important;
+    box-sizing: border-box;
+}
+
+/* Cegah konten menimbulkan scroll horizontal */
+html,
+body {
+    max-width: 100%;
+    overflow-x: clip;
+}
+
+.directory-page {
+    width: min(1232px, calc(100% - 52px));
+    max-width: 1232px;
+    margin-inline: auto;
+    box-sizing: border-box;
+}
+
+/* Kurangi ruang kosong setelah tab */
+.directory-header {
+    margin-bottom: 28px;
+}
+
+.directory-tabs {
+    margin-bottom: 24px;
+}
+
+/* Samakan struktur toolbar kedua tab */
+#permintaan .toolbar,
+#penawaran .toolbar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: end;
+    gap: 22px;
+    width: 100%;
+    min-width: 0;
+    margin-bottom: 22px;
+    box-sizing: border-box;
+}
+
+#permintaan .toolbar-heading,
+#penawaran .toolbar > div:first-child {
+    min-width: 0;
+}
+
+#permintaan .toolbar h2,
+#penawaran .toolbar h2 {
+    overflow-wrap: anywhere;
+}
+
+#permintaan .toolbar p,
+#penawaran .toolbar p {
+    line-height: 1.6;
+}
+
+/* Tombol, pencarian, dan Filter terpisah dengan jarak konsisten */
+#permintaan .request-toolbar-actions,
+#penawaran .toolbar-actions {
+    display: grid;
+    grid-template-columns: max-content minmax(180px, 280px) max-content;
+    align-items: center;
+    justify-content: end;
+    gap: 10px;
+    min-width: 0;
+    width: auto;
+}
+
+#permintaan #addRequestButton,
+#penawaran #addOfferButton {
+    width: auto;
+    max-width: 100%;
+    min-width: 0;
+}
+
+#permintaan .request-toolbar-actions .search-box,
+#penawaran .toolbar-actions .search-box {
+    width: 100%;
+    min-width: 0;
+}
+
+#permintaan .request-toolbar-actions .search-box input,
+#penawaran .toolbar-actions .search-box input {
+    display: block;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+/* Filter tidak boleh mengecil atau menempel pada pencarian */
+#permintaan .request-filter-wrap {
+    position: relative;
+    flex: none;
+    min-width: max-content;
+}
+
+#permintaan #toggleRequestFilters,
+#penawaran #toggleOfferFilters {
+    width: auto;
+    min-width: 78px;
+    min-height: 40px;
+    padding: 10px 14px;
+    flex-shrink: 0;
+}
+
+/* Panel Permintaan Mitra dan Penawaran Desa */
+#permintaan .request-filters-panel,
+#penawaran .offer-filters-panel {
+    top: calc(100% + 8px);
+    right: 0;
+    width: min(520px, calc(100vw - 32px));
+    max-width: calc(100vw - 32px);
+    margin: 0;
+    padding: 14px;
+    z-index: 1200;
+    box-sizing: border-box;
+}
+
+/* Panel Penawaran mengikuti wrapper toolbar-nya */
+#penawaran .offer-toolbar-wrap {
+    position: relative;
+    width: 100%;
+    min-width: 0;
+    margin-bottom: 22px;
+}
+
+#penawaran .offer-toolbar-wrap > .toolbar {
+    margin-bottom: 0;
+}
+
+#penawaran .offer-filters-panel {
+    position: absolute;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+    gap: 12px 16px;
+}
+
+#penawaran .offer-filters-panel[hidden],
+#permintaan .request-filters-panel[hidden] {
+    display: none !important;
+}
+
+/* Tablet: judul di atas, tombol dan pencarian di baris berikutnya */
+@media (max-width: 1100px) {
+    .directory-page,
+    .header .navbar {
+        width: calc(100% - 40px);
+    }
+
+    #permintaan .toolbar,
+    #penawaran .toolbar {
+        grid-template-columns: minmax(0, 1fr);
+        align-items: stretch;
+        gap: 14px;
+    }
+
+    #permintaan .request-toolbar-actions,
+    #penawaran .toolbar-actions {
+        grid-template-columns: max-content minmax(0, 1fr) max-content;
+        justify-content: stretch;
+        width: 100%;
+    }
+
+    #permintaan .request-toolbar-actions .search-box,
+    #penawaran .toolbar-actions .search-box {
+        width: 100%;
+    }
+}
+
+/* Ponsel: tombol pengajuan di atas, pencarian dan Filter di bawah */
+@media (max-width: 680px) {
+    .directory-page,
+    .header .navbar {
+        width: calc(100% - 32px);
+    }
+
+    .header .navbar {
+        padding: 12px 0 !important;
+    }
+
+    .directory-tabs {
+        margin-bottom: 22px;
+    }
+
+    #permintaan .toolbar,
+    #penawaran .toolbar {
+        gap: 12px;
+    }
+
+    #permintaan .request-toolbar-actions,
+    #penawaran .toolbar-actions {
+        grid-template-columns: minmax(0, 1fr) max-content;
+        gap: 9px;
+        width: 100%;
+    }
+
+    #permintaan #addRequestButton,
+    #penawaran #addOfferButton {
+        grid-column: 1 / -1;
+        width: 100%;
+        white-space: normal;
+    }
+
+    #permintaan .request-toolbar-actions .search-box,
+    #penawaran .toolbar-actions .search-box {
+        width: 100%;
+        min-width: 0;
+    }
+
+    #permintaan .request-filters-panel,
+    #penawaran .offer-filters-panel {
+        width: min(520px, calc(100vw - 32px));
+        max-width: calc(100vw - 32px);
+        padding: 12px;
+        gap: 12px;
+    }
+
+    #penawaran .offer-filters-panel {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+/* Status penawaran desa */
+#penawaran #offerList .card-image-wrapper .status {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 28px;
+    padding: 6px 11px;
+    border-radius: 999px;
+    font-family: "Poppins", sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.3;
+    white-space: nowrap;
+    box-sizing: border-box;
+}
+
+#penawaran #offerList .offer-status-aktif {
+    background: #dff4e7;
+    color: #176b42;
+    border: 1px solid #b9e2c8;
+}
+
+#penawaran #offerList .offer-status-selesai {
+    background: #eeeeee;
+    color: #505b53;
+    border: 1px solid #d8ded9;
+}
+
+#detailModal .modal-status.offer-status-aktif {
+    background: #dff4e7;
+    color: #176b42;
+    border: 1px solid #b9e2c8;
+}
+
+#detailModal .modal-status.offer-status-selesai {
+    background: #eeeeee;
+    color: #505b53;
+    border: 1px solid #d8ded9;
+}
+
+/* =========================================
+   FINAL CARD FIX — PENAWARAN DESA
+   Samakan tampilan dengan Permintaan Mitra
+   ========================================= */
+
+/* Ukuran dan bentuk card */
+#penawaran #offerList .directory-card {
+    display: flex;
+    flex-direction: column;
+    align-self: stretch;
+    min-width: 0;
+    height: 100%;
+    padding: 16px;
+    box-sizing: border-box;
+    border: 1px solid #dce7df;
+    border-radius: 14px;
+    background: #ffffff;
+    box-shadow: 0 2px 8px rgba(15, 45, 31, 0.035);
+}
+
+/* Foto sama dengan Permintaan Mitra */
+#penawaran #offerList .card-image-wrapper {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    margin-bottom: 14px;
+    border-radius: 10px;
+    overflow: hidden;
+    background: #f0f3f0;
+}
+
+#penawaran #offerList .card-image {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+}
+
+/* Judul produk */
+#penawaran #offerList .directory-card h3 {
+    margin: 0 0 8px;
+    color: #103c2b;
+    font-size: 19px;
+    font-weight: 700;
+    line-height: 1.45;
+}
+
+/* Nama petani, kelompok tani, atau BUMDes */
+#penawaran #offerList .card-subtitle {
+    margin: 0 0 18px;
+    color: #34483b;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.6;
+    overflow-wrap: anywhere;
+}
+
+/* Empat informasi utama dalam dua kolom */
+#penawaran #offerList .offer-card-meta {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: stretch;
+    gap: 14px 12px;
+    margin: 0 0 18px;
+}
+
+#penawaran #offerList .offer-card-meta > div {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+    min-width: 0;
+    min-height: 58px;
+    padding: 10px;
+    border-radius: 8px;
+    background: #f5f8f5;
+    box-sizing: border-box;
+}
+
+#penawaran #offerList .offer-card-meta small {
+    display: block;
+    margin-bottom: 4px;
+    color: #748176;
+    font-size: 11px;
+    font-weight: 400;
+    line-height: 1.5;
+}
+
+#penawaran #offerList .offer-card-meta strong {
+    display: block;
+    color: #293b30;
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 1.6;
+    overflow-wrap: anywhere;
+}
+
+/* Catatan mengikuti gaya Permintaan Mitra */
+#penawaran #offerList .card-note {
+    flex: 1;
+    min-width: 0;
+    margin: 0 0 18px;
+}
+
+#penawaran #offerList .card-note small {
+    display: block;
+    margin-bottom: 5px;
+    color: #748176;
+    font-size: 11px;
+}
+
+#penawaran #offerList .card-note p {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    overflow: hidden;
+    margin: 0;
+    color: #4e5c52;
+    font-size: 12px;
+    line-height: 1.7;
+    overflow-wrap: anywhere;
+}
+
+/* KUNCI PERBAIKAN:
+   Kedua tombol berjajar kiri-kanan */
+#penawaran #offerList .card-actions {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
+    align-items: stretch;
+    gap: 9px;
+    width: 100%;
+    min-width: 0;
+    margin-top: auto;
+    padding-top: 4px;
+    box-sizing: border-box;
+}
+
+/* Ukuran tombol disamakan dengan Permintaan Mitra */
+#penawaran #offerList .card-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-width: 0;
+    min-height: 42px;
+    margin-top: 0;
+    padding: 10px 9px;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    font-family: "Poppins", sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.4;
+    text-align: center;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    box-sizing: border-box;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s, color 0.2s;
+}
+
+/* Lihat Detail: putih dengan garis hijau */
+#penawaran #offerList .button-detail {
+    border-color: #2d6a4f;
+    background: #ffffff;
+    color: #245d40;
+}
+
+#penawaran #offerList .button-detail:hover {
+    background: #edf5f0;
+}
+
+/* Nyatakan Minat: hijau */
+#penawaran #offerList .button-offer {
+    border-color: #2d6a4f;
+    background: #2d6a4f;
+    color: #ffffff;
+}
+
+#penawaran #offerList .button-offer:hover {
+    border-color: #214f39;
+    background: #214f39;
+}
+
+/* Status card: ukuran badge konsisten */
+#penawaran #offerList .card-image-wrapper .status {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 28px;
+    padding: 6px 11px;
+    border-radius: 999px;
+    font-family: "Poppins", sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.3;
+    white-space: nowrap;
+    box-sizing: border-box;
+}
+
+/* Tablet: kedua tab sama-sama dua kolom */
+@media (max-width: 1100px) {
+    #permintaan #requestList,
+    #penawaran #offerList.offer-product-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+    }
+}
+
+/* Ponsel: satu card per baris, tombol tetap berdampingan */
+@media (max-width: 680px) {
+    #permintaan #requestList,
+    #penawaran #offerList.offer-product-grid {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 16px;
+    }
+
+    #penawaran #offerList .directory-card {
+        padding: 14px;
+    }
+
+    #penawaran #offerList .directory-card h3 {
+        font-size: 18px;
+    }
+
+    #penawaran #offerList .card-actions {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
+    }
+}
+#penawaran #offerList .button-disabled {
+    border: 1px solid #e0e5e1;
+    background: #ecefed;
+    color: #87928a;
+    cursor: not-allowed;
+}
+
+.offer-right-sidebar {
+    display: flex;
+    flex-direction: column;
+    align-self: start;
+    gap: 14px;
+    min-width: 0;
+}
+
+.offer-right-sidebar .offer-commodities,
+.offer-right-sidebar .offer-information {
+    position: static;
+    float: none;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    margin: 0;
+}
+
+.offer-right-sidebar .offer-information {
+    display: block;
+}
+
+.contact-link {
+    display: block;
+    margin-top: 16px;
+    padding-top: 12px;
+    border-top: 1px solid #e0e8e3;
+    color: #087f5b;
+    font-size: 13px;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.contact-link:hover {
+    color: #064e3b;
+    text-decoration: underline;
+}
+
+/* Profil pengguna setelah login */
+.user-menu {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    margin-left: 12px;
+}
+
+.notification-btn,
+.user-profile-btn {
+    border: none;
+    background: transparent;
+    color: white;
+    cursor: pointer;
+}
+
+.notification-btn {
+    font-size: 18px;
+}
+
+.user-profile-btn {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 5px 10px;
+    text-align: left;
+}
+
+.user-avatar {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: white;
+    color: #08785b;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 23px;
+    flex-shrink: 0;
+}
+
+.user-info {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+}
+
+.user-info strong {
+    color: white;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.user-info small {
+    color: #d9eee7;
+    font-size: 11px;
+}
+
+.dropdown-arrow {
+    font-size: 12px;
+    transition: transform 0.2s;
+}
+
+.user-menu.open .dropdown-arrow {
+    transform: rotate(180deg);
+}
+
+.user-dropdown {
+    display: none;
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    min-width: 170px;
+    padding: 8px;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    z-index: 1000;
+}
+
+.user-menu.open .user-dropdown {
+    display: block;
+}
+
+.user-dropdown a,
+.user-dropdown button {
+    display: block;
+    width: 100%;
+    padding: 11px 12px;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: #173c30;
+    text-align: left;
+    text-decoration: none;
+    font: inherit;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.user-dropdown a:hover,
+.user-dropdown button:hover {
+    background: #edf7f2;
+}
+
+.user-dropdown button {
+    color: #c0392b;
+}

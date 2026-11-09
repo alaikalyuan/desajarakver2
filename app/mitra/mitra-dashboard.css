@@ -1,0 +1,722 @@
+.mitra-dashboard-scope {
+  --green: #08745b;
+  --dark: #064b3d;
+  --ink: #183047;
+  --muted: #65788a;
+  --line: #dfe9ed;
+  --bg: #f4f8f8;
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--ink);
+}
+
+.mitra-dashboard-scope .topbar {
+  min-height: 80px;
+  height: auto;
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  padding: 14px clamp(20px, 4vw, 60px);
+  background: #0f2d1f;
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+.mitra-dashboard-scope .topbar .brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.mitra-dashboard-scope .topbar .brand-logo {
+  display: block;
+  width: 36px;
+  height: 40px;
+  object-fit: contain;
+}
+
+.mitra-dashboard-scope .topbar .brand-name {
+  color: #ffffff;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+}
+
+.mitra-dashboard-scope .topbar .brand-name span {
+  color: #7ec8a0;
+}
+
+.mitra-dashboard-scope .topbar .topnav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: auto;
+  flex: 1;
+  min-width: 0;
+}
+
+.mitra-dashboard-scope .topbar .topnav a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 14px;
+  border-radius: 6px;
+  color: rgba(255, 255, 255, 0.9);
+  background: transparent;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  white-space: nowrap;
+  text-decoration: none;
+  transition: background 0.2s, color 0.2s;
+}
+
+.mitra-dashboard-scope .topbar .topnav a:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.mitra-dashboard-scope .topbar .account {
+  position: relative;
+  flex-shrink: 0;
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.mitra-dashboard-scope .topbar .avatar {
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #ffffff;
+  color: #0f2d1f;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.mitra-dashboard-scope .topbar .account > button {
+  background: none;
+  border: 0;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 600;
+  max-width: 225px;
+}
+
+.mitra-dashboard-scope .topbar .account > button span {
+  margin-left: 8px;
+}
+
+.mitra-dashboard-scope .topbar .account .account-menu {
+  position: absolute;
+  top: 48px;
+  right: 0;
+  background: white;
+  box-shadow: 0 5px 20px rgba(17, 34, 51, 0.2);
+  border-radius: 8px;
+  min-width: 190px;
+  padding: 8px;
+  z-index: 20;
+}
+
+.mitra-dashboard-scope .topbar .account .account-menu a,
+.mitra-dashboard-scope .topbar .account .account-menu button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.mitra-dashboard-scope .topbar .account .account-menu a:hover,
+.mitra-dashboard-scope .topbar .account .account-menu button:hover {
+  background: #f0f8f5;
+}
+
+.mitra-dashboard-scope .sidebar {
+  position: fixed;
+  top: 80px;
+  bottom: 0;
+  left: 0;
+  width: 225px;
+  background: white;
+  border-right: 1px solid var(--line);
+  padding: 24px 12px;
+  display: flex;
+  flex-direction: column;
+  z-index: 2;
+}
+
+.mitra-dashboard-scope .sidebar nav {
+  display: grid;
+  gap: 7px;
+}
+
+.mitra-dashboard-scope .sidebar nav button,
+.mitra-dashboard-scope .sidebar nav a,
+.mitra-dashboard-scope .sidebar > button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 12px 14px;
+  border: 0;
+  border-radius: 8px;
+  background: white;
+  color: #41566a;
+  font-weight: 600;
+  font-size: 13px;
+  text-align: left;
+  text-decoration: none;
+}
+
+.mitra-dashboard-scope .sidebar nav button:hover,
+.mitra-dashboard-scope .sidebar nav a:hover,
+.mitra-dashboard-scope .sidebar > button:hover {
+  background: #f0f8f5;
+}
+
+.mitra-dashboard-scope .sidebar nav button.active,
+.mitra-dashboard-scope .sidebar nav a.active {
+  background: #dff4ee;
+  color: var(--dark);
+  font-weight: 800;
+}
+
+.mitra-dashboard-scope .sidebar nav b {
+  border-radius: 20px;
+  background: #fff0cf;
+  color: #8e5a00;
+  padding: 2px 8px;
+  font-size: 11px;
+}
+
+.mitra-dashboard-scope .sidebar > button {
+  margin-top: auto;
+  color: #a42d29;
+}
+
+.mitra-dashboard-scope main {
+  margin-left: 225px;
+  padding: 30px clamp(18px, 3vw, 45px);
+  max-width: 1750px;
+}
+
+.mitra-dashboard-scope .crumb {
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 16px;
+}
+
+.mitra-dashboard-scope .crumb b {
+  color: var(--ink);
+}
+
+.mitra-dashboard-scope .heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.mitra-dashboard-scope .heading h1 {
+  font-size: 28px;
+  line-height: 1.2;
+  margin: 0 0 7px;
+  font-weight: 800;
+}
+
+.mitra-dashboard-scope .heading p {
+  font-size: 15px;
+  color: var(--muted);
+  margin: 0;
+}
+
+.mitra-dashboard-scope .outline,
+.mitra-dashboard-scope .primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 10px 16px;
+  border: 1px solid #a9d5c8;
+  border-radius: 8px;
+  background: white;
+  color: var(--dark);
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+  text-decoration: none;
+}
+
+.mitra-dashboard-scope .outline:hover {
+  background: #e7f6f0;
+}
+
+.mitra-dashboard-scope .primary {
+  background: var(--green);
+  border-color: var(--green);
+  color: white;
+}
+
+.mitra-dashboard-scope .primary:hover {
+  background: var(--dark);
+}
+
+.mitra-dashboard-scope .panel {
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  box-shadow: 0 5px 20px rgba(21, 68, 65, 0.04);
+  overflow: hidden;
+}
+
+.mitra-dashboard-scope .tabs {
+  display: flex;
+  gap: 4px;
+  padding: 0 18px;
+  border-bottom: 1px solid var(--line);
+  overflow-x: auto;
+}
+
+.mitra-dashboard-scope .tab {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 58px;
+  padding: 10px 13px;
+  background: none;
+  border: 0;
+  border-bottom: 3px solid transparent;
+  color: #53677b;
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.mitra-dashboard-scope .tab.active {
+  border-bottom-color: var(--green);
+  color: var(--dark);
+}
+
+.mitra-dashboard-scope .count {
+  display: grid;
+  place-items: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  background: #e1f2eb;
+  border-radius: 20px;
+  color: var(--dark);
+  font-size: 12px;
+}
+
+.mitra-dashboard-scope .count.amber {
+  background: #fff0cf;
+  color: #98640a;
+}
+
+.mitra-dashboard-scope .count.blue {
+  background: #dcecff;
+  color: #225a9c;
+}
+
+.mitra-dashboard-scope .count.green {
+  background: #d9f5e7;
+  color: #14794c;
+}
+
+.mitra-dashboard-scope .count.red {
+  background: #ffe3e1;
+  color: #a42d29;
+}
+
+.mitra-dashboard-scope .tools {
+  display: flex;
+  gap: 10px;
+  padding: 18px 20px;
+}
+
+.mitra-dashboard-scope .search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  height: 45px;
+  border: 1px solid #d8e3e8;
+  border-radius: 8px;
+  padding: 0 12px;
+  color: #718597;
+}
+
+.mitra-dashboard-scope .search:focus-within {
+  border-color: var(--green);
+}
+
+.mitra-dashboard-scope .search input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: none;
+  font-size: 14px;
+  color: var(--ink);
+}
+
+.mitra-dashboard-scope .search button {
+  border: 0;
+  background: none;
+  font-size: 18px;
+  color: var(--muted);
+}
+
+.mitra-dashboard-scope .filters {
+  margin: 0 20px 16px;
+  padding: 15px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  background: #f6faf9;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.mitra-dashboard-scope .filters label {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.mitra-dashboard-scope .filters select {
+  display: block;
+  margin-top: 5px;
+  min-height: 39px;
+  min-width: 170px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: white;
+  padding: 7px;
+  color: var(--ink);
+}
+
+.mitra-dashboard-scope .linkbutton {
+  border: 0;
+  background: none;
+  color: var(--green);
+  font-weight: 800;
+  padding: 8px;
+}
+
+.mitra-dashboard-scope .table-scroll {
+  overflow-x: auto;
+}
+
+.mitra-dashboard-scope table {
+  width: 100%;
+  min-width: 1040px;
+  border-collapse: collapse;
+}
+
+.mitra-dashboard-scope thead {
+  background: #f5f9f9;
+}
+
+.mitra-dashboard-scope th {
+  padding: 14px 10px;
+  text-align: center;
+  vertical-align: middle;
+  font-size: 12px;
+  color: #42596d;
+  border-block: 1px solid var(--line);
+  white-space: nowrap;
+}
+
+.mitra-dashboard-scope td {
+  padding: 13px 10px;
+  border-bottom: 1px solid #edf1f3;
+  font-size: 13px;
+  white-space: nowrap;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.mitra-dashboard-scope th:first-child,
+.mitra-dashboard-scope td:first-child {
+  padding-left: 20px;
+  color: #718294;
+}
+
+.mitra-dashboard-scope tbody tr:hover {
+  background: #f8fcfb;
+}
+
+.mitra-dashboard-scope .person {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  text-align: left;
+  gap: 9px;
+  white-space: normal;
+  min-width: 160px;
+}
+
+.mitra-dashboard-scope .person-icon {
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #e2f3ed;
+  color: var(--dark);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.mitra-dashboard-scope .person strong,
+.mitra-dashboard-scope .person small {
+  display: block;
+  text-align: left;
+}
+
+.mitra-dashboard-scope .person strong {
+  font-size: 12px;
+}
+
+.mitra-dashboard-scope .person small {
+  font-size: 11px;
+  color: #5c6d7a;
+}
+
+.mitra-dashboard-scope .status {
+  display: inline-block;
+  max-width: 130px;
+  padding: 6px 8px;
+  border-radius: 7px;
+  font-size: 11px;
+  font-weight: 800;
+  white-space: normal;
+  text-align: center;
+}
+
+.mitra-dashboard-scope .status.wait {
+  background: #fff0d0;
+  color: #8e5a00;
+}
+
+.mitra-dashboard-scope .status.progress {
+  background: #e2efff;
+  color: #1c5796;
+}
+
+.mitra-dashboard-scope .status.done {
+  background: #d9f4e7;
+  color: #116c43;
+}
+
+.mitra-dashboard-scope .status.rejected {
+  background: #ffe4e2;
+  color: #a52d2a;
+}
+
+.mitra-dashboard-scope .detail-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 34px;
+  padding: 7px 12px;
+  background: white;
+  border: 1px solid #a8d8c7;
+  border-radius: 6px;
+  color: var(--dark);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.mitra-dashboard-scope .detail-button:hover {
+  background: #e4f5ef;
+}
+
+.mitra-dashboard-scope .expanded-row > td {
+  padding: 0;
+  white-space: normal;
+  background: #f4f9f6;
+  border-bottom: 1px solid #dceae3;
+  text-align: left;
+}
+
+.mitra-dashboard-scope .expanded-panel {
+  padding: 22px 24px;
+  border-left: 4px solid #08745b;
+}
+
+.mitra-dashboard-scope .expanded-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.mitra-dashboard-scope .expanded-label {
+  color: #08745b;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.2px;
+}
+
+.mitra-dashboard-scope .expanded-heading h3 {
+  margin: 4px 0 0;
+  font-size: 20px;
+  line-height: 1.4;
+  color: #183b30;
+}
+
+.mitra-dashboard-scope .expanded-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.mitra-dashboard-scope .expanded-item {
+  min-width: 0;
+  padding: 12px 15px;
+  background: #ffffff;
+  border: 1px solid #e0ebe5;
+  border-radius: 10px;
+}
+
+.mitra-dashboard-scope .expanded-item span,
+.mitra-dashboard-scope .expanded-request span {
+  display: block;
+  color: #5c7063;
+  font-size: 12px;
+  margin-bottom: 4px;
+}
+
+.mitra-dashboard-scope .expanded-item strong,
+.mitra-dashboard-scope .expanded-request strong {
+  display: block;
+  color: #203b31;
+  font-size: 14px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.mitra-dashboard-scope .expanded-request {
+  width: fit-content;
+  max-width: min(100%, 620px);
+  margin: 18px auto 0;
+  padding: 12px 24px;
+  text-align: center;
+  background: #ffffff;
+  border: 1px solid #cfe4d8;
+  border-radius: 12px;
+}
+
+.mitra-dashboard-scope .expanded-actions {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.mitra-dashboard-scope .footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  border-top: 1px solid var(--line);
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.mitra-dashboard-scope .empty {
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.mitra-dashboard-scope .empty h2 {
+  font-size: 20px;
+  margin-bottom: 6px;
+}
+
+.mitra-dashboard-scope .note {
+  color: var(--muted);
+  font-size: 13px;
+  margin: 14px 2px;
+}
+
+.mitra-dashboard-scope .toast {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  padding: 14px 18px;
+  border-radius: 8px;
+  background: #173c34;
+  color: white;
+  box-shadow: 0 5px 20px rgba(17, 34, 51, 0.25);
+  z-index: 50;
+}
+
+@media (max-width: 900px) {
+  .mitra-dashboard-scope .sidebar {
+    position: static;
+    width: 100%;
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+    padding: 12px 16px;
+  }
+
+  .mitra-dashboard-scope .sidebar nav {
+    display: flex;
+    overflow-x: auto;
+    gap: 8px;
+  }
+
+  .mitra-dashboard-scope .sidebar nav button,
+  .mitra-dashboard-scope .sidebar nav a {
+    width: auto;
+    white-space: nowrap;
+  }
+
+  .mitra-dashboard-scope .sidebar > button {
+    display: none;
+  }
+
+  .mitra-dashboard-scope main {
+    margin-left: 0;
+    padding: 20px 16px;
+  }
+
+  .mitra-dashboard-scope .expanded-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .mitra-dashboard-scope .expanded-grid {
+    grid-template-columns: 1fr;
+  }
+}
