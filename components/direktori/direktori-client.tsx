@@ -141,6 +141,65 @@ function getOfferCoverageKey(item: DirectoryOfferItem): string {
   return "jawa_timur";
 }
 
+const JENIS_FILTER_OPTIONS = [
+  { key: "semua", label: "Semua jenis" },
+  { key: "pertanian_perkebunan", label: "Pertanian & Perkebunan" },
+  { key: "peternakan_perikanan", label: "Peternakan & Perikanan" },
+  { key: "olahan_kuliner", label: "Produk Olahan & Kuliner" },
+  { key: "kerajinan", label: "Kerajinan" },
+  { key: "jasa", label: "Jasa" },
+] as const;
+
+type JenisFilterKey = (typeof JENIS_FILTER_OPTIONS)[number]["key"];
+
+function getListingJenisGroup(
+  category = "",
+  title = "",
+  summary = ""
+): Exclude<JenisFilterKey, "semua"> {
+  const text = `${category} ${title} ${summary}`.toLowerCase();
+  if (
+    category.toLowerCase() === "jasa" ||
+    text.includes("jasa") ||
+    text.includes("layanan pengolahan lahan") ||
+    text.includes("sewa alat")
+  ) {
+    return "jasa";
+  }
+  if (
+    text.includes("kerajinan") ||
+    text.includes("anyaman") ||
+    text.includes("kriya") ||
+    text.includes("souvenir")
+  ) {
+    return "kerajinan";
+  }
+  if (
+    text.includes("olahan") ||
+    text.includes("kuliner") ||
+    text.includes("keripik") ||
+    text.includes("sambal") ||
+    text.includes("kemasan") && text.includes("pangan olahan")
+  ) {
+    return "olahan_kuliner";
+  }
+  if (
+    text.includes("peternakan") ||
+    text.includes("perikanan") ||
+    text.includes("telur") ||
+    text.includes("unggas") ||
+    text.includes("susu") ||
+    text.includes("kambing") ||
+    text.includes("sapi") ||
+    text.includes("ikan") ||
+    text.includes("lele") ||
+    text.includes("nila")
+  ) {
+    return "peternakan_perikanan";
+  }
+  return "pertanian_perkebunan";
+}
+
 function getOfferCoverageLabel(item: DirectoryOfferItem): string {
   const key = getOfferCoverageKey(item);
   if (key === "nasional") return "Nasional";
@@ -165,21 +224,49 @@ export function DirektoriClient({
   // Request search & filters
   const [requestSearch, setRequestSearch] = useState("");
   const [requestFilterOpen, setRequestFilterOpen] = useState(false);
+  const [draftReqJenis, setDraftReqJenis] = useState<JenisFilterKey>("semua");
   const [draftReqStatus, setDraftReqStatus] = useState("semua");
   const [draftReqLocation, setDraftReqLocation] = useState("semua");
+  const [appliedReqJenis, setAppliedReqJenis] =
+    useState<JenisFilterKey>("semua");
   const [appliedReqStatus, setAppliedReqStatus] = useState("semua");
   const [appliedReqLocation, setAppliedReqLocation] = useState("semua");
+  const [reqOpenSections, setReqOpenSections] = useState<{
+    jenis: boolean;
+    status: boolean;
+    location: boolean;
+  }>({
+    jenis: false,
+    status: false,
+    location: false,
+  });
   const reqFilterRef = useRef<HTMLDivElement>(null);
 
   // Offer search & filters
   const [offerSearch, setOfferSearch] = useState("");
   const [offerFilterOpen, setOfferFilterOpen] = useState(false);
+  const [draftOfferJenis, setDraftOfferJenis] =
+    useState<JenisFilterKey>("semua");
   const [draftOfferAvail, setDraftOfferAvail] = useState("semua");
   const [draftOfferStatus, setDraftOfferStatus] = useState("semua");
   const [draftOfferCoverage, setDraftOfferCoverage] = useState("semua");
+  const [appliedOfferJenis, setAppliedOfferJenis] =
+    useState<JenisFilterKey>("semua");
   const [appliedOfferAvail, setAppliedOfferAvail] = useState("semua");
   const [appliedOfferStatus, setAppliedOfferStatus] = useState("semua");
   const [appliedOfferCoverage, setAppliedOfferCoverage] = useState("semua");
+  const [offerOpenSections, setOfferOpenSections] = useState<{
+    jenis: boolean;
+    availability: boolean;
+    status: boolean;
+    coverage: boolean;
+  }>({
+    jenis: false,
+    availability: false,
+    status: false,
+    coverage: false,
+  });
+  const offerFilterRef = useRef<HTMLDivElement>(null);
 
   // Modal state
   const [selectedModal, setSelectedModal] = useState<
@@ -255,6 +342,12 @@ export function DirektoriClient({
       ) {
         setRequestFilterOpen(false);
       }
+      if (
+        offerFilterRef.current &&
+        !offerFilterRef.current.contains(event.target as Node)
+      ) {
+        setOfferFilterOpen(false);
+      }
     }
     document.addEventListener("click", handleOutsideClick);
     return () => document.removeEventListener("click", handleOutsideClick);
@@ -279,6 +372,33 @@ export function DirektoriClient({
     });
 
     return {
+      jenis: {
+        semua: base.length,
+        pertanian_perkebunan: base.filter(
+          (i) =>
+            getListingJenisGroup(i.category, i.title, i.summary) ===
+            "pertanian_perkebunan"
+        ).length,
+        peternakan_perikanan: base.filter(
+          (i) =>
+            getListingJenisGroup(i.category, i.title, i.summary) ===
+            "peternakan_perikanan"
+        ).length,
+        olahan_kuliner: base.filter(
+          (i) =>
+            getListingJenisGroup(i.category, i.title, i.summary) ===
+            "olahan_kuliner"
+        ).length,
+        kerajinan: base.filter(
+          (i) =>
+            getListingJenisGroup(i.category, i.title, i.summary) ===
+            "kerajinan"
+        ).length,
+        jasa: base.filter(
+          (i) =>
+            getListingJenisGroup(i.category, i.title, i.summary) === "jasa"
+        ).length,
+      },
       status: {
         semua: base.length,
         Baru: base.filter((i) => normalizeRequestStatus(i.status) === "Baru")
@@ -292,8 +412,9 @@ export function DirektoriClient({
       },
       location: {
         semua: base.length,
-        jatim: base.filter((i) => getRequestLocationGroup(i.location) === "jatim")
-          .length,
+        jatim: base.filter(
+          (i) => getRequestLocationGroup(i.location) === "jatim"
+        ).length,
         luar_jatim: base.filter(
           (i) => getRequestLocationGroup(i.location) === "luar_jatim"
         ).length,
@@ -318,6 +439,10 @@ export function DirektoriClient({
         .toLowerCase();
 
       const matchKeyword = !keyword || text.includes(keyword);
+      const matchJenis =
+        appliedReqJenis === "semua" ||
+        getListingJenisGroup(item.category, item.title, item.summary) ===
+          appliedReqJenis;
       const matchStatus =
         appliedReqStatus === "semua" ||
         normalizeRequestStatus(item.status) === appliedReqStatus;
@@ -325,9 +450,15 @@ export function DirektoriClient({
         appliedReqLocation === "semua" ||
         getRequestLocationGroup(item.location) === appliedReqLocation;
 
-      return matchKeyword && matchStatus && matchLoc;
+      return matchKeyword && matchJenis && matchStatus && matchLoc;
     });
-  }, [requests, requestSearch, appliedReqStatus, appliedReqLocation]);
+  }, [
+    requests,
+    requestSearch,
+    appliedReqJenis,
+    appliedReqStatus,
+    appliedReqLocation,
+  ]);
 
   // Counts for Offer filters
   const offerCounts = useMemo(() => {
@@ -348,6 +479,33 @@ export function DirektoriClient({
     });
 
     return {
+      jenis: {
+        semua: base.length,
+        pertanian_perkebunan: base.filter(
+          (i) =>
+            getListingJenisGroup(i.category, i.title, i.summary) ===
+            "pertanian_perkebunan"
+        ).length,
+        peternakan_perikanan: base.filter(
+          (i) =>
+            getListingJenisGroup(i.category, i.title, i.summary) ===
+            "peternakan_perikanan"
+        ).length,
+        olahan_kuliner: base.filter(
+          (i) =>
+            getListingJenisGroup(i.category, i.title, i.summary) ===
+            "olahan_kuliner"
+        ).length,
+        kerajinan: base.filter(
+          (i) =>
+            getListingJenisGroup(i.category, i.title, i.summary) ===
+            "kerajinan"
+        ).length,
+        jasa: base.filter(
+          (i) =>
+            getListingJenisGroup(i.category, i.title, i.summary) === "jasa"
+        ).length,
+      },
       availability: {
         semua: base.length,
         stok: base.filter((i) => normalizeOfferAvailabilityKey(i) === "stok")
@@ -393,6 +551,10 @@ export function DirektoriClient({
         .toLowerCase();
 
       const matchKeyword = !keyword || text.includes(keyword);
+      const matchJenis =
+        appliedOfferJenis === "semua" ||
+        getListingJenisGroup(item.category, item.title, item.summary) ===
+          appliedOfferJenis;
       const matchAvail =
         appliedOfferAvail === "semua" ||
         normalizeOfferAvailabilityKey(item) === appliedOfferAvail;
@@ -403,11 +565,14 @@ export function DirektoriClient({
         appliedOfferCoverage === "semua" ||
         getOfferCoverageKey(item) === appliedOfferCoverage;
 
-      return matchKeyword && matchAvail && matchStatus && matchCov;
+      return (
+        matchKeyword && matchJenis && matchAvail && matchStatus && matchCov
+      );
     });
   }, [
     offers,
     offerSearch,
+    appliedOfferJenis,
     appliedOfferAvail,
     appliedOfferStatus,
     appliedOfferCoverage,
@@ -532,57 +697,154 @@ export function DirektoriClient({
 
                 <div
                   id="requestFiltersPanel"
-                  className="request-filters-panel"
+                  className="request-filters-panel filter-accordion-panel"
                   hidden={!requestFilterOpen}
                 >
-                  <div className="request-filter-column">
-                    <h4>Status Permintaan</h4>
+                  {/* Accordion 1: Jenis */}
+                  <div className="filter-accordion-section">
+                    <button
+                      type="button"
+                      className={`filter-accordion-header ${
+                        reqOpenSections.jenis ? "open" : ""
+                      }`}
+                      aria-expanded={reqOpenSections.jenis}
+                      onClick={() =>
+                        setReqOpenSections((prev) => ({
+                          ...prev,
+                          jenis: !prev.jenis,
+                        }))
+                      }
+                    >
+                      <span>Jenis</span>
+                      <span
+                        className="filter-accordion-chevron"
+                        aria-hidden="true"
+                      >
+                        {reqOpenSections.jenis ? "^" : "v"}
+                      </span>
+                    </button>
 
-                    {(["semua", "Baru", "Dalam Proses", "Selesai"] as const).map(
-                      (statusKey) => (
-                        <button
-                          key={statusKey}
-                          type="button"
-                          className={`request-filter-option ${
-                            draftReqStatus === statusKey ? "active" : ""
-                          }`}
-                          onClick={() => setDraftReqStatus(statusKey)}
-                        >
-                          <span>
-                            {statusKey === "semua" ? "Semua status" : statusKey}
-                          </span>
-                          <span className="request-filter-count">
-                            {reqCounts.status[statusKey]}
-                          </span>
-                        </button>
-                      )
+                    {reqOpenSections.jenis && (
+                      <div className="filter-accordion-body">
+                        {JENIS_FILTER_OPTIONS.map((opt) => (
+                          <button
+                            key={opt.key}
+                            type="button"
+                            className={`request-filter-option ${
+                              draftReqJenis === opt.key ? "active" : ""
+                            }`}
+                            onClick={() => setDraftReqJenis(opt.key)}
+                          >
+                            <span>{opt.label}</span>
+                            <span className="request-filter-count">
+                              {reqCounts.jenis[opt.key]}
+                            </span>
+                          </button>
+                        ))}
+                      </div>
                     )}
                   </div>
 
-                  <div className="request-filter-column">
-                    <h4>Lokasi Permintaan</h4>
-
-                    {(
-                      [
-                        { key: "semua", label: "Semua lokasi" },
-                        { key: "jatim", label: "Jawa Timur" },
-                        { key: "luar_jatim", label: "Luar Jawa Timur" },
-                      ] as const
-                    ).map((loc) => (
-                      <button
-                        key={loc.key}
-                        type="button"
-                        className={`request-filter-option ${
-                          draftReqLocation === loc.key ? "active" : ""
-                        }`}
-                        onClick={() => setDraftReqLocation(loc.key)}
+                  {/* Accordion 2: Status Permintaan */}
+                  <div className="filter-accordion-section">
+                    <button
+                      type="button"
+                      className={`filter-accordion-header ${
+                        reqOpenSections.status ? "open" : ""
+                      }`}
+                      aria-expanded={reqOpenSections.status}
+                      onClick={() =>
+                        setReqOpenSections((prev) => ({
+                          ...prev,
+                          status: !prev.status,
+                        }))
+                      }
+                    >
+                      <span>Status Permintaan</span>
+                      <span
+                        className="filter-accordion-chevron"
+                        aria-hidden="true"
                       >
-                        <span>{loc.label}</span>
-                        <span className="request-filter-count">
-                          {reqCounts.location[loc.key]}
-                        </span>
-                      </button>
-                    ))}
+                        {reqOpenSections.status ? "^" : "v"}
+                      </span>
+                    </button>
+
+                    {reqOpenSections.status && (
+                      <div className="filter-accordion-body">
+                        {(
+                          ["semua", "Baru", "Dalam Proses", "Selesai"] as const
+                        ).map((statusKey) => (
+                          <button
+                            key={statusKey}
+                            type="button"
+                            className={`request-filter-option ${
+                              draftReqStatus === statusKey ? "active" : ""
+                            }`}
+                            onClick={() => setDraftReqStatus(statusKey)}
+                          >
+                            <span>
+                              {statusKey === "semua"
+                                ? "Semua status"
+                                : statusKey}
+                            </span>
+                            <span className="request-filter-count">
+                              {reqCounts.status[statusKey]}
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Accordion 3: Lokasi Permintaan */}
+                  <div className="filter-accordion-section">
+                    <button
+                      type="button"
+                      className={`filter-accordion-header ${
+                        reqOpenSections.location ? "open" : ""
+                      }`}
+                      aria-expanded={reqOpenSections.location}
+                      onClick={() =>
+                        setReqOpenSections((prev) => ({
+                          ...prev,
+                          location: !prev.location,
+                        }))
+                      }
+                    >
+                      <span>Lokasi Permintaan</span>
+                      <span
+                        className="filter-accordion-chevron"
+                        aria-hidden="true"
+                      >
+                        {reqOpenSections.location ? "^" : "v"}
+                      </span>
+                    </button>
+
+                    {reqOpenSections.location && (
+                      <div className="filter-accordion-body">
+                        {(
+                          [
+                            { key: "semua", label: "Semua lokasi" },
+                            { key: "jatim", label: "Jawa Timur" },
+                            { key: "luar_jatim", label: "Luar Jawa Timur" },
+                          ] as const
+                        ).map((loc) => (
+                          <button
+                            key={loc.key}
+                            type="button"
+                            className={`request-filter-option ${
+                              draftReqLocation === loc.key ? "active" : ""
+                            }`}
+                            onClick={() => setDraftReqLocation(loc.key)}
+                          >
+                            <span>{loc.label}</span>
+                            <span className="request-filter-count">
+                              {reqCounts.location[loc.key]}
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
 
                   <div className="request-filter-footer">
@@ -591,6 +853,7 @@ export function DirektoriClient({
                       className="secondary-button"
                       id="applyRequestFilters"
                       onClick={() => {
+                        setAppliedReqJenis(draftReqJenis);
                         setAppliedReqStatus(draftReqStatus);
                         setAppliedReqLocation(draftReqLocation);
                         setRequestFilterOpen(false);
@@ -604,8 +867,10 @@ export function DirektoriClient({
                       className="secondary-button"
                       id="resetRequestFilters"
                       onClick={() => {
+                        setDraftReqJenis("semua");
                         setDraftReqStatus("semua");
                         setDraftReqLocation("semua");
+                        setAppliedReqJenis("semua");
                         setAppliedReqStatus("semua");
                         setAppliedReqLocation("semua");
                         setRequestFilterOpen(false);
@@ -716,7 +981,7 @@ export function DirektoriClient({
             activeTab === "penawaran" ? "active" : ""
           }`}
         >
-          <div className="offer-toolbar-wrap">
+          <div className="offer-toolbar-wrap" ref={offerFilterRef}>
             <div className="toolbar">
               <div>
                 <h2>Penawaran Desa</h2>
@@ -761,80 +1026,207 @@ export function DirektoriClient({
 
             <div
               id="offerFiltersPanel"
-              className="offer-filters-panel"
+              className="offer-filters-panel filter-accordion-panel"
               hidden={!offerFilterOpen}
             >
-              <div className="offer-filter-column">
-                <h4>Ketersediaan</h4>
-                {(
-                  [
-                    { key: "semua", label: "Semua ketersediaan" },
-                    { key: "stok", label: "Stok tersedia" },
-                    { key: "po", label: "Pre-Order (PO)" },
-                    { key: "musiman", label: "Musiman" },
-                  ] as const
-                ).map((opt) => (
-                  <button
-                    key={opt.key}
-                    type="button"
-                    className={`offer-filter-option ${
-                      draftOfferAvail === opt.key ? "active" : ""
-                    }`}
-                    onClick={() => setDraftOfferAvail(opt.key)}
+              {/* Accordion 1: Jenis */}
+              <div className="filter-accordion-section">
+                <button
+                  type="button"
+                  className={`filter-accordion-header ${
+                    offerOpenSections.jenis ? "open" : ""
+                  }`}
+                  aria-expanded={offerOpenSections.jenis}
+                  onClick={() =>
+                    setOfferOpenSections((prev) => ({
+                      ...prev,
+                      jenis: !prev.jenis,
+                    }))
+                  }
+                >
+                  <span>Jenis</span>
+                  <span
+                    className="filter-accordion-chevron"
+                    aria-hidden="true"
                   >
-                    <span>{opt.label}</span>
-                    <span className="offer-filter-count">
-                      {offerCounts.availability[opt.key]}
-                    </span>
-                  </button>
-                ))}
+                    {offerOpenSections.jenis ? "^" : "v"}
+                  </span>
+                </button>
+
+                {offerOpenSections.jenis && (
+                  <div className="filter-accordion-body">
+                    {JENIS_FILTER_OPTIONS.map((opt) => (
+                      <button
+                        key={opt.key}
+                        type="button"
+                        className={`offer-filter-option ${
+                          draftOfferJenis === opt.key ? "active" : ""
+                        }`}
+                        onClick={() => setDraftOfferJenis(opt.key)}
+                      >
+                        <span>{opt.label}</span>
+                        <span className="offer-filter-count">
+                          {offerCounts.jenis[opt.key]}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
 
-              <div className="offer-filter-column">
-                <h4>Status Penawaran</h4>
-                {(["semua", "Aktif", "Selesai"] as const).map((statusKey) => (
-                  <button
-                    key={statusKey}
-                    type="button"
-                    className={`offer-filter-option ${
-                      draftOfferStatus === statusKey ? "active" : ""
-                    }`}
-                    onClick={() => setDraftOfferStatus(statusKey)}
+              {/* Accordion 2: Ketersediaan */}
+              <div className="filter-accordion-section">
+                <button
+                  type="button"
+                  className={`filter-accordion-header ${
+                    offerOpenSections.availability ? "open" : ""
+                  }`}
+                  aria-expanded={offerOpenSections.availability}
+                  onClick={() =>
+                    setOfferOpenSections((prev) => ({
+                      ...prev,
+                      availability: !prev.availability,
+                    }))
+                  }
+                >
+                  <span>Ketersediaan</span>
+                  <span
+                    className="filter-accordion-chevron"
+                    aria-hidden="true"
                   >
-                    <span>
-                      {statusKey === "semua" ? "Semua status" : statusKey}
-                    </span>
-                    <span className="offer-filter-count">
-                      {offerCounts.status[statusKey]}
-                    </span>
-                  </button>
-                ))}
+                    {offerOpenSections.availability ? "^" : "v"}
+                  </span>
+                </button>
+
+                {offerOpenSections.availability && (
+                  <div className="filter-accordion-body">
+                    {(
+                      [
+                        { key: "semua", label: "Semua ketersediaan" },
+                        { key: "stok", label: "Stok tersedia" },
+                        { key: "po", label: "Pre-Order (PO)" },
+                        { key: "musiman", label: "Musiman" },
+                      ] as const
+                    ).map((opt) => (
+                      <button
+                        key={opt.key}
+                        type="button"
+                        className={`offer-filter-option ${
+                          draftOfferAvail === opt.key ? "active" : ""
+                        }`}
+                        onClick={() => setDraftOfferAvail(opt.key)}
+                      >
+                        <span>{opt.label}</span>
+                        <span className="offer-filter-count">
+                          {offerCounts.availability[opt.key]}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
 
-              <div className="offer-filter-column">
-                <h4>Jangkauan</h4>
-                {(
-                  [
-                    { key: "semua", label: "Semua jangkauan" },
-                    { key: "jawa_timur", label: "Jawa Timur" },
-                    { key: "pulau_jawa", label: "Pulau Jawa" },
-                    { key: "nasional", label: "Nasional" },
-                  ] as const
-                ).map((cov) => (
-                  <button
-                    key={cov.key}
-                    type="button"
-                    className={`offer-filter-option ${
-                      draftOfferCoverage === cov.key ? "active" : ""
-                    }`}
-                    onClick={() => setDraftOfferCoverage(cov.key)}
+              {/* Accordion 3: Status Penawaran */}
+              <div className="filter-accordion-section">
+                <button
+                  type="button"
+                  className={`filter-accordion-header ${
+                    offerOpenSections.status ? "open" : ""
+                  }`}
+                  aria-expanded={offerOpenSections.status}
+                  onClick={() =>
+                    setOfferOpenSections((prev) => ({
+                      ...prev,
+                      status: !prev.status,
+                    }))
+                  }
+                >
+                  <span>Status Penawaran</span>
+                  <span
+                    className="filter-accordion-chevron"
+                    aria-hidden="true"
                   >
-                    <span>{cov.label}</span>
-                    <span className="offer-filter-count">
-                      {offerCounts.coverage[cov.key]}
-                    </span>
-                  </button>
-                ))}
+                    {offerOpenSections.status ? "^" : "v"}
+                  </span>
+                </button>
+
+                {offerOpenSections.status && (
+                  <div className="filter-accordion-body">
+                    {(["semua", "Aktif", "Selesai"] as const).map(
+                      (statusKey) => (
+                        <button
+                          key={statusKey}
+                          type="button"
+                          className={`offer-filter-option ${
+                            draftOfferStatus === statusKey ? "active" : ""
+                          }`}
+                          onClick={() => setDraftOfferStatus(statusKey)}
+                        >
+                          <span>
+                            {statusKey === "semua"
+                              ? "Semua status"
+                              : statusKey}
+                          </span>
+                          <span className="offer-filter-count">
+                            {offerCounts.status[statusKey]}
+                          </span>
+                        </button>
+                      )
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Accordion 4: Jangkauan */}
+              <div className="filter-accordion-section">
+                <button
+                  type="button"
+                  className={`filter-accordion-header ${
+                    offerOpenSections.coverage ? "open" : ""
+                  }`}
+                  aria-expanded={offerOpenSections.coverage}
+                  onClick={() =>
+                    setOfferOpenSections((prev) => ({
+                      ...prev,
+                      coverage: !prev.coverage,
+                    }))
+                  }
+                >
+                  <span>Jangkauan</span>
+                  <span
+                    className="filter-accordion-chevron"
+                    aria-hidden="true"
+                  >
+                    {offerOpenSections.coverage ? "^" : "v"}
+                  </span>
+                </button>
+
+                {offerOpenSections.coverage && (
+                  <div className="filter-accordion-body">
+                    {(
+                      [
+                        { key: "semua", label: "Semua jangkauan" },
+                        { key: "jawa_timur", label: "Jawa Timur" },
+                        { key: "pulau_jawa", label: "Pulau Jawa" },
+                        { key: "nasional", label: "Nasional" },
+                      ] as const
+                    ).map((cov) => (
+                      <button
+                        key={cov.key}
+                        type="button"
+                        className={`offer-filter-option ${
+                          draftOfferCoverage === cov.key ? "active" : ""
+                        }`}
+                        onClick={() => setDraftOfferCoverage(cov.key)}
+                      >
+                        <span>{cov.label}</span>
+                        <span className="offer-filter-count">
+                          {offerCounts.coverage[cov.key]}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <div className="offer-filter-actions">
@@ -843,6 +1235,7 @@ export function DirektoriClient({
                   className="secondary-button"
                   id="applyOfferFilters"
                   onClick={() => {
+                    setAppliedOfferJenis(draftOfferJenis);
                     setAppliedOfferAvail(draftOfferAvail);
                     setAppliedOfferStatus(draftOfferStatus);
                     setAppliedOfferCoverage(draftOfferCoverage);
@@ -857,9 +1250,11 @@ export function DirektoriClient({
                   className="secondary-button"
                   id="resetOfferFilters"
                   onClick={() => {
+                    setDraftOfferJenis("semua");
                     setDraftOfferAvail("semua");
                     setDraftOfferStatus("semua");
                     setDraftOfferCoverage("semua");
+                    setAppliedOfferJenis("semua");
                     setAppliedOfferAvail("semua");
                     setAppliedOfferStatus("semua");
                     setAppliedOfferCoverage("semua");

@@ -2143,7 +2143,7 @@ html {
     position: absolute;
     top: calc(100% + 10px);
     right: 0;
-    z-index: 1100;
+    z-index: 100;
     width: min(520px, calc(100vw - 32px));
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -2285,7 +2285,7 @@ html {
 /* 4. Samakan visual panel filter kedua tab */
 #permintaan .request-filters-panel,
 #penawaran .offer-filters-panel {
-    z-index: 1100;
+    z-index: 100;
     width: min(520px, calc(100vw - 32px));
     padding: 14px;
     border: 1px solid #e0e8e2;
@@ -2617,7 +2617,7 @@ html {
     top: calc(100% + 8px);
     right: 0;
     width: min(520px, calc(100vw - 32px));
-    z-index: 1200;
+    z-index: 100;
     box-sizing: border-box;
 }
 
@@ -2636,7 +2636,7 @@ html {
     border-radius: 12px;
     background: #ffffff;
     box-shadow: 0 12px 30px rgba(15, 45, 31, 0.14);
-    z-index: 1200;
+    z-index: 100;
     box-sizing: border-box;
 }
 
@@ -2940,7 +2940,7 @@ body {
     max-width: calc(100vw - 32px);
     margin: 0;
     padding: 14px;
-    z-index: 1200;
+    z-index: 100;
     box-sizing: border-box;
 }
 
@@ -3472,4 +3472,104 @@ body {
 
 .user-dropdown button {
     color: #c0392b;
+}
+
+
+/* =========================================
+   ACCORDION FILTER PANEL (PERMINTAAN & PENAWARAN)
+   ========================================= */
+
+#permintaan .request-filters-panel.filter-accordion-panel,
+#penawaran .offer-filters-panel.filter-accordion-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    width: min(360px, calc(100vw - 32px));
+    max-width: calc(100vw - 32px);
+    padding: 16px 18px;
+    border: 1px solid #e0e8e2;
+    border-radius: 14px;
+    background: #ffffff;
+    box-shadow: 0 12px 32px rgba(15, 45, 31, 0.14);
+    box-sizing: border-box;
+    z-index: 100;
+    max-height: calc(100vh - 120px);
+    overflow-y: auto;
+}
+
+.filter-accordion-section {
+    display: flex;
+    flex-direction: column;
+    border-bottom: 1px solid #e8efea;
+    padding: 4px 0;
+}
+
+.filter-accordion-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 11px 12px;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: #163a29;
+    font-family: "Poppins", sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.4;
+    text-align: left;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+    box-sizing: border-box;
+}
+
+.filter-accordion-header:hover {
+    background: #f4f8f5;
+}
+
+.filter-accordion-header.open {
+    background: #edf5f0;
+    color: #163a29;
+}
+
+.filter-accordion-chevron {
+    font-size: 12px;
+    font-weight: 700;
+    color: #163a29;
+    line-height: 1;
+}
+
+.filter-accordion-body {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 8px 6px 10px;
+}
+
+#permintaan .filter-accordion-panel .request-filter-option,
+#penawaran .filter-accordion-panel .offer-filter-option {
+    padding: 8px 12px;
+    border-radius: 8px;
+}
+
+#permintaan .filter-accordion-panel .request-filter-footer,
+#penawaran .filter-accordion-panel .offer-filter-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    padding-top: 14px;
+    margin-top: 2px;
+}
+
+#permintaan .filter-accordion-panel #applyRequestFilters,
+#permintaan .filter-accordion-panel #resetRequestFilters,
+#penawaran .filter-accordion-panel #applyOfferFilters,
+#penawaran .filter-accordion-panel #resetOfferFilters {
+    min-height: 36px;
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-size: 11.5px;
+    font-weight: 600;
 }
