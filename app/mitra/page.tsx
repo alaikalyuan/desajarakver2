@@ -16,6 +16,7 @@ interface IncomingOfferItem {
   volume: string;
   volumeKg: number;
   harga: number;
+  hargaLabel: string;
   tanggal: string;
   tanggalLabel: string;
   status: OfferStatusLabel;
@@ -53,9 +54,11 @@ function initials(name: string): string {
     .toUpperCase();
 }
 
-function rupiah(value: number): string {
-  if (!value) return "-";
-  return `Rp ${value.toLocaleString("id-ID")} / Kg`;
+// Sort key only: the first price in a note like "Rp11.800 - Rp12.300/kg".
+// The note itself is shown as the seller wrote it.
+function firstPrice(note: string): number {
+  const match = note.match(/\d[\d.]*/);
+  return match ? Number(match[0].replace(/\./g, "")) || 0 : 0;
 }
 
 export default function MitraDashboardPage() {
@@ -140,9 +143,7 @@ export default function MitraDashboardPage() {
           const qtyNum = Number(entry.data.quantity) || 1;
           const volKg =
             entry.data.unit === "ton" ? qtyNum * 1000 : qtyNum;
-          const priceDigits = Number(
-            (entry.data.priceNote || "").replace(/[^\d]/g, "")
-          );
+          const priceNote = (entry.data.priceNote || "").trim();
           return {
             id: entry.id,
             penawar: entry.data.ownerName || "Pelaku Usaha Desa Jarak",
@@ -150,7 +151,8 @@ export default function MitraDashboardPage() {
             komoditas: entry.data.variety || entry.data.productType,
             volume: `${entry.data.quantity} ${entry.data.unit}`,
             volumeKg: volKg,
-            harga: priceDigits > 0 ? priceDigits : 0,
+            harga: firstPrice(priceNote),
+            hargaLabel: priceNote || "-",
             tanggal: entry.createdAt.slice(0, 10),
             tanggalLabel: formatTimestamp(entry.createdAt),
             status: OFFER_STATUS_LABEL[entry.status] || "Menunggu Respons",
@@ -257,7 +259,7 @@ export default function MitraDashboardPage() {
         item.lokasi,
         item.komoditas,
         item.volume,
-        item.harga,
+        item.hargaLabel,
         item.tanggalLabel,
         item.status,
         item.kontak,
@@ -284,7 +286,7 @@ export default function MitraDashboardPage() {
       <header className="topbar">
         <Link className="brand" href="/">
           <img
-            src="/assets/Logo Desa Jarak.png"
+            src="/assets/logo-desa-jarak-96.png"
             alt="Logo Desa Jarak"
             className="brand-logo"
             width={36}
@@ -538,7 +540,7 @@ export default function MitraDashboardPage() {
                             </td>
                             <td>{item.volume}</td>
                             <td>
-                              <strong>{rupiah(item.harga)}</strong>
+                              <strong>{item.hargaLabel}</strong>
                             </td>
                             <td>{item.tanggalLabel}</td>
                             <td>
@@ -597,7 +599,7 @@ export default function MitraDashboardPage() {
                                     </div>
                                     <div className="expanded-item">
                                       <span>Harga Penawaran</span>
-                                      <strong>{rupiah(item.harga)}</strong>
+                                      <strong>{item.hargaLabel}</strong>
                                     </div>
                                     <div className="expanded-item">
                                       <span>Kontak Penawar</span>

@@ -2,10 +2,19 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
 import { Menu } from "lucide-react";
 
 export default function TopNav({ onMenuClick }: { onMenuClick?: () => void }) {
   const [isOpen, setIsOpen] = useState(false);
+  const router = useRouter();
+
+  async function handleLogout() {
+    await createClient().auth.signOut();
+    router.push("/");
+    router.refresh();
+  }
 
   return (
     <header className="relative w-full bg-[#1b4332] text-white z-40">
@@ -57,6 +66,13 @@ export default function TopNav({ onMenuClick }: { onMenuClick?: () => void }) {
           >
             DASHBOARD USAHA
           </Link>
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="hover:text-[#74c69d] transition-colors whitespace-nowrap"
+          >
+            KELUAR
+          </button>
         </nav>
 
         <button
@@ -95,6 +111,15 @@ export default function TopNav({ onMenuClick }: { onMenuClick?: () => void }) {
               >
                 DASHBOARD USAHA
               </Link>
+            </li>
+            <li>
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="block w-full text-left px-5 py-3.5 text-sm text-white hover:bg-[#2d6a4f]"
+              >
+                KELUAR
+              </button>
             </li>
           </ul>
         </nav>

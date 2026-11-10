@@ -55,12 +55,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(loginUrl);
     }
 
-    if (
-      nextParam &&
-      nextParam.startsWith("/") &&
-      !nextParam.startsWith("//")
-    ) {
-      const targetUrl = new URL(nextParam, origin);
+    const targetUrl = safeSameOriginUrl(nextParam, origin);
+    if (targetUrl) {
       searchParams.forEach((value, key) => {
         if (
           key !== "code" &&
@@ -81,4 +77,16 @@ export async function GET(request: NextRequest) {
   }
 
   return NextResponse.redirect(new URL("/masuk", origin));
+}
+
+// Browsers treat "\" like "/", so "/\evil.test" resolves off-site.
+// Only accept a path that still resolves to our own origin.
+function safeSameOriginUrl(next: string | null, origin: string): URL | null {
+  if (!next || !next.startsWith("/") || next.includes("\\")) return null;
+  try {
+    const url = new URL(next, origin);
+    return url.origin === origin ? url : null;
+  } catch {
+    return null;
+  }
 }

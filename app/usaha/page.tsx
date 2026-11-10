@@ -17,7 +17,7 @@ interface PageRowItem {
   col4: string;
   status: "draf" | "menunggu" | "diproses" | "selesai" | "ditolak";
   action: string;
-  href?: string;
+  href: string;
 }
 
 interface DashboardTabConfig {
@@ -26,134 +26,14 @@ interface DashboardTabConfig {
   subtitle: string;
   searchPlaceholder: string;
   headers: [string, string, string, string, string, string];
-  rows: PageRowItem[];
 }
 
-const SAMPLE_TAB_DATA: Record<string, DashboardTabConfig> = {
-  "penawaran-saya": {
-    breadcrumb: "Penawaran Saya",
-    title: "Penawaran Saya",
-    subtitle: "Daftar penawaran komoditas yang telah Anda ajukan ke mitra.",
-    searchPlaceholder: "Cari komoditas atau nama mitra...",
-    headers: ["Komoditas", "Mitra Tujuan", "Volume", "Harga", "Status", "Aksi"],
-    rows: [],
-  },
-  "permintaan-masuk": {
-    breadcrumb: "Permintaan Masuk",
-    title: "Permintaan Masuk",
-    subtitle: "Kebutuhan komoditas dari mitra yang sesuai dengan usaha Anda.",
-    searchPlaceholder: "Cari permintaan atau nama mitra...",
-    headers: [
-      "Permintaan",
-      "Mitra",
-      "Kebutuhan",
-      "Batas Waktu",
-      "Status",
-      "Aksi",
-    ],
-    rows: [
-      {
-        col1: "Pasokan Cabai Segar",
-        col2: "CV Pangan Nusantara",
-        col3: "2 Ton / bulan",
-        col4: "28 Apr 2026",
-        status: "menunggu",
-        action: "Ajukan Penawaran",
-        href: "/usaha/penawaran/baru?requestId=seed-request-3",
-      },
-      {
-        col1: "Jagung Pakan Ternak",
-        col2: "PT Agro Timur Jaya",
-        col3: "5 Ton",
-        col4: "02 Mei 2026",
-        status: "diproses",
-        action: "Ajukan Penawaran",
-        href: "/usaha/penawaran/baru?requestId=seed-request-2",
-      },
-      {
-        col1: "Sayur Segar Harian",
-        col2: "Dapur Katering Berkah",
-        col3: "500 Kg / minggu",
-        col4: "10 Mei 2026",
-        status: "selesai",
-        action: "Lihat Direktori",
-        href: "/direktori",
-      },
-    ],
-  },
-  pesan: {
-    breadcrumb: "Pesan",
-    title: "Pesan Mitra",
-    subtitle: "Percakapan terbaru terkait penawaran dan pengiriman komoditas.",
-    searchPlaceholder: "Cari pengirim atau isi pesan...",
-    headers: ["Pengirim", "Topik", "Pesan Terakhir", "Waktu", "Status", "Aksi"],
-    rows: [
-      {
-        col1: "CV Pangan Nusantara",
-        col2: "Konfirmasi Sampel Cabai",
-        col3: "Sampel sudah kami terima dengan baik.",
-        col4: "Hari ini, 09.30",
-        status: "menunggu",
-        action: "Buka Pesan",
-      },
-      {
-        col1: "PT Agro Timur Jaya",
-        col2: "Jadwal Kirim Jagung",
-        col3: "Mohon konfirmasi armada pengiriman.",
-        col4: "Kemarin",
-        status: "diproses",
-        action: "Buka Pesan",
-      },
-      {
-        col1: "Toko Tani Sehat",
-        col2: "Pembayaran Beras Organik",
-        col3: "Pembayaran tahap pertama sudah selesai.",
-        col4: "16 Apr 2026",
-        status: "selesai",
-        action: "Buka Pesan",
-      },
-    ],
-  },
-  dokumen: {
-    breadcrumb: "Dokumen",
-    title: "Dokumen Usaha",
-    subtitle: "Dokumen kerja sama, surat jalan, dan bukti transaksi usaha.",
-    searchPlaceholder: "Cari nama dokumen atau mitra...",
-    headers: [
-      "Nama Dokumen",
-      "Mitra",
-      "Jenis",
-      "Tanggal",
-      "Status",
-      "Aksi",
-    ],
-    rows: [
-      {
-        col1: "Kontrak Pasok Cabai Semester I",
-        col2: "CV Pangan Nusantara",
-        col3: "Perjanjian",
-        col4: "18 Apr 2026",
-        status: "diproses",
-        action: "Unduh",
-      },
-      {
-        col1: "Surat Jalan Beras Organik",
-        col2: "Toko Tani Sehat",
-        col3: "Pengiriman",
-        col4: "15 Apr 2026",
-        status: "selesai",
-        action: "Unduh",
-      },
-      {
-        col1: "Form Spesifikasi Jagung Pipil",
-        col2: "PT Agro Timur Jaya",
-        col3: "Lampiran",
-        col4: "12 Apr 2026",
-        status: "menunggu",
-        action: "Unduh",
-      },
-    ],
-  },
+const OFFERS_TAB: DashboardTabConfig = {
+  breadcrumb: "Penawaran Saya",
+  title: "Penawaran Saya",
+  subtitle: "Daftar penawaran komoditas yang telah Anda ajukan ke mitra.",
+  searchPlaceholder: "Cari komoditas atau nama mitra...",
+  headers: ["Komoditas", "Mitra Tujuan", "Volume", "Harga", "Status", "Aksi"],
 };
 
 const OFFER_ROW_STATUS: Record<string, PageRowItem["status"]> = {
@@ -183,11 +63,9 @@ export default function UsahaDashboardPage() {
   const router = useRouter();
   const [userName, setUserName] = useState("Pelaku Usaha Desa Jarak");
   const [userRoleLabel, setUserRoleLabel] = useState("Pelaku Usaha");
-  const [activeTab, setActiveTab] = useState<string>("penawaran-saya");
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("semua");
   const [myOffers, setMyOffers] = useState<FormEntry[]>([]);
-  const [toastText, setToastText] = useState("");
 
   useEffect(() => {
     const supabase = createClient();
@@ -234,13 +112,6 @@ export default function UsahaDashboardPage() {
     loadData();
   }, []);
 
-  function showToast(msg: string) {
-    setToastText(msg);
-    setTimeout(() => {
-      setToastText("");
-    }, 2800);
-  }
-
   async function handleLogout() {
     const supabase = createClient();
     await supabase.auth.signOut();
@@ -255,35 +126,29 @@ export default function UsahaDashboardPage() {
     .filter((o) => o.status !== "draft")
     .reduce((sum, o) => sum + offerVolumeKg(o), 0);
 
-  const currentTabConfig =
-    SAMPLE_TAB_DATA[activeTab] || SAMPLE_TAB_DATA["penawaran-saya"];
+  const currentTabConfig = OFFERS_TAB;
 
-  // Combine user's real offers with sample rows when viewing "penawaran-saya"
-  const combinedRows = useMemo(() => {
-    if (activeTab !== "penawaran-saya") {
-      return currentTabConfig.rows;
-    }
-
-    const realRows: PageRowItem[] = myOffers.map((offer) => ({
-      col1: `${offer.data.productType} (${offer.data.variety || offer.reference})`,
-      col2:
-        offer.targetRequest?.ownerName || "Direktori Usaha Desa Jarak",
-      col3: `${offer.data.quantity} ${offer.data.unit} (${offer.data.frequency})`,
-      col4: offer.data.priceNote || `Diperbarui ${formatTimestamp(offer.updatedAt)}`,
-      status: OFFER_ROW_STATUS[offer.status] || "menunggu",
-      action: offer.status === "draft" ? "Lanjutkan Draf" : "Lihat di Direktori",
-      href:
-        offer.status === "draft"
-          ? `/usaha/penawaran/baru?entryId=${encodeURIComponent(offer.id)}`
-          : "/direktori",
-    }));
-
-    return [...realRows, ...currentTabConfig.rows];
-  }, [activeTab, currentTabConfig.rows, myOffers]);
+  const offerRows = useMemo<PageRowItem[]>(
+    () =>
+      myOffers.map((offer) => ({
+        col1: `${offer.data.productType} (${offer.data.variety || offer.reference})`,
+        col2: offer.targetRequest?.ownerName || "Direktori Usaha Desa Jarak",
+        col3: `${offer.data.quantity} ${offer.data.unit} (${offer.data.frequency})`,
+        col4:
+          offer.data.priceNote || `Diperbarui ${formatTimestamp(offer.updatedAt)}`,
+        status: OFFER_ROW_STATUS[offer.status] || "menunggu",
+        action: offer.status === "draft" ? "Lanjutkan Draf" : "Lihat di Direktori",
+        href:
+          offer.status === "draft"
+            ? `/usaha/penawaran/baru?entryId=${encodeURIComponent(offer.id)}`
+            : "/direktori",
+      })),
+    [myOffers]
+  );
 
   const filteredRows = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
-    return combinedRows.filter((item) => {
+    return offerRows.filter((item) => {
       const matchSearch =
         !q ||
         [item.col1, item.col2, item.col3, item.col4]
@@ -294,7 +159,7 @@ export default function UsahaDashboardPage() {
         statusFilter === "semua" || item.status === statusFilter;
       return matchSearch && matchStatus;
     });
-  }, [combinedRows, searchQuery, statusFilter]);
+  }, [offerRows, searchQuery, statusFilter]);
 
   const initials = (userName || "PU")
     .split(" ")
@@ -308,7 +173,7 @@ export default function UsahaDashboardPage() {
       <header className="topbar">
         <Link className="brand" href="/">
           <img
-            src="/assets/Logo Desa Jarak.png"
+            src="/assets/logo-desa-jarak-96.png"
             alt="Logo Desa Jarak"
             width={40}
             height={40}
@@ -324,6 +189,13 @@ export default function UsahaDashboardPage() {
           <span className="avatar" aria-hidden="true">
             {initials}
           </span>
+          <button
+            type="button"
+            className="topbar-logout"
+            onClick={handleLogout}
+          >
+            Keluar
+          </button>
         </div>
       </header>
 
@@ -331,63 +203,15 @@ export default function UsahaDashboardPage() {
         <aside className="sidebar" aria-label="Menu pelaku usaha">
           <p className="sidebar-label">MENU UTAMA</p>
 
-          <button
-            type="button"
-            className={`menu-item ${
-              activeTab === "penawaran-saya" ? "active" : ""
-            }`}
-            onClick={() => {
-              setActiveTab("penawaran-saya");
-              setSearchQuery("");
-              setStatusFilter("semua");
-            }}
-          >
+          <button type="button" className="menu-item active">
             <span aria-hidden="true">▤</span>
             <span>Penawaran Saya</span>
           </button>
 
-          <button
-            type="button"
-            className={`menu-item ${
-              activeTab === "permintaan-masuk" ? "active" : ""
-            }`}
-            onClick={() => {
-              setActiveTab("permintaan-masuk");
-              setSearchQuery("");
-              setStatusFilter("semua");
-            }}
-          >
+          <Link href="/direktori" className="menu-item">
             <span aria-hidden="true">📥</span>
-            <span>Permintaan Masuk</span>
-            <span className="menu-count">3</span>
-          </button>
-
-          <button
-            type="button"
-            className={`menu-item ${activeTab === "pesan" ? "active" : ""}`}
-            onClick={() => {
-              setActiveTab("pesan");
-              setSearchQuery("");
-              setStatusFilter("semua");
-            }}
-          >
-            <span aria-hidden="true">✉</span>
-            <span>Pesan</span>
-            <span className="menu-count">2</span>
-          </button>
-
-          <button
-            type="button"
-            className={`menu-item ${activeTab === "dokumen" ? "active" : ""}`}
-            onClick={() => {
-              setActiveTab("dokumen");
-              setSearchQuery("");
-              setStatusFilter("semua");
-            }}
-          >
-            <span aria-hidden="true">📄</span>
-            <span>Dokumen</span>
-          </button>
+            <span>Cari Permintaan Mitra</span>
+          </Link>
 
           <Link href="/usaha/analisis" className="menu-item">
             <span aria-hidden="true">
@@ -519,7 +343,15 @@ export default function UsahaDashboardPage() {
               </select>
             </div>
 
-            {filteredRows.length === 0 ? (
+            {offerRows.length === 0 ? (
+              <div className="empty-state">
+                <h3>Belum ada penawaran</h3>
+                <p>
+                  Cari permintaan mitra di Direktori, lalu ajukan penawaran
+                  pertama Anda.
+                </p>
+              </div>
+            ) : filteredRows.length === 0 ? (
               <div className="empty-state">
                 <h3>Data tidak ditemukan</h3>
                 <p>Coba ubah kata kunci pencarian atau pilihan status.</p>
@@ -547,21 +379,9 @@ export default function UsahaDashboardPage() {
                           </span>
                         </td>
                         <td>
-                          {item.href ? (
-                            <Link href={item.href} className="action-btn">
-                              {item.action}
-                            </Link>
-                          ) : (
-                            <button
-                              type="button"
-                              className="action-btn"
-                              onClick={() =>
-                                showToast(`${item.action}: ${item.col1}`)
-                              }
-                            >
-                              {item.action}
-                            </button>
-                          )}
+                          <Link href={item.href} className="action-btn">
+                            {item.action}
+                          </Link>
                         </td>
                       </tr>
                     ))}
@@ -578,11 +398,6 @@ export default function UsahaDashboardPage() {
         </main>
       </div>
 
-      {toastText && (
-        <div className="toast" role="status" aria-live="polite">
-          {toastText}
-        </div>
-      )}
     </div>
   );
 }

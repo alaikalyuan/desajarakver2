@@ -31,7 +31,7 @@
       rgba(181, 218, 201, 0.78),
       rgba(221, 241, 243, 0.82)
     ),
-    url("/assets/login.desa.png") center / cover;
+    url("/assets/login-desa.jpg") center / cover;
 }
 
 .register-intro .intro-label {

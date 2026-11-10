@@ -21,6 +21,21 @@ const nextConfig: NextConfig = {
       },
     },
   },
+  async headers() {
+    // Files in public/assets are not content-hashed, so cache for a week
+    // rather than forever. Give a file a new name when its content changes.
+    return [
+      {
+        source: "/assets/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=604800, stale-while-revalidate=86400",
+          },
+        ],
+      },
+    ];
+  },
   async redirects() {
     return [
       {
