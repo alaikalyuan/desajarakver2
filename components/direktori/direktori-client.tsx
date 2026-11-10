@@ -11,11 +11,27 @@ import {
   type DirectoryRequestItem,
 } from "@/lib/listings";
 import { createClient } from "@/lib/supabase/client";
+import { todayWIB } from "@/lib/format";
+import { telUrl, whatsAppUrl } from "@/lib/contact";
 
 interface DirektoriClientProps {
   initialRequests: DirectoryRequestItem[];
   initialOffers: DirectoryOfferItem[];
   initialUser: UserProfile | null;
+}
+
+/** A phone number as a tap-to-call link when it looks like a real number. */
+function PhoneLink({ phone, whatsapp }: { phone: string; whatsapp?: boolean }) {
+  const href = whatsapp ? whatsAppUrl(phone) : telUrl(phone);
+  if (!href) return <>{phone || "-"}</>;
+  return (
+    <a
+      href={href}
+      {...(whatsapp ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+    >
+      {phone}
+    </a>
+  );
 }
 
 function normalizeRequestStatus(status = ""): string {
@@ -26,6 +42,16 @@ function normalizeRequestStatus(status = ""): string {
   }
   if (value.includes("tutup") || value.includes("selesai")) return "Selesai";
   return status || "Baru";
+}
+
+/** A request whose "Tanggal Dibutuhkan" has passed no longer takes offers. */
+function isPastDeadline(item: DirectoryRequestItem): boolean {
+  return Boolean(item.deadlineDate) && item.deadlineDate! < todayWIB();
+}
+
+/** Status used by the filters: past-deadline requests count as finished. */
+function requestStatusBucket(item: DirectoryRequestItem): string {
+  return isPastDeadline(item) ? "Selesai" : normalizeRequestStatus(item.status);
 }
 
 function getRequestStatusClass(status = ""): string {
@@ -152,52 +178,50 @@ const JENIS_FILTER_OPTIONS = [
 
 type JenisFilterKey = (typeof JENIS_FILTER_OPTIONS)[number]["key"];
 
-function getListingJenisGroup(
-  category = "",
-  title = "",
-  summary = ""
-): Exclude<JenisFilterKey, "semua"> {
-  const text = `${category} ${title} ${summary}`.toLowerCase();
-  if (
-    category.toLowerCase() === "jasa" ||
-    text.includes("jasa") ||
-    text.includes("layanan pengolahan lahan") ||
-    text.includes("sewa alat")
-  ) {
-    return "jasa";
+type JenisGroup = Exclude<JenisFilterKey, "semua">;
+
+// Whole words only: "olahan" must not match "pengolahan", "nila" not "nilai",
+// "ikan" not "diberikan".
+const JENIS_KEYWORDS: [JenisGroup, string[]][] = [
+  ["jasa", ["jasa", "layanan", "sewa alat", "sewa traktor"]],
+  ["kerajinan", ["kerajinan", "anyaman", "kriya", "souvenir"]],
+  ["olahan_kuliner", ["olahan", "olahan pangan", "kuliner", "keripik", "sambal"]],
+  [
+    "peternakan_perikanan",
+    [
+      "peternakan", "perikanan", "ternak", "telur", "unggas", "ayam", "susu",
+      "kambing", "sapi", "ikan", "lele", "nila",
+    ],
+  ],
+  // Checked last, so "Susu Segar" stays livestock and "Jasa ... pertanian" stays a service.
+  [
+    "pertanian_perkebunan",
+    ["pertanian", "perkebunan", "hortikultura", "komoditas", "segar", "panen"],
+  ],
+];
+
+// Keywords are plain lowercase words, so they need no regex escaping.
+function hasWord(text: string, word: string): boolean {
+  return new RegExp(`(^|[^a-z])${word}([^a-z]|$)`).test(text);
+}
+
+function matchJenis(text: string): JenisGroup | null {
+  const lower = text.toLowerCase();
+  for (const [group, words] of JENIS_KEYWORDS) {
+    if (words.some((w) => hasWord(lower, w))) return group;
   }
-  if (
-    text.includes("kerajinan") ||
-    text.includes("anyaman") ||
-    text.includes("kriya") ||
-    text.includes("souvenir")
-  ) {
-    return "kerajinan";
-  }
-  if (
-    text.includes("olahan") ||
-    text.includes("kuliner") ||
-    text.includes("keripik") ||
-    text.includes("sambal") ||
-    text.includes("kemasan") && text.includes("pangan olahan")
-  ) {
-    return "olahan_kuliner";
-  }
-  if (
-    text.includes("peternakan") ||
-    text.includes("perikanan") ||
-    text.includes("telur") ||
-    text.includes("unggas") ||
-    text.includes("susu") ||
-    text.includes("kambing") ||
-    text.includes("sapi") ||
-    text.includes("ikan") ||
-    text.includes("lele") ||
-    text.includes("nila")
-  ) {
-    return "peternakan_perikanan";
-  }
-  return "pertanian_perkebunan";
+  return null;
+}
+
+function getListingJenisGroup(category = "", title = "", summary = ""): JenisGroup {
+  // The category and product name decide first; the free-text summary is only
+  // a fallback, so "beras siap kirim untuk pengolahan" stays a fresh crop.
+  return (
+    matchJenis(category) ??
+    matchJenis(title) ??
+    matchJenis(summary) ??
+    "pertanian_perkebunan"
+  );
 }
 
 function getOfferCoverageLabel(item: DirectoryOfferItem): string {
@@ -401,13 +425,13 @@ export function DirektoriClient({
       },
       status: {
         semua: base.length,
-        Baru: base.filter((i) => normalizeRequestStatus(i.status) === "Baru")
+        Baru: base.filter((i) => requestStatusBucket(i) === "Baru")
           .length,
         "Dalam Proses": base.filter(
-          (i) => normalizeRequestStatus(i.status) === "Dalam Proses"
+          (i) => requestStatusBucket(i) === "Dalam Proses"
         ).length,
         Selesai: base.filter(
-          (i) => normalizeRequestStatus(i.status) === "Selesai"
+          (i) => requestStatusBucket(i) === "Selesai"
         ).length,
       },
       location: {
@@ -445,7 +469,7 @@ export function DirektoriClient({
           appliedReqJenis;
       const matchStatus =
         appliedReqStatus === "semua" ||
-        normalizeRequestStatus(item.status) === appliedReqStatus;
+        requestStatusBucket(item) === appliedReqStatus;
       const matchLoc =
         appliedReqLocation === "semua" ||
         getRequestLocationGroup(item.location) === appliedReqLocation;
@@ -892,9 +916,14 @@ export function DirektoriClient({
               </div>
             ) : (
               filteredRequests.map((item) => {
-                const statusText = normalizeRequestStatus(item.status);
-                const statusClass = getRequestStatusClass(item.status);
-                const isClosed = statusText === "Selesai";
+                const pastDeadline = isPastDeadline(item);
+                const statusText = pastDeadline
+                  ? "Ditutup"
+                  : normalizeRequestStatus(item.status);
+                const statusClass = pastDeadline
+                  ? "status-selesai"
+                  : getRequestStatusClass(item.status);
+                const isClosed = pastDeadline || statusText === "Selesai";
 
                 return (
                   <article key={item.id} className="directory-card">
@@ -957,7 +986,9 @@ export function DirektoriClient({
                         disabled={isClosed}
                         title={
                           isClosed
-                            ? "Permintaan mitra sudah terpenuhi"
+                            ? pastDeadline
+                              ? "Batas waktu permintaan sudah lewat"
+                              : "Permintaan mitra sudah terpenuhi"
                             : "Ajukan penawaran untuk kebutuhan ini"
                         }
                         onClick={() => {
@@ -1318,7 +1349,7 @@ export function DirektoriClient({
                             fontSize: 14,
                           }}
                         >
-                          Jasa Pertanian
+                          Belum ada foto
                         </div>
                       )}
                       <span className={`status ${statusClass}`}>
@@ -1368,23 +1399,44 @@ export function DirektoriClient({
                         Lihat Detail
                       </button>
 
-                      <button
-                        type="button"
-                        className={`card-button ${
-                          statusText === "Selesai"
-                            ? "button-disabled"
-                            : "button-offer"
-                        }`}
-                        aria-disabled={
-                          statusText === "Selesai" ? "true" : "false"
-                        }
-                        disabled={statusText === "Selesai"}
-                        onClick={() =>
-                          setSelectedModal({ type: "offer", item })
-                        }
-                      >
-                        Nyatakan Minat
-                      </button>
+                      {/* Until interest is recorded in the app (Phase 2), "Nyatakan
+                          Minat" opens WhatsApp to the seller. Without a login or
+                          a usable number it opens the detail, which explains why. */}
+                      {statusText !== "Selesai" &&
+                      user &&
+                      whatsAppUrl(item.contact.phone) ? (
+                        <a
+                          className="card-button button-offer"
+                          href={
+                            whatsAppUrl(
+                              item.contact.phone,
+                              `Halo ${item.business}, saya tertarik dengan penawaran ${item.title} di Direktori Desa Jarak.`
+                            )!
+                          }
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          Nyatakan Minat
+                        </a>
+                      ) : (
+                        <button
+                          type="button"
+                          className={`card-button ${
+                            statusText === "Selesai"
+                              ? "button-disabled"
+                              : "button-offer"
+                          }`}
+                          aria-disabled={
+                            statusText === "Selesai" ? "true" : "false"
+                          }
+                          disabled={statusText === "Selesai"}
+                          onClick={() =>
+                            setSelectedModal({ type: "offer", item })
+                          }
+                        >
+                          Nyatakan Minat
+                        </button>
+                      )}
                     </div>
                   </article>
                 );
@@ -1422,9 +1474,14 @@ export function DirektoriClient({
               {selectedModal.type === "request" ? (
                 (() => {
                   const reqItem = selectedModal.item;
-                  const statusText = normalizeRequestStatus(reqItem.status);
-                  const statusClass = getRequestStatusClass(reqItem.status);
-                  const isClosed = statusText === "Selesai";
+                  const pastDeadline = isPastDeadline(reqItem);
+                  const statusText = pastDeadline
+                    ? "Ditutup"
+                    : normalizeRequestStatus(reqItem.status);
+                  const statusClass = pastDeadline
+                    ? "status-selesai"
+                    : getRequestStatusClass(reqItem.status);
+                  const isClosed = pastDeadline || statusText === "Selesai";
                   const requestedQuantity = Number(reqItem.requestedQuantity) || 0;
                   const fulfilledQuantity = Math.min(
                     requestedQuantity,
@@ -1529,13 +1586,17 @@ export function DirektoriClient({
                             </p>
                             <p>
                               <strong>Telepon:</strong>{" "}
-                              {reqItem.contact.phone || "-"}
+                              <PhoneLink phone={reqItem.contact.phone} />
                             </p>
                             <p>
                               <strong>WhatsApp:</strong>{" "}
-                              {reqItem.contact.whatsapp ||
-                                reqItem.contact.phone ||
-                                "-"}
+                              <PhoneLink
+                                phone={
+                                  reqItem.contact.whatsapp ||
+                                  reqItem.contact.phone
+                                }
+                                whatsapp
+                              />
                             </p>
                           </div>
                         ) : (
@@ -1572,7 +1633,9 @@ export function DirektoriClient({
                           disabled={isClosed}
                           title={
                             isClosed
-                              ? "Permintaan mitra sudah terpenuhi"
+                              ? pastDeadline
+                              ? "Batas waktu permintaan sudah lewat"
+                              : "Permintaan mitra sudah terpenuhi"
                               : "Ajukan penawaran untuk permintaan ini"
                           }
                           onClick={() => {
@@ -1670,7 +1733,24 @@ export function DirektoriClient({
                             {offerItem.contact.phone && (
                               <p>
                                 <strong>Nomor HP:</strong>{" "}
-                                {offerItem.contact.phone}
+                                <PhoneLink phone={offerItem.contact.phone} />
+                              </p>
+                            )}
+                            {whatsAppUrl(offerItem.contact.phone) && (
+                              <p>
+                                <a
+                                  className="button-offer card-button"
+                                  href={
+                                    whatsAppUrl(
+                                      offerItem.contact.phone,
+                                      `Halo ${offerItem.business}, saya tertarik dengan penawaran ${offerItem.title} di Direktori Desa Jarak.`
+                                    )!
+                                  }
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                >
+                                  Hubungi lewat WhatsApp
+                                </a>
                               </p>
                             )}
 
@@ -1686,8 +1766,11 @@ export function DirektoriClient({
                                       >
                                         <strong>{farmer.name}</strong>
                                         <span>
-                                          {farmer.phone ||
-                                            "Nomor HP belum dicantumkan"}
+                                          {farmer.phone ? (
+                                            <PhoneLink phone={farmer.phone} />
+                                          ) : (
+                                            "Nomor HP belum dicantumkan"
+                                          )}
                                         </span>
                                         {farmer.quantity && (
                                           <small>

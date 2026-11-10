@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { formatTimestamp, type FormEntry } from "@/lib/forms/form-flow";
 import { rowToFormEntry } from "@/lib/listings";
+import { telUrl, whatsAppUrl } from "@/lib/contact";
+import { toKg } from "@/lib/units";
 import "./mitra-dashboard.css";
 
 interface IncomingOfferItem {
@@ -140,14 +142,13 @@ export default function MitraDashboardPage() {
       if (offerRows && offerRows.length > 0) {
         const liveOffers: IncomingOfferItem[] = offerRows.map((row) => {
           const entry = rowToFormEntry(row as Record<string, unknown>);
-          const qtyNum = Number(entry.data.quantity) || 1;
-          const volKg =
-            entry.data.unit === "ton" ? qtyNum * 1000 : qtyNum;
+          const qtyNum = Number(entry.data.quantity) || 0;
+          const volKg = toKg(qtyNum, entry.data.unit) ?? qtyNum;
           const priceNote = (entry.data.priceNote || "").trim();
           return {
             id: entry.id,
-            penawar: entry.data.ownerName || "Pelaku Usaha Desa Jarak",
-            lokasi: entry.data.location || "Desa Jarak",
+            penawar: entry.data.ownerName || "—",
+            lokasi: entry.data.location || "—",
             komoditas: entry.data.variety || entry.data.productType,
             volume: `${entry.data.quantity} ${entry.data.unit}`,
             volumeKg: volKg,
@@ -603,7 +604,13 @@ export default function MitraDashboardPage() {
                                     </div>
                                     <div className="expanded-item">
                                       <span>Kontak Penawar</span>
-                                      <strong>{item.kontak}</strong>
+                                      <strong>
+                                        {telUrl(item.kontak) ? (
+                                          <a href={telUrl(item.kontak)!}>{item.kontak}</a>
+                                        ) : (
+                                          item.kontak
+                                        )}
+                                      </strong>
                                     </div>
                                   </div>
 
@@ -620,17 +627,21 @@ export default function MitraDashboardPage() {
                                     >
                                       Tutup Detail
                                     </button>
-                                    <button
-                                      type="button"
-                                      className="primary"
-                                      onClick={() =>
-                                        showToast(
-                                          `Menghubungi ${item.penawar} melalui ${item.kontak}`
-                                        )
-                                      }
-                                    >
-                                      Hubungi Penawar
-                                    </button>
+                                    {whatsAppUrl(item.kontak) && (
+                                      <a
+                                        className="primary"
+                                        href={
+                                          whatsAppUrl(
+                                            item.kontak,
+                                            `Halo ${item.penawar}, saya menanggapi penawaran ${item.komoditas} Anda di Desa Jarak.`
+                                          )!
+                                        }
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                      >
+                                        Hubungi lewat WhatsApp
+                                      </a>
+                                    )}
                                   </div>
                                 </div>
                               </td>
@@ -643,14 +654,24 @@ export default function MitraDashboardPage() {
                 </table>
               </div>
 
-              {filteredOffers.length === 0 && (
+              {incomingOffers.length === 0 ? (
                 <div className="empty">
-                  <h2>Tidak ada penawaran yang cocok</h2>
+                  <h2>Belum ada penawaran untuk permintaan Anda</h2>
                   <p>
-                    Coba ubah kata kunci pencarian atau atur ulang filter di
-                    atas.
+                    Penawaran dari pelaku usaha desa akan muncul di sini setelah
+                    permintaan Anda diterbitkan di direktori.
                   </p>
                 </div>
+              ) : (
+                filteredOffers.length === 0 && (
+                  <div className="empty">
+                    <h2>Tidak ada penawaran yang cocok</h2>
+                    <p>
+                      Coba ubah kata kunci pencarian atau atur ulang filter di
+                      atas.
+                    </p>
+                  </div>
+                )
               )}
 
               <footer className="footer">

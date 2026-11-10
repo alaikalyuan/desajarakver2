@@ -1,3 +1,5 @@
+import { POSITIVE_NUMBER_MESSAGE, positiveNumberError } from "@/lib/format";
+
 export type FormKind = "request" | "offer";
 export type EntryStatus =
   | "draft"
@@ -308,25 +310,6 @@ export const DURATION_OPTIONS: SelectOption[] = [
   { value: "12 bulan", label: "12 bulan" },
 ];
 
-export const DEFAULT_TARGET_REQUEST: TargetRequestSummary = {
-  id: "req-beras-0426",
-  reference: "PRM-JRK-2404",
-  ownerName: "CV Pangan Lestari Kediri",
-  ownerType: "Mitra Pembeli",
-  productType: "Beras & Gabah",
-  variety: "Beras putih medium IR64 / Ciherang",
-  quantity: "3",
-  unit: "ton",
-  frequency: "Mingguan",
-  neededDate: "Mulai Mei 2026",
-  partnershipScheme: "Kontrak Pasok Berkala",
-  deliveryType: "Diambil di titik kumpul desa",
-  priceNote: "Rp11.800 - Rp12.300/kg sesuai kadar air dan hasil sortir",
-  location: "Gudang penerima Kecamatan Pare, Kabupaten Kediri",
-  description:
-    "Membutuhkan pasokan beras medium bersih, kadar air terjaga, dikemas karung 50 kg, dengan jadwal ambil setiap pekan di titik kumpul Desa Jarak.",
-};
-
 export function createEmptyFormData(
   kind: FormKind,
   targetRequest?: TargetRequestSummary | null
@@ -336,10 +319,10 @@ export function createEmptyFormData(
       ownerType: "Kelompok Tani",
       ownerName: "",
       contactName: "",
-      position: "Koordinator Pasokan",
+      position: "",
       phone: "",
       email: "",
-      location: "Dusun Krajan, Desa Jarak",
+      location: "",
       productType: targetRequest?.productType || "Beras & Gabah",
       variety: targetRequest?.variety || "",
       grade: "Sortir Standar Pasar",
@@ -467,12 +450,8 @@ export function validateStep(
         : "Waktu ketersediaan pasokan wajib diisi."
     );
 
-    const numericQuantity = Number(String(data.quantity).replace(",", "."));
-    if (
-      data.quantity.trim() &&
-      (!Number.isFinite(numericQuantity) || numericQuantity <= 0)
-    ) {
-      errors.quantity = "Masukkan angka jumlah yang lebih besar dari 0.";
+    if (data.quantity.trim() && positiveNumberError(data.quantity)) {
+      errors.quantity = POSITIVE_NUMBER_MESSAGE;
     }
   }
 

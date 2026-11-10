@@ -2,6 +2,8 @@
 
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import { NumberInput } from "@/components/forms/number-input";
+import { parseDecimal } from "@/lib/format";
 import {
   ArrowLeft,
   ArrowRight,
@@ -227,7 +229,7 @@ export function FormWizard({
       targetRequest: kind === "offer" ? targetRequest : null,
       createdAt: createdAtRef.current,
       updatedAt: now,
-      data,
+      data: { ...data, quantity: normalizeQuantity(data.quantity) },
     };
   }
 
@@ -408,10 +410,19 @@ export function FormWizard({
         <section className="jf-notice">
           <div>
             <span className="tag">{targetRequest.reference}</span>{" "}
-            <strong>Menanggapi: {targetRequest.ownerName}</strong> -{" "}
-            {targetRequest.productType} ({targetRequest.variety}),{" "}
-            {targetRequest.quantity} {targetRequest.unit},{" "}
-            {targetRequest.frequency}.
+            <strong>Menanggapi: {targetRequest.ownerName || "—"}</strong>
+            {(() => {
+              const detail = [
+                [targetRequest.productType, targetRequest.variety && `(${targetRequest.variety})`]
+                  .filter(Boolean)
+                  .join(" "),
+                [targetRequest.quantity, targetRequest.unit].filter(Boolean).join(" "),
+                targetRequest.frequency,
+              ]
+                .filter(Boolean)
+                .join(", ");
+              return detail ? ` - ${detail}.` : null;
+            })()}
           </div>
         </section>
       )}
@@ -740,17 +751,15 @@ export function FormWizard({
                         ? "Volume Kebutuhan per Pengiriman"
                         : "Kapasitas Pasok yang Ditawarkan"
                     }
-                    hint="Tulis angka saja, misalnya 3 atau 750."
+                    hint="Tulis angka saja, misalnya 3, 750 atau 2,5."
                     error={errors.quantity}
                   >
-                    <input
-                      type="number"
-                      min="0"
-                      step="any"
+                    <NumberInput
                       value={data.quantity}
-                      aria-invalid={Boolean(errors.quantity)}
-                      placeholder="Contoh: 3"
-                      onChange={(e) => updateField("quantity", e.target.value)}
+                      error={errors.quantity}
+                      showMessage={false}
+                      placeholder="Contoh: 3 atau 2,5"
+                      onValueChange={(value) => updateField("quantity", value)}
                     />
                   </Field>
 
@@ -1273,4 +1282,10 @@ function Field({
       )}
     </div>
   );
+}
+
+/** "2,5" -> "2.5" so every reader of the saved data gets a plain number string. */
+function normalizeQuantity(raw: string): string {
+  const n = parseDecimal(raw);
+  return n === null ? raw : String(n);
 }

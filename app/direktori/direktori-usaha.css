@@ -413,6 +413,15 @@
     background: #1b3a2d;
 }
 
+/* WhatsApp links styled as buttons */
+a.card-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    text-decoration: none;
+}
+
 
 /* Lihat Detail */
 

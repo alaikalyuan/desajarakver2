@@ -10,6 +10,7 @@ import {
   YAxis,
 } from "recharts";
 import { ChartCard, Legend } from "./chart-card";
+import { formatCompactNumber, formatRupiah } from "@/lib/format";
 
 type Props = {
   data: Record<string, unknown>[];
@@ -37,12 +38,11 @@ export function FinanceTrend({ data }: Props) {
               axisLine={false}
               fontSize={11}
               stroke="var(--muted-foreground)"
-              tickFormatter={(v: number) => `${(v / 1000000).toFixed(0)} jt`}
+              tickFormatter={(v: number) => formatCompactNumber(v)}
+              width={48}
             />
             <Tooltip
-              formatter={(v: unknown) =>
-                `Rp ${Number(v).toLocaleString("id-ID")}`
-              }
+              formatter={(v: unknown) => formatRupiah(Number(v))}
               contentStyle={{
                 borderRadius: 8,
                 border: "1px solid var(--border)",
@@ -60,7 +60,7 @@ export function FinanceTrend({ data }: Props) {
             <Line
               type="monotone"
               dataKey="biaya"
-              name="Total Biaya"
+              name="Biaya Operasional"
               stroke="#ef4444"
               strokeWidth={2}
               dot={{ r: 3 }}
@@ -71,8 +71,8 @@ export function FinanceTrend({ data }: Props) {
 
       <Legend
         items={[
-          { label: "Pendapatan", color: "#1b4332" },
-          { label: "Total Biaya", color: "#ef4444" },
+          { label: "Pendapatan (Rp)", color: "#1b4332" },
+          { label: "Biaya Operasional (Rp)", color: "#ef4444" },
         ]}
       />
     </ChartCard>
