@@ -1,6 +1,7 @@
 "use client";
 
 import { Cell, Pie, PieChart, ResponsiveContainer } from "recharts";
+import { formatRupiah, formatRupiahCompact } from "@/lib/format";
 
 type Props = {
   items: { name: string; value: number }[];
@@ -55,10 +56,8 @@ export function RevenueDonut({ items }: Props) {
           </ResponsiveContainer>
           <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
             <span className="text-[10px] text-gray-500">Total</span>
-            <span className="font-bold text-xs text-gray-900">
-              {total >= 1000000
-                ? `Rp ${(total / 1000000).toFixed(1)} jt`
-                : `Rp ${(total / 1000).toFixed(0)} rb`}
+            <span className="font-bold text-xs text-gray-900" title={formatRupiah(total)}>
+              {formatRupiahCompact(total)}
             </span>
           </div>
         </div>

@@ -1,5 +1,4 @@
 import {
-  DEFAULT_TARGET_REQUEST,
   FormData,
   FormEntry,
   FormKind,
@@ -73,29 +72,30 @@ export function getRoleMeta(kind: FormKind): RoleMeta {
 
 export function buildTargetFromRequestEntry(
   entry?: FormEntry | null
-): TargetRequestSummary {
+): TargetRequestSummary | null {
+  // No made-up request: without a real entry there is nothing to respond to.
   if (!entry || entry.kind !== "request") {
-    return DEFAULT_TARGET_REQUEST;
+    return null;
   }
 
   return {
     id: entry.id,
     reference: entry.reference,
-    ownerName: entry.data.ownerName || DEFAULT_TARGET_REQUEST.ownerName,
-    ownerType: entry.data.ownerType || DEFAULT_TARGET_REQUEST.ownerType,
-    productType: entry.data.productType || DEFAULT_TARGET_REQUEST.productType,
-    variety: entry.data.variety || DEFAULT_TARGET_REQUEST.variety,
-    quantity: entry.data.quantity || DEFAULT_TARGET_REQUEST.quantity,
-    unit: entry.data.unit || DEFAULT_TARGET_REQUEST.unit,
-    frequency: entry.data.frequency || DEFAULT_TARGET_REQUEST.frequency,
-    neededDate: entry.data.neededDate || DEFAULT_TARGET_REQUEST.neededDate,
+    ownerName: entry.data.ownerName || "",
+    ownerType: entry.data.ownerType || "",
+    productType: entry.data.productType || "",
+    variety: entry.data.variety || "",
+    quantity: entry.data.quantity || "",
+    unit: entry.data.unit || "",
+    frequency: entry.data.frequency || "",
+    neededDate: entry.data.neededDate || "",
     partnershipScheme:
-      entry.data.partnershipScheme || DEFAULT_TARGET_REQUEST.partnershipScheme,
+      entry.data.partnershipScheme || "",
     deliveryType:
-      entry.data.deliveryType || DEFAULT_TARGET_REQUEST.deliveryType,
-    priceNote: entry.data.priceNote || "Menyesuaikan kesepakatan mutu & pengiriman",
-    location: entry.data.location || DEFAULT_TARGET_REQUEST.location,
-    description: entry.data.description || DEFAULT_TARGET_REQUEST.description,
+      entry.data.deliveryType || "",
+    priceNote: entry.data.priceNote || "",
+    location: entry.data.location || "",
+    description: entry.data.description || "",
   };
 }
 

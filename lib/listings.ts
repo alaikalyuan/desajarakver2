@@ -1,6 +1,6 @@
+import { parseIndonesianDate } from "@/lib/format";
 import { createClient } from "@/lib/supabase/client";
 import {
-  DEFAULT_TARGET_REQUEST,
   type EntryStatus,
   type FormData,
   type FormEntry,
@@ -28,6 +28,8 @@ export interface DirectoryRequestItem {
   frequency: string;
   status: string;
   deadline: string;
+  /** The deadline as YYYY-MM-DD when it is a full date, else null. */
+  deadlineDate: string | null;
   image: string;
   location: string;
   requestedQuantity: number;
@@ -243,6 +245,7 @@ function mapDirectorySeedRequest(
     frequency: "Sesuai jadwal mitra",
     status: str(rawData.status) || "Baru",
     deadline: str(req.requiredDate) || "-",
+    deadlineDate: parseIndonesianDate(str(req.requiredDate)),
     image: photoUrl || normalizeAssetUrl(str(rawData.image), DEFAULT_REQUEST_IMAGE),
     location: str(req.deliveryLocation) || str(partner.address) || "Jawa Timur",
     requestedQuantity: requested,
@@ -314,7 +317,7 @@ function mapDirectorySeedOffer(
     summary: str(rawData.description),
     note: str(rawData.note) || str(rawData.description) || "Belum ada catatan tambahan.",
     capacity: quantityLabel(rawData.quantity, rawData.unit),
-    priceLabel: str(rawData.priceLabel) || "Rp13.000 - Rp15.100",
+    priceLabel: str(rawData.priceLabel) || "Harga belum dicantumkan",
     harvestPeriod: `${AVAILABILITY_LABELS[availabilityKey] || "Stok tersedia"} · ${
       str(rawData.estimatedAvailability) || "Sesuai kesepakatan"
     }`,
@@ -332,7 +335,7 @@ function mapDirectorySeedOffer(
     terms,
     contact: {
       pic: str(contactObj.pic),
-      role: "Koordinator Pasokan",
+      role: "",
       phone: str(contactObj.phone),
       email: str(contactObj.email),
       responseTime: farmerPhones.filter(Boolean).length
@@ -392,6 +395,7 @@ export function mapRowToDirectoryRequest(row: Record<string, unknown>): Director
     frequency: mapFrequencyFilter(String(rawData.frequency || "")),
     status: "Baru",
     deadline: String(rawData.neededDate || "Fleksibel"),
+    deadlineDate: parseIndonesianDate(String(rawData.neededDate || "")),
     image:
       photoUrl ||
       normalizeAssetUrl(String(rawData.photoPreview || ""), DEFAULT_REQUEST_IMAGE),
@@ -477,7 +481,7 @@ export function mapRowToDirectoryOffer(row: Record<string, unknown>): DirectoryO
     terms: terms.length > 0 ? terms : ["Siap bekerja sama dengan mitra"],
     contact: {
       pic: String(contactObj.contactName || contactObj.pic || ""),
-      role: String(contactObj.position || contactObj.role || "Koordinator Pasokan"),
+      role: String(contactObj.position || contactObj.role || ""),
       phone: String(contactObj.phone || ""),
       email: String(contactObj.email || ""),
       responseTime: "Aktif melalui WhatsApp / Telepon",
@@ -569,23 +573,21 @@ export async function getTargetRequestById(
     return {
       id: entry.id,
       reference: entry.reference || "PRM-JRK",
-      ownerName: entry.data.ownerName || DEFAULT_TARGET_REQUEST.ownerName,
-      ownerType: entry.data.ownerType || DEFAULT_TARGET_REQUEST.ownerType,
-      productType: entry.data.productType || DEFAULT_TARGET_REQUEST.productType,
-      variety: entry.data.variety || DEFAULT_TARGET_REQUEST.variety,
-      quantity: entry.data.quantity || DEFAULT_TARGET_REQUEST.quantity,
-      unit: entry.data.unit || DEFAULT_TARGET_REQUEST.unit,
-      frequency: entry.data.frequency || DEFAULT_TARGET_REQUEST.frequency,
-      neededDate: entry.data.neededDate || DEFAULT_TARGET_REQUEST.neededDate,
+      ownerName: entry.data.ownerName || "",
+      ownerType: entry.data.ownerType || "",
+      productType: entry.data.productType || "",
+      variety: entry.data.variety || "",
+      quantity: entry.data.quantity || "",
+      unit: entry.data.unit || "",
+      frequency: entry.data.frequency || "",
+      neededDate: entry.data.neededDate || "",
       partnershipScheme:
-        entry.data.partnershipScheme ||
-        DEFAULT_TARGET_REQUEST.partnershipScheme,
+        entry.data.partnershipScheme || "",
       deliveryType:
-        entry.data.deliveryType || DEFAULT_TARGET_REQUEST.deliveryType,
-      priceNote:
-        entry.data.priceNote || "Menyesuaikan kesepakatan mutu & pengiriman",
-      location: entry.data.location || DEFAULT_TARGET_REQUEST.location,
-      description: entry.data.description || DEFAULT_TARGET_REQUEST.description,
+        entry.data.deliveryType || "",
+      priceNote: entry.data.priceNote || "",
+      location: entry.data.location || "",
+      description: entry.data.description || "",
     };
   }
 
@@ -597,18 +599,18 @@ export async function getTargetRequestById(
   return {
     id: String(row.id),
     reference: String(row.reference || `PRM-${String(row.id).toUpperCase().slice(0, 8)}`),
-    ownerName: str(partner.name) || "Mitra Pembeli",
-    ownerType: str(partner.type) || "Mitra Pembeli",
-    productType: str(req.product) || "Beras & Gabah",
-    variety: str(req.variety) || str(req.product) || "Sesuai spesifikasi permintaan",
-    quantity: str(req.quantity) || "1",
-    unit: str(req.unit) || "kg",
-    frequency: "Mingguan",
-    neededDate: str(req.requiredDate) || "Segera",
-    partnershipScheme: "Kontrak Pasok Berkala",
-    deliveryType: "Diambil di titik kumpul desa",
-    priceNote: "Sesuai kesepakatan mutu dan volume",
-    location: str(req.deliveryLocation) || "Kediri",
+    ownerName: str(partner.name),
+    ownerType: str(partner.type),
+    productType: str(req.product),
+    variety: str(req.variety) || str(req.product),
+    quantity: str(req.quantity),
+    unit: str(req.unit),
+    frequency: "",
+    neededDate: str(req.requiredDate),
+    partnershipScheme: "",
+    deliveryType: "",
+    priceNote: "",
+    location: str(req.deliveryLocation),
     description: str(req.note),
   };
 }

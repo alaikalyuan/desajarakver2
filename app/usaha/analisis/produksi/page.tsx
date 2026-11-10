@@ -12,6 +12,26 @@ import {
   updateProduction,
   type Produksi,
 } from "@/lib/analisis/api";
+import { NumberInput } from "@/components/forms/number-input";
+import {
+  formatNumber,
+  formatTanggal,
+  parseDecimal,
+  positiveNumberError,
+  todayWIB,
+} from "@/lib/format";
+
+type EditRow = Omit<Produksi, "jumlah"> & { jumlah: string };
+
+const ICON_BUTTON =
+  "inline-flex items-center justify-center w-11 h-11 rounded-lg hover:bg-gray-100";
+
+const PANEN_SEBELUM_TANAM = "Tanggal panen tidak boleh sebelum tanggal tanam.";
+
+/** Error text when the harvest date is before the planting date. */
+function cekTanggal(tanam: string, panen: string): string | null {
+  return tanam && panen && panen < tanam ? PANEN_SEBELUM_TANAM : null;
+}
 
 function laporGagal(err: unknown) {
   window.alert(err instanceof Error ? err.message : "Terjadi kesalahan. Coba lagi.");
@@ -23,16 +43,15 @@ export default function ProduksiPage() {
   const [komoditas, setKomoditas] = useState("");
   const [jumlah, setJumlah] = useState("");
   const [satuan, setSatuan] = useState("kg");
-  const [tanggalTanam, setTanggalTanam] = useState(
-    () => new Date().toISOString().split("T")[0]
-  );
-  const [tanggalPanen, setTanggalPanen] = useState(
-    () => new Date().toISOString().split("T")[0]
-  );
+  const [tanggalTanam, setTanggalTanam] = useState(() => todayWIB());
+  const [tanggalPanen, setTanggalPanen] = useState(() => todayWIB());
+  const [jumlahError, setJumlahError] = useState<string | null>(null);
 
   const [list, setList] = useState<Produksi[]>([]);
   const [editingId, setEditingId] = useState<number | null>(null);
-  const [editData, setEditData] = useState<Produksi | null>(null);
+  const [editData, setEditData] = useState<EditRow | null>(null);
+  const [editError, setEditError] = useState("");
+  const tanggalError = cekTanggal(tanggalTanam, tanggalPanen);
 
   useEffect(() => {
     let mounted = true;
@@ -48,12 +67,14 @@ export default function ProduksiPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!komoditas || !jumlah) return;
+    const errJumlah = positiveNumberError(jumlah);
+    setJumlahError(errJumlah);
+    if (!komoditas.trim() || errJumlah || tanggalError) return;
 
     const newItem: Produksi = {
       id: newRowId(),
-      komoditas,
-      jumlah: Number(jumlah),
+      komoditas: komoditas.trim(),
+      jumlah: parseDecimal(jumlah)!,
       satuan,
       tanggalTanam,
       tanggalPanen,
@@ -69,9 +90,14 @@ export default function ProduksiPage() {
     setList((current) => [newItem, ...current]);
     setKomoditas("");
     setJumlah("");
+    setJumlahError(null);
   };
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (item: Produksi) => {
+    if (!window.confirm(`Hapus data produksi ini?\n\n${item.komoditas}`)) {
+      return;
+    }
+    const id = item.id;
     try {
       await deleteProduction(id);
       setList((current) => current.filter((item) => item.id !== id));
@@ -82,32 +108,43 @@ export default function ProduksiPage() {
 
   const startEdit = (item: Produksi) => {
     setEditingId(item.id);
-    setEditData({ ...item });
+    setEditData({ ...item, jumlah: String(item.jumlah).replace(".", ",") });
+    setEditError("");
   };
 
   const saveEdit = async () => {
     if (!editData || editingId === null) return;
+    const jumlahBaru = parseDecimal(editData.jumlah);
+    if (!editData.komoditas.trim()) {
+      setEditError("Nama komoditas wajib diisi.");
+      return;
+    }
+    if (jumlahBaru === null || jumlahBaru <= 0) {
+      setEditError("Jumlah harus angka lebih dari 0.");
+      return;
+    }
+    const errTanggal = cekTanggal(editData.tanggalTanam, editData.tanggalPanen);
+    if (errTanggal) {
+      setEditError(errTanggal);
+      return;
+    }
+    setEditError("");
+    const updated: Produksi = {
+      ...editData,
+      komoditas: editData.komoditas.trim(),
+      jumlah: jumlahBaru,
+    };
     try {
-      await updateProduction(editingId, editData);
+      await updateProduction(editingId, updated);
     } catch (err) {
       laporGagal(err);
       return;
     }
     setList((current) =>
-      current.map((item) => (item.id === editingId ? editData : item))
+      current.map((item) => (item.id === editingId ? updated : item))
     );
     setEditingId(null);
     setEditData(null);
-  };
-
-  const formatTanggal = (tgl: string) => {
-    if (!tgl) return "-";
-    const d = new Date(tgl);
-    return d.toLocaleDateString("id-ID", {
-      day: "numeric",
-      month: "short",
-      year: "numeric",
-    });
   };
 
   return (
@@ -146,16 +183,19 @@ export default function ProduksiPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">
+                  <label htmlFor="produksi-jumlah" className="block text-xs font-medium text-gray-700 mb-1">
                     Hasil Panen / Target
                   </label>
-                  <input
-                    type="number"
+                  <NumberInput
+                    id="produksi-jumlah"
                     value={jumlah}
-                    onChange={(e) => setJumlah(e.target.value)}
-                    placeholder="Contoh: 500"
-                    className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:ring-2 focus:ring-[#1b4332] focus:outline-none"
-                    required
+                    onValueChange={(v) => {
+                      setJumlah(v);
+                      setJumlahError(null);
+                    }}
+                    error={jumlahError}
+                    placeholder="Contoh: 500 atau 2,5"
+                    className="w-full px-3 py-2 rounded-lg border border-gray-200 text-base md:text-sm focus:ring-2 focus:ring-[#1b4332] focus:outline-none"
                   />
                 </div>
                 <div>
@@ -196,10 +236,18 @@ export default function ProduksiPage() {
                   <input
                     type="date"
                     value={tanggalPanen}
+                    min={tanggalTanam || undefined}
                     onChange={(e) => setTanggalPanen(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:ring-2 focus:ring-[#1b4332] focus:outline-none"
+                    aria-invalid={tanggalError ? true : undefined}
+                    aria-describedby={tanggalError ? "produksi-tanggal-error" : undefined}
+                    className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:ring-2 focus:ring-[#1b4332] focus:outline-none aria-[invalid=true]:border-red-500"
                     required
                   />
+                  {tanggalError && (
+                    <p id="produksi-tanggal-error" role="alert" className="mt-1 text-xs text-red-600">
+                      {tanggalError}
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -263,15 +311,18 @@ export default function ProduksiPage() {
                               </td>
                               <td className="px-3 py-2">
                                 <input
-                                  type="number"
+                                  type="text"
+                                  inputMode="decimal"
+                                  aria-label="Jumlah"
                                   value={editData.jumlah}
                                   onChange={(e) =>
                                     setEditData({
                                       ...editData,
-                                      jumlah: Number(e.target.value),
+                                      jumlah: e.target.value,
                                     })
                                   }
-                                  className="border rounded px-2 py-1 text-xs w-20"
+                                  aria-invalid={positiveNumberError(editData.jumlah) ? true : undefined}
+                                  className="border rounded px-2 py-1 text-xs w-20 aria-[invalid=true]:border-red-500"
                                 />
                               </td>
                               <td className="px-3 py-2">
@@ -300,22 +351,30 @@ export default function ProduksiPage() {
                                   className="border rounded px-2 py-1 text-xs"
                                 />
                               </td>
-                              <td className="px-3 py-2 text-right space-x-1 whitespace-nowrap">
+                              <td className="px-2 py-1 text-right whitespace-nowrap">
+                                {editError && (
+                                  <p role="alert" className="text-xs text-red-600 whitespace-normal text-left">
+                                    {editError}
+                                  </p>
+                                )}
                                 <button
                                   type="button"
                                   onClick={saveEdit}
-                                  className="text-green-600 p-1"
+                                  className={`${ICON_BUTTON} text-green-600`}
                                   aria-label="Simpan"
                                 >
-                                  <Check className="w-4 h-4" />
+                                  <Check className="w-5 h-5" />
                                 </button>
                                 <button
                                   type="button"
-                                  onClick={() => setEditingId(null)}
-                                  className="text-gray-500 p-1"
+                                  onClick={() => {
+                                    setEditingId(null);
+                                    setEditError("");
+                                  }}
+                                  className={`${ICON_BUTTON} text-gray-500`}
                                   aria-label="Batal"
                                 >
-                                  <X className="w-4 h-4" />
+                                  <X className="w-5 h-5" />
                                 </button>
                               </td>
                             </>
@@ -325,7 +384,7 @@ export default function ProduksiPage() {
                                 {item.komoditas}
                               </td>
                               <td className="px-4 py-3 whitespace-nowrap">
-                                {item.jumlah.toLocaleString("id-ID")}{" "}
+                                {formatNumber(item.jumlah)}{" "}
                                 {item.satuan}
                               </td>
                               <td className="px-4 py-3 text-gray-600 whitespace-nowrap">
@@ -334,22 +393,22 @@ export default function ProduksiPage() {
                               <td className="px-4 py-3 text-gray-600 whitespace-nowrap">
                                 {formatTanggal(item.tanggalPanen)}
                               </td>
-                              <td className="px-4 py-3 text-right space-x-2 whitespace-nowrap">
+                              <td className="px-2 py-1 text-right whitespace-nowrap">
                                 <button
                                   type="button"
                                   onClick={() => startEdit(item)}
-                                  className="text-blue-600 hover:text-blue-800"
+                                  className={`${ICON_BUTTON} text-blue-600 hover:text-blue-800`}
                                   aria-label={`Ubah ${item.komoditas}`}
                                 >
-                                  <Edit2 className="w-4 h-4 inline" />
+                                  <Edit2 className="w-5 h-5" />
                                 </button>
                                 <button
                                   type="button"
-                                  onClick={() => handleDelete(item.id)}
-                                  className="text-red-500 hover:text-red-700"
+                                  onClick={() => handleDelete(item)}
+                                  className={`${ICON_BUTTON} text-red-600 hover:text-red-700`}
                                   aria-label={`Hapus ${item.komoditas}`}
                                 >
-                                  <Trash2 className="w-4 h-4 inline" />
+                                  <Trash2 className="w-5 h-5" />
                                 </button>
                               </td>
                             </>

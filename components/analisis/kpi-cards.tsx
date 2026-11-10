@@ -1,10 +1,12 @@
 "use client";
 
 import { useState } from "react";
+import { formatRupiah, formatRupiahCompact } from "@/lib/format";
 
-type HppItem = {
-  hpp: number;
-  satuan: string;
+/** HPP per unit; `hpp` is null when it cannot be computed (no sales, or mixed units). */
+export type HppItem = {
+  hpp: number | null;
+  satuan: string | null;
 };
 
 type Props = {
@@ -15,20 +17,7 @@ type Props = {
   overallHpp?: HppItem;
 };
 
-const formatCompact = (val: number | undefined) => {
-  if (val === undefined || val === null || isNaN(val)) return "Rp 0";
-  const absVal = Math.abs(val);
-  if (absVal >= 1_000_000_000)
-    return `Rp ${(val / 1_000_000_000).toFixed(1)} M`;
-  if (absVal >= 1_000_000) return `Rp ${(val / 1_000_000).toFixed(1)} jt`;
-  if (absVal >= 1_000) return `Rp ${(val / 1_000).toFixed(0)} rb`;
-  return `Rp ${val.toLocaleString("id-ID")}`;
-};
-
-const formatFull = (val: number | undefined) => {
-  if (val === undefined || val === null || isNaN(val)) return "Rp 0";
-  return `Rp ${val.toLocaleString("id-ID")}`;
-};
+const EMPTY_HPP: HppItem = { hpp: null, satuan: null };
 
 export function KpiCards({
   pendapatan,
@@ -40,12 +29,12 @@ export function KpiCards({
   const [selectedItem, setSelectedItem] = useState<string>("all");
 
   const safeHppPerItem = hppPerItem || {};
-  const safeOverallHpp = overallHpp || { hpp: 0, satuan: "kg" };
+  const safeOverallHpp = overallHpp || EMPTY_HPP;
   const items = Object.keys(safeHppPerItem);
   const currentHpp =
     selectedItem === "all"
       ? safeOverallHpp
-      : safeHppPerItem[selectedItem] || { hpp: 0, satuan: "kg" };
+      : safeHppPerItem[selectedItem] || EMPTY_HPP;
 
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 w-full">
@@ -59,9 +48,9 @@ export function KpiCards({
           </p>
           <h3
             className="text-base md:text-lg font-bold text-gray-900 truncate"
-            title={formatFull(pendapatan)}
+            title={formatRupiah(pendapatan)}
           >
-            {formatCompact(pendapatan)}
+            {formatRupiahCompact(pendapatan)}
           </h3>
         </div>
       </div>
@@ -76,9 +65,9 @@ export function KpiCards({
           </p>
           <h3
             className="text-base md:text-lg font-bold text-gray-900 truncate"
-            title={formatFull(biaya)}
+            title={formatRupiah(biaya)}
           >
-            {formatCompact(biaya)}
+            {formatRupiahCompact(biaya)}
           </h3>
         </div>
       </div>
@@ -99,9 +88,9 @@ export function KpiCards({
           </p>
           <h3
             className="text-base md:text-lg font-bold text-gray-900 truncate"
-            title={formatFull(Math.abs(laba))}
+            title={formatRupiah(Math.abs(laba))}
           >
-            {formatCompact(Math.abs(laba))}
+            {formatRupiahCompact(Math.abs(laba))}
           </h3>
         </div>
       </div>
@@ -128,15 +117,24 @@ export function KpiCards({
             </option>
           ))}
         </select>
-        <h3
-          className="text-base md:text-lg font-bold text-gray-900 truncate"
-          title={`${formatFull(currentHpp.hpp)}/${currentHpp.satuan}`}
-        >
-          {formatCompact(currentHpp.hpp)}
-          <span className="text-[10px] md:text-xs font-normal text-gray-600">
-            /{currentHpp.satuan}
-          </span>
-        </h3>
+        {currentHpp.hpp === null ? (
+          <h3
+            className="text-base md:text-lg font-bold text-gray-900 truncate"
+            title="Belum bisa dihitung: belum ada penjualan, atau satuannya berbeda-beda."
+          >
+            —
+          </h3>
+        ) : (
+          <h3
+            className="text-base md:text-lg font-bold text-gray-900 truncate"
+            title={`${formatRupiah(currentHpp.hpp)}/${currentHpp.satuan}`}
+          >
+            {formatRupiahCompact(currentHpp.hpp)}
+            <span className="text-[10px] md:text-xs font-normal text-gray-600">
+              /{currentHpp.satuan}
+            </span>
+          </h3>
+        )}
       </div>
     </div>
   );
