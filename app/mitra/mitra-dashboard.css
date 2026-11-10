@@ -720,3 +720,60 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Phase 2: deal actions */
+.mitra-dashboard-scope .row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.mitra-dashboard-scope .detail-button {
+  min-height: 44px;
+}
+
+.mitra-dashboard-scope .outline.danger,
+.mitra-dashboard-scope .detail-button.danger {
+  border-color: #e6b3b0;
+  color: #a52d2a;
+}
+
+.mitra-dashboard-scope .outline.danger:hover,
+.mitra-dashboard-scope .detail-button.danger:hover {
+  background: #ffe4e2;
+}
+
+.mitra-dashboard-scope button:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.mitra-dashboard-scope .interest-toggle {
+  display: block;
+  min-height: 44px;
+  padding: 8px 0;
+  text-decoration: underline;
+}
+
+.mitra-dashboard-scope .interest-list {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.mitra-dashboard-scope .interest-list li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 14px;
+}
+
+.mitra-dashboard-scope .interest-list a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--green);
+  font-weight: 700;
+}

@@ -545,3 +545,119 @@
     flex-direction: column;
   }
 }
+
+/* Phase 2: deal states and actions */
+.usaha-dashboard-scope .status.diterima {
+  background: #e7f0ff;
+  color: #245899;
+}
+
+.usaha-dashboard-scope .status.tayang {
+  background: var(--green-light);
+  color: var(--green-dark);
+}
+
+.usaha-dashboard-scope .status.ditutup {
+  background: #eef0f2;
+  color: #4a5560;
+}
+
+.usaha-dashboard-scope .row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.usaha-dashboard-scope .action-btn {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.usaha-dashboard-scope .action-btn.primary {
+  background: var(--green);
+  border-color: var(--green);
+  color: white;
+}
+
+.usaha-dashboard-scope .action-btn.primary:hover {
+  background: var(--green-dark);
+}
+
+.usaha-dashboard-scope .action-btn.danger {
+  border-color: #e6b3b0;
+  color: #9b2626;
+}
+
+.usaha-dashboard-scope .action-btn.danger:hover {
+  background: #fdeaea;
+}
+
+.usaha-dashboard-scope .action-btn:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.usaha-dashboard-scope .muted-text {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.usaha-dashboard-scope .interest-toggle {
+  display: block;
+  min-height: 44px;
+  padding: 8px 0;
+  border: 0;
+  background: none;
+  color: var(--green);
+  font: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.usaha-dashboard-scope .interest-row > td {
+  background: #f6faf7;
+  white-space: normal;
+}
+
+.usaha-dashboard-scope .interest-list {
+  list-style: none;
+  margin: 0;
+  padding: 4px 0;
+  display: grid;
+  gap: 8px;
+}
+
+.usaha-dashboard-scope .interest-list li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 14px;
+}
+
+.usaha-dashboard-scope .interest-list a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--green);
+  font-weight: 700;
+}
+
+.usaha-dashboard-scope .toast {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  transform: translateX(-50%);
+  max-width: calc(100vw - 32px);
+  padding: 12px 18px;
+  border-radius: 8px;
+  background: #183047;
+  color: white;
+  font-size: 14px;
+  z-index: 50;
+}

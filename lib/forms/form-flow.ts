@@ -7,11 +7,26 @@ export type EntryStatus =
   | "sent"
   | "accepted"
   | "rejected"
-  | "completed";
+  | "completed"
+  | "closed";
 
 /** Anything that is no longer a draft is final and cannot be edited. */
 export function isFinalStatus(status: EntryStatus | string | null | undefined) {
   return Boolean(status) && status !== "draft";
+}
+
+/**
+ * Status a listing gets when it is submitted. Requests and stand-alone offers
+ * go to the directory ("published"); an offer made to a request is sent to
+ * that buyer only ("sent"). The database enforces the same rule.
+ */
+export function submittedStatus(kind: FormKind, requestId: string | null): EntryStatus {
+  return kind === "offer" && requestId ? "sent" : "published";
+}
+
+/** A published listing can still be edited by its owner ("Ubah"). */
+export function isEditableStatus(status: EntryStatus | string | null | undefined) {
+  return status === "draft" || status === "published";
 }
 
 export interface StepConfig {

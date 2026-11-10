@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { UserProfile } from "@/lib/auth";
 import {
+  expressInterest,
   mapRowToDirectoryOffer,
   mapRowToDirectoryRequest,
   type DirectoryOfferItem,
@@ -13,6 +14,56 @@ import {
 import { createClient } from "@/lib/supabase/client";
 import { todayWIB } from "@/lib/format";
 import { telUrl, whatsAppUrl } from "@/lib/contact";
+
+/** True when the viewer has been given this listing's contact. */
+function hasContact(contact: { pic: string; phone: string; email: string }) {
+  return Boolean(contact.pic || contact.phone || contact.email);
+}
+
+/**
+ * Shown to a logged-in viewer before the contact is revealed (decision D2):
+ * pressing the button records interest, which the owner can see.
+ */
+function InterestGate({
+  ownerLabel,
+  busy,
+  error,
+  onConfirm,
+}: {
+  ownerLabel: string;
+  busy: boolean;
+  error: string;
+  onConfirm: () => void;
+}) {
+  return (
+    <div className="modal-contact-locked">
+      <span className="modal-lock-icon" aria-hidden="true">
+        🔒
+      </span>
+      <div>
+        <strong>Kontak terlihat setelah Anda menyatakan minat</strong>
+        <p>
+          Dengan menekan tombol ini, {ownerLabel} akan melihat nama dan nomor HP
+          akun Anda agar bisa saling menghubungi. Anda bisa menyatakan minat pada
+          10 listing per hari.
+        </p>
+        <button
+          type="button"
+          className="card-button button-offer"
+          onClick={onConfirm}
+          disabled={busy}
+        >
+          {busy ? "Mencatat minat..." : "Nyatakan Minat & Lihat Kontak"}
+        </button>
+        {error && (
+          <p className="modal-interest-error" role="alert">
+            {error}
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
 
 interface DirektoriClientProps {
   initialRequests: DirectoryRequestItem[];
@@ -614,6 +665,52 @@ export function DirektoriClient({
       return;
     }
     router.push(`/masuk?next=${encodeURIComponent("/mitra/permintaan/baru")}`);
+  }
+
+  // Listings whose contact this viewer unlocked in this visit (some have no
+  // contact saved at all, so hasContact() alone cannot tell).
+  const [revealedIds, setRevealedIds] = useState<Set<string>>(() => new Set());
+  const [interestBusyId, setInterestBusyId] = useState<string | null>(null);
+  const [interestError, setInterestError] = useState<{ id: string; message: string } | null>(null);
+
+  function isRevealed(item: { id: string; contact: { pic: string; phone: string; email: string } }) {
+    return revealedIds.has(item.id) || hasContact(item.contact);
+  }
+
+  async function handleExpressInterest(listingId: string, kind: "request" | "offer") {
+    setInterestBusyId(listingId);
+    setInterestError(null);
+    try {
+      await expressInterest(listingId);
+      const supabase = createClient();
+      const { data: row } = await supabase
+        .from("listings")
+        .select(
+          "id, kind, status, reference, format, data, photo_path, created_at, listing_contacts(contact)"
+        )
+        .eq("id", listingId)
+        .maybeSingle();
+      setRevealedIds((prev) => new Set(prev).add(listingId));
+      if (row) {
+        const r = row as unknown as Record<string, unknown>;
+        if (kind === "request") {
+          const next = mapRowToDirectoryRequest(r);
+          setRequests((prev) => prev.map((x) => (x.id === listingId ? next : x)));
+          setSelectedModal((m) => (m && m.item.id === listingId ? { type: "request", item: next } : m));
+        } else {
+          const next = mapRowToDirectoryOffer(r);
+          setOffers((prev) => prev.map((x) => (x.id === listingId ? next : x)));
+          setSelectedModal((m) => (m && m.item.id === listingId ? { type: "offer", item: next } : m));
+        }
+      }
+    } catch (err) {
+      setInterestError({
+        id: listingId,
+        message: err instanceof Error ? err.message : "Minat gagal dicatat.",
+      });
+    } finally {
+      setInterestBusyId(null);
+    }
   }
 
   function handleAddOfferClick(requestId?: string) {
@@ -1399,9 +1496,8 @@ export function DirektoriClient({
                         Lihat Detail
                       </button>
 
-                      {/* Until interest is recorded in the app (Phase 2), "Nyatakan
-                          Minat" opens WhatsApp to the seller. Without a login or
-                          a usable number it opens the detail, which explains why. */}
+                      {/* "Nyatakan Minat" opens the detail, where the viewer
+                          confirms; the contact is revealed after that. */}
                       {statusText !== "Selesai" &&
                       user &&
                       whatsAppUrl(item.contact.phone) ? (
@@ -1416,7 +1512,7 @@ export function DirektoriClient({
                           target="_blank"
                           rel="noopener noreferrer"
                         >
-                          Nyatakan Minat
+                          Hubungi via WhatsApp
                         </a>
                       ) : (
                         <button
@@ -1569,7 +1665,14 @@ export function DirektoriClient({
 
                       <div className="modal-section">
                         <h4>Informasi Mitra</h4>
-                        {user ? (
+                        {user && !isRevealed(reqItem) ? (
+                          <InterestGate
+                            ownerLabel="pembeli"
+                            busy={interestBusyId === reqItem.id}
+                            error={interestError?.id === reqItem.id ? interestError.message : ""}
+                            onConfirm={() => handleExpressInterest(reqItem.id, "request")}
+                          />
+                        ) : user ? (
                           <div className="modal-contact">
                             <p>
                               <strong>PIC:</strong>{" "}
@@ -1719,7 +1822,14 @@ export function DirektoriClient({
 
                       <div className="modal-section">
                         <h4>Informasi Pelaku Usaha</h4>
-                        {user ? (
+                        {user && !isRevealed(offerItem) ? (
+                          <InterestGate
+                            ownerLabel="penjual"
+                            busy={interestBusyId === offerItem.id}
+                            error={interestError?.id === offerItem.id ? interestError.message : ""}
+                            onConfirm={() => handleExpressInterest(offerItem.id, "offer")}
+                          />
+                        ) : user ? (
                           <div className="modal-contact">
                             <p>
                               <strong>Nama penawar:</strong>{" "}

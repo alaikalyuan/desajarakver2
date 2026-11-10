@@ -351,3 +351,8 @@
     gap: 0;
   }
 }
+
+.turnstile-box {
+  min-height: 65px;
+  margin: 12px 0;
+}

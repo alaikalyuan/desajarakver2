@@ -1,11 +1,18 @@
 "use client";
 
-import { Fragment, useEffect, useMemo, useState } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { formatTimestamp, type FormEntry } from "@/lib/forms/form-flow";
-import { rowToFormEntry } from "@/lib/listings";
+import {
+  closeListing,
+  deleteDraft,
+  getMyListingInterests,
+  respondToOffer,
+  rowToFormEntry,
+  type ListingInterest,
+} from "@/lib/listings";
 import { telUrl, whatsAppUrl } from "@/lib/contact";
 import { toKg } from "@/lib/units";
 import "./mitra-dashboard.css";
@@ -22,29 +29,35 @@ interface IncomingOfferItem {
   tanggal: string;
   tanggalLabel: string;
   status: OfferStatusLabel;
+  rawStatus: string;
   kontak: string;
   permintaan: string;
 }
 
 type OfferStatusLabel =
   | "Menunggu Respons"
-  | "Dalam Proses"
+  | "Diterima"
   | "Terlaksana"
   | "Ditolak";
 
-// Same labels as V1 (sub-login-mitra.js STATUS_PENAWARAN).
 const OFFER_STATUS_LABEL: Record<string, OfferStatusLabel> = {
   sent: "Menunggu Respons",
-  accepted: "Dalam Proses",
+  accepted: "Diterima",
   completed: "Terlaksana",
   rejected: "Ditolak",
 };
 
 const STATUS_CLASS: Record<string, string> = {
   "Menunggu Respons": "wait",
-  "Dalam Proses": "progress",
+  Diterima: "progress",
   Terlaksana: "done",
   Ditolak: "rejected",
+};
+
+const REQUEST_STATUS: Record<string, { label: string; cls: string }> = {
+  draft: { label: "Draf", cls: "wait" },
+  published: { label: "Dipublikasikan", cls: "done" },
+  closed: { label: "Ditutup", cls: "rejected" },
 };
 
 function initials(name: string): string {
@@ -83,11 +96,13 @@ export default function MitraDashboardPage() {
   const [sortOrder, setSortOrder] = useState("terbaru");
   const [expandedId, setExpandedId] = useState<number | string | null>(null);
   const [toastText, setToastText] = useState("");
+  const [interests, setInterests] = useState<ListingInterest[]>([]);
+  const [openInterestId, setOpenInterestId] = useState<string | null>(null);
+  const [busyId, setBusyId] = useState<string | null>(null);
 
-  useEffect(() => {
+  const loadDashboard = useCallback(async () => {
     const supabase = createClient();
-
-    async function loadDashboard() {
+    {
       const {
         data: { session },
       } = await supabase.auth.getSession();
@@ -122,6 +137,7 @@ export default function MitraDashboardPage() {
       );
       setMyRequests(mappedReqs);
       setLoadingRequests(false);
+      getMyListingInterests().then(setInterests);
 
       // Offers sent to this mitra's own requests (published, not drafts).
       const requestIds = mappedReqs
@@ -157,7 +173,9 @@ export default function MitraDashboardPage() {
             tanggal: entry.createdAt.slice(0, 10),
             tanggalLabel: formatTimestamp(entry.createdAt),
             status: OFFER_STATUS_LABEL[entry.status] || "Menunggu Respons",
-            kontak: entry.data.phone || "-",
+            rawStatus: entry.status,
+            // Readable only once this offer is accepted (database rule).
+            kontak: entry.data.phone || "",
             permintaan:
               entry.targetRequest?.productType ||
               "Permintaan Kemitraan Direktori",
@@ -166,9 +184,77 @@ export default function MitraDashboardPage() {
         setIncomingOffers(liveOffers);
       }
     }
-
-    loadDashboard();
   }, []);
+
+  // Load after mount; the handlers below call loadDashboard() again after a change.
+  useEffect(() => {
+    const timer = setTimeout(loadDashboard, 0);
+    return () => clearTimeout(timer);
+  }, [loadDashboard]);
+
+  async function handleRespond(item: IncomingOfferItem, decision: "accepted" | "rejected") {
+    const question =
+      decision === "accepted"
+        ? `Terima penawaran ${item.komoditas} dari ${item.penawar}? Nomor WhatsApp Anda dan penawar akan saling terlihat.`
+        : `Tolak penawaran ${item.komoditas} dari ${item.penawar}? Keputusan ini tidak bisa dibatalkan.`;
+    if (!window.confirm(question)) return;
+    setBusyId(String(item.id));
+    try {
+      await respondToOffer(String(item.id), decision);
+      showToast(
+        decision === "accepted"
+          ? "Penawaran diterima. Hubungi penawar lewat WhatsApp."
+          : "Penawaran ditolak."
+      );
+      await loadDashboard();
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : "Tanggapan gagal disimpan.");
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  async function handleCloseRequest(req: FormEntry) {
+    if (
+      !window.confirm(
+        `Tutup permintaan ${req.reference}? Permintaan akan hilang dari direktori dan tidak menerima penawaran baru.`
+      )
+    )
+      return;
+    setBusyId(req.id);
+    try {
+      await closeListing(req.id);
+      showToast("Permintaan ditutup.");
+      await loadDashboard();
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : "Gagal menutup permintaan.");
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  async function handleDeleteDraft(req: FormEntry) {
+    if (!window.confirm(`Hapus draf ${req.reference}? Draf yang dihapus tidak bisa dikembalikan.`))
+      return;
+    setBusyId(req.id);
+    try {
+      await deleteDraft(req.id);
+      showToast("Draf dihapus.");
+      await loadDashboard();
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : "Draf gagal dihapus.");
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  const interestsByListing = useMemo(() => {
+    const map: Record<string, ListingInterest[]> = {};
+    interests.forEach((i) => {
+      (map[i.listingId] ||= []).push(i);
+    });
+    return map;
+  }, [interests]);
 
   function showToast(message: string) {
     setToastText(message);
@@ -195,7 +281,7 @@ export default function MitraDashboardPage() {
       "Menunggu Respons": incomingOffers.filter(
         (i) => i.status === "Menunggu Respons"
       ).length,
-      "Dalam Proses": incomingOffers.filter((i) => i.status === "Dalam Proses").length,
+      Diterima: incomingOffers.filter((i) => i.status === "Diterima").length,
       Terlaksana: incomingOffers.filter((i) => i.status === "Terlaksana").length,
       Ditolak: incomingOffers.filter((i) => i.status === "Ditolak").length,
     }),
@@ -263,7 +349,7 @@ export default function MitraDashboardPage() {
         item.hargaLabel,
         item.tanggalLabel,
         item.status,
-        item.kontak,
+        item.kontak || "-",
         item.permintaan,
       ]
         .map((v) => `"${String(v).replaceAll('"', '""')}"`)
@@ -400,7 +486,7 @@ export default function MitraDashboardPage() {
                       label: "Menunggu Respons",
                       badgeClass: "amber",
                     },
-                    { key: "Dalam Proses", label: "Dalam Proses", badgeClass: "blue" },
+                    { key: "Diterima", label: "Diterima", badgeClass: "blue" },
                     { key: "Terlaksana", label: "Terlaksana", badgeClass: "green" },
                     { key: "Ditolak", label: "Ditolak", badgeClass: "red" },
                   ] as const
@@ -605,11 +691,13 @@ export default function MitraDashboardPage() {
                                     <div className="expanded-item">
                                       <span>Kontak Penawar</span>
                                       <strong>
-                                        {telUrl(item.kontak) ? (
-                                          <a href={telUrl(item.kontak)!}>{item.kontak}</a>
-                                        ) : (
-                                          item.kontak
-                                        )}
+                                        {item.rawStatus === "sent"
+                                          ? "Terlihat setelah Anda menerima penawaran"
+                                          : telUrl(item.kontak) ? (
+                                              <a href={telUrl(item.kontak)!}>{item.kontak}</a>
+                                            ) : (
+                                              item.kontak || "-"
+                                            )}
                                       </strong>
                                     </div>
                                   </div>
@@ -627,7 +715,27 @@ export default function MitraDashboardPage() {
                                     >
                                       Tutup Detail
                                     </button>
-                                    {whatsAppUrl(item.kontak) && (
+                                    {item.rawStatus === "sent" && (
+                                      <>
+                                        <button
+                                          type="button"
+                                          className="outline danger"
+                                          disabled={busyId === String(item.id)}
+                                          onClick={() => handleRespond(item, "rejected")}
+                                        >
+                                          Tolak
+                                        </button>
+                                        <button
+                                          type="button"
+                                          className="primary"
+                                          disabled={busyId === String(item.id)}
+                                          onClick={() => handleRespond(item, "accepted")}
+                                        >
+                                          Terima Penawaran
+                                        </button>
+                                      </>
+                                    )}
+                                    {item.rawStatus !== "sent" && whatsAppUrl(item.kontak) && (
                                       <a
                                         className="primary"
                                         href={
@@ -734,7 +842,8 @@ export default function MitraDashboardPage() {
                     </thead>
                     <tbody>
                       {myRequests.map((req) => (
-                        <tr key={req.id}>
+                        <Fragment key={req.id}>
+                        <tr>
                           <td>
                             <strong>{req.reference}</strong>
                           </td>
@@ -752,30 +861,79 @@ export default function MitraDashboardPage() {
                           <td>
                             <span
                               className={`status ${
-                                req.status === "draft" ? "wait" : "done"
+                                (REQUEST_STATUS[req.status] || REQUEST_STATUS.published).cls
                               }`}
                             >
-                              {req.status === "draft" ? "Draf" : "Dipublikasikan"}
+                              {(REQUEST_STATUS[req.status] || REQUEST_STATUS.published).label}
                             </span>
+                            {(interestsByListing[req.id]?.length ?? 0) > 0 && (
+                              <button
+                                type="button"
+                                className="linkbutton interest-toggle"
+                                aria-expanded={openInterestId === req.id}
+                                onClick={() =>
+                                  setOpenInterestId(openInterestId === req.id ? null : req.id)
+                                }
+                              >
+                                {interestsByListing[req.id].length} orang tertarik
+                              </button>
+                            )}
                           </td>
                           <td>{formatTimestamp(req.updatedAt)}</td>
                           <td>
-                            {req.status === "draft" ? (
-                              <Link
-                                href={`/mitra/permintaan/baru?entryId=${encodeURIComponent(
-                                  req.id
-                                )}`}
-                                className="detail-button"
-                              >
-                                Lanjutkan Draf
-                              </Link>
-                            ) : (
-                              <Link href="/direktori" className="detail-button">
-                                Lihat di Direktori
-                              </Link>
-                            )}
+                            <div className="row-actions">
+                              {req.status === "draft" && (
+                                <>
+                                  <Link
+                                    href={`/mitra/permintaan/baru?entryId=${encodeURIComponent(
+                                      req.id
+                                    )}`}
+                                    className="detail-button"
+                                  >
+                                    Lanjutkan Draf
+                                  </Link>
+                                  <button
+                                    type="button"
+                                    className="detail-button danger"
+                                    disabled={busyId === req.id}
+                                    onClick={() => handleDeleteDraft(req)}
+                                  >
+                                    Hapus
+                                  </button>
+                                </>
+                              )}
+                              {req.status === "published" && (
+                                <>
+                                  <Link
+                                    href={`/mitra/permintaan/baru?entryId=${encodeURIComponent(
+                                      req.id
+                                    )}`}
+                                    className="detail-button"
+                                  >
+                                    Ubah
+                                  </Link>
+                                  <button
+                                    type="button"
+                                    className="detail-button danger"
+                                    disabled={busyId === req.id}
+                                    onClick={() => handleCloseRequest(req)}
+                                  >
+                                    Tutup Permintaan
+                                  </button>
+                                </>
+                              )}
+                              {req.status === "closed" && <span>—</span>}
+                            </div>
                           </td>
                         </tr>
+                        {openInterestId === req.id && (
+                          <tr className="expanded-row">
+                            <td colSpan={8}>
+                              <InterestList items={interestsByListing[req.id] || []} />
+                            </td>
+                          </tr>
+                        )}
+                        </Fragment>
                       ))}
                     </tbody>
                   </table>
@@ -796,6 +954,38 @@ export default function MitraDashboardPage() {
           {toastText}
         </div>
       )}
+    </div>
+  );
+}
+
+function InterestList({ items }: { items: ListingInterest[] }) {
+  return (
+    <div className="expanded-panel">
+      <small className="expanded-label">YANG MENYATAKAN MINAT</small>
+      <ul className="interest-list">
+        {items.map((person) => (
+          <li key={`${person.listingId}-${person.createdAt}`}>
+            <strong>{person.name}</strong>
+            <span>{formatTimestamp(person.createdAt)}</span>
+            {whatsAppUrl(person.phone) ? (
+              <a
+                href={
+                  whatsAppUrl(
+                    person.phone,
+                    `Halo ${person.name}, terima kasih sudah tertarik dengan listing saya di Desa Jarak.`
+                  )!
+                }
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                WhatsApp {person.phone}
+              </a>
+            ) : (
+              <span>Nomor HP belum dicantumkan</span>
+            )}
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }

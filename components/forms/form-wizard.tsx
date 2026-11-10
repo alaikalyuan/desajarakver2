@@ -26,12 +26,13 @@ import {
   FREQUENCY_OPTIONS,
   getSteps,
   GRADE_OPTIONS,
-  isFinalStatus,
+  isEditableStatus,
   OFFER_OWNER_TYPES,
   PARTNERSHIP_OPTIONS,
   PAYMENT_OPTIONS,
   PRODUCT_OPTIONS,
   REQUEST_OWNER_TYPES,
+  submittedStatus,
   TargetRequestSummary,
   UNIT_OPTIONS,
   validateAllSteps,
@@ -43,6 +44,7 @@ import {
   getRoleMeta,
 } from "@/lib/forms/domain";
 import {
+  findMyOfferForRequest,
   getTargetRequestById,
   readFormEntries,
   saveFormEntry,
@@ -77,6 +79,13 @@ export function FormWizard({
   const [consentError, setConsentError] = useState("");
   const [submitNotice, setSubmitNotice] = useState("");
   const [saving, setSaving] = useState(false);
+  // Set when this offer cannot be made at all (2.10): the seller already
+  // offered on this request, or the request is closed or missing.
+  const [blocked, setBlocked] = useState<
+    | { reason: "duplicate"; reference: string }
+    | { reason: "closed" }
+    | null
+  >(null);
 
   const steps = useMemo(() => getSteps(kind), [kind]);
   const roleMeta = useMemo(() => getRoleMeta(kind), [kind]);
@@ -99,30 +108,45 @@ export function FormWizard({
     let mounted = true;
 
     async function loadInitialData() {
-      const [loadedEntries, loadedTarget] = await Promise.all([
+      const offerToRequest = kind === "offer" && initialRequestId && !initialEntryId;
+      const [loadedEntries, loadedTarget, existingOffer] = await Promise.all([
         readFormEntries(),
         kind === "offer" && initialRequestId
           ? getTargetRequestById(initialRequestId)
+          : Promise.resolve(null),
+        offerToRequest
+          ? findMyOfferForRequest(initialRequestId)
           : Promise.resolve(null),
       ]);
 
       if (!mounted) return;
       setEntries(loadedEntries);
 
-      // Find if editing a specific draft entry
+      if (offerToRequest) {
+        if (existingOffer) {
+          setBlocked({ reason: "duplicate", reference: existingOffer.reference });
+          return;
+        }
+        if (!loadedTarget) {
+          setBlocked({ reason: "closed" });
+          return;
+        }
+      }
+
+      // Continue a draft, or edit a published listing ("Ubah").
       if (initialEntryId) {
-        const foundDraft = loadedEntries.find(
+        const found = loadedEntries.find(
           (item) => item.id === initialEntryId && item.kind === kind
         );
-        if (foundDraft) {
-          if (isFinalStatus(foundDraft.status)) {
+        if (found) {
+          if (!isEditableStatus(found.status)) {
             setSubmitNotice(
               `${
                 kind === "request" ? "Permintaan" : "Penawaran"
               } ini sudah dikirim dan bersifat final.`
             );
           } else {
-            loadDraftIntoState(foundDraft);
+            loadDraftIntoState(found);
             return;
           }
         }
@@ -167,8 +191,18 @@ export function FormWizard({
     });
     setStepIndex(0);
     setErrors({});
-    setSubmitNotice(`Melanjutkan draf ${draft.reference}.`);
+    setSubmitNotice(
+      draft.status === "published"
+        ? `Mengubah ${draft.reference}. Perubahan langsung tampil di direktori setelah disimpan.`
+        : `Melanjutkan draf ${draft.reference}.`
+    );
   }
+
+  const isEditingPublished = activeEntry?.status === "published";
+  const requestIdForEntry =
+    kind === "offer"
+      ? activeEntry?.requestId ?? initialRequestId ?? targetRequest?.id ?? null
+      : null;
 
   function updateField<K extends keyof FormData>(field: K, value: FormData[K]) {
     setData((current) => ({ ...current, [field]: value }));
@@ -222,10 +256,7 @@ export function FormWizard({
       kind,
       status,
       reference: referenceRef.current,
-      requestId:
-        kind === "offer"
-          ? initialRequestId || targetRequest?.id || null
-          : null,
+      requestId: requestIdForEntry,
       targetRequest: kind === "offer" ? targetRequest : null,
       createdAt: createdAtRef.current,
       updatedAt: now,
@@ -296,7 +327,7 @@ export function FormWizard({
 
     setSaving(true);
     try {
-      const entry = buildEntry(kind === "request" ? "published" : "sent");
+      const entry = buildEntry(submittedStatus(kind, requestIdForEntry));
       const saved = await saveFormEntry(entry);
       setSubmittedEntry(saved);
     } catch (err) {
@@ -362,9 +393,11 @@ export function FormWizard({
         <section className="jf-success">
           <span className="tag green">{submittedEntry.reference}</span>
           <h1>
-            {kind === "request"
-              ? "Permintaan Kemitraan Terkirim"
-              : "Penawaran Desa Terkirim"}
+            {isEditingPublished
+              ? "Perubahan Tersimpan"
+              : kind === "request"
+                ? "Permintaan Kemitraan Terkirim"
+                : "Penawaran Desa Terkirim"}
           </h1>
           <p>
             <strong>{submittedEntry.data.ownerName}</strong> -{" "}
@@ -398,6 +431,33 @@ export function FormWizard({
             >
               Isi Formulir Baru
             </button>
+          </div>
+        </section>
+      </main>
+    );
+  }
+
+  if (blocked) {
+    return (
+      <main id="jarak-forms">
+        <section className="jf-success" role="alert">
+          <h1>
+            {blocked.reason === "duplicate"
+              ? "Anda sudah mengirim penawaran"
+              : "Permintaan ini sudah ditutup"}
+          </h1>
+          <p>
+            {blocked.reason === "duplicate"
+              ? `Penawaran ${blocked.reference} untuk permintaan ini sudah terkirim. Satu pelaku usaha hanya bisa mengirim satu penawaran per permintaan. Lihat statusnya di dasbor Anda.`
+              : "Permintaan ini sudah ditutup oleh pembeli atau tidak ditemukan, jadi tidak menerima penawaran baru."}
+          </p>
+          <div>
+            <Link className="btn primary" href="/usaha">
+              Buka Dashboard Saya
+            </Link>
+            <Link className="btn outline" href="/direktori">
+              Kembali ke Direktori Usaha
+            </Link>
           </div>
         </section>
       </main>
@@ -1166,7 +1226,11 @@ export function FormWizard({
                       ? "permintaan kemitraan"
                       : "penawaran komoditas desa"}{" "}
                     ini benar dan siap ditindaklanjuti melalui koordinasi resmi
-                    Desa Jarak.
+                    Desa Jarak. Nama, nomor HP, dan email kontak hanya
+                    terlihat oleh pengguna yang menekan &quot;Nyatakan Minat&quot;
+                    {kind === "request"
+                      ? " dan oleh pelaku usaha yang penawarannya Anda terima."
+                      : " dan oleh pembeli yang menerima penawaran Anda."}
                   </span>
                 </label>
                 {consentError && (
@@ -1217,19 +1281,25 @@ export function FormWizard({
                 disabled={saving}
               >
                 <Send size={16} />{" "}
-                {saving ? "Mengirim..." : roleMeta.submitLabel}
+                {saving
+                  ? "Menyimpan..."
+                  : isEditingPublished
+                    ? "Simpan Perubahan"
+                    : roleMeta.submitLabel}
               </button>
             )}
           </div>
 
           <div className="wf-draft">
-            <button
-              type="button"
-              onClick={handleSaveDraft}
-              disabled={saving}
-            >
-              <Bookmark size={14} /> Simpan sebagai Draf
-            </button>
+            {!isEditingPublished && (
+              <button
+                type="button"
+                onClick={handleSaveDraft}
+                disabled={saving}
+              >
+                <Bookmark size={14} /> Simpan sebagai Draf
+              </button>
+            )}
             <span role="status">
               {submitNotice || roleMeta.draftReadyText}
             </span>

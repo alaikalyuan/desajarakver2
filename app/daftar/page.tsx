@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -18,6 +18,11 @@ import {
   User,
 } from "lucide-react";
 import { Navbar } from "@/components/navbar";
+import {
+  Turnstile,
+  TURNSTILE_SITE_KEY,
+  type TurnstileHandle,
+} from "@/components/turnstile";
 import { createClient } from "@/lib/supabase/client";
 import type { UserRole } from "@/lib/auth";
 import "./daftar.css";
@@ -35,6 +40,8 @@ export default function DaftarPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState("");
+  const turnstileRef = useRef<TurnstileHandle>(null);
   const [message, setMessage] = useState<{
     type: "error" | "success" | "";
     text: string;
@@ -124,6 +131,14 @@ export default function DaftarPage() {
       return;
     }
 
+    if (TURNSTILE_SITE_KEY && !captchaToken) {
+      setMessage({
+        type: "error",
+        text: "Tunggu centang verifikasi \"Saya bukan robot\" selesai, lalu coba lagi.",
+      });
+      return;
+    }
+
     setLoading(true);
     const supabase = createClient();
 
@@ -139,10 +154,23 @@ export default function DaftarPage() {
             role,
           },
           emailRedirectTo: `${window.location.origin}/masuk`,
+          ...(captchaToken ? { captchaToken } : {}),
         },
       });
+      // Each verification token works once.
+      turnstileRef.current?.reset();
 
       if (error) {
+        if (/captcha/i.test(error.message)) {
+          throw new Error(
+            "Verifikasi \"Saya bukan robot\" gagal atau kedaluwarsa. Ulangi centangnya lalu daftar lagi."
+          );
+        }
+        if (/rate limit|too many/i.test(error.message)) {
+          throw new Error(
+            "Terlalu banyak percobaan pendaftaran. Tunggu beberapa menit lalu coba lagi."
+          );
+        }
         if (/already registered/i.test(error.message)) {
           throw new Error("Email sudah terdaftar. Silakan masuk.");
         }
@@ -470,6 +498,17 @@ export default function DaftarPage() {
                   Desa Jarak.
                 </span>
               </label>
+
+              <Turnstile
+                ref={turnstileRef}
+                onToken={setCaptchaToken}
+                onError={() =>
+                  setMessage({
+                    type: "error",
+                    text: "Verifikasi tidak dapat dimuat. Periksa koneksi internet lalu muat ulang halaman.",
+                  })
+                }
+              />
 
               <button
                 type="submit"
