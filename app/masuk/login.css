@@ -38,7 +38,7 @@
 .login-intro {
   position: relative;
   min-height: 610px;
-  background-image: url("/assets/login.desa.png");
+  background-image: url("/assets/login-desa.jpg");
   background-size: cover;
   background-position: center;
   overflow: hidden;

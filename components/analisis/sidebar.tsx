@@ -1,17 +1,20 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   ArrowLeft,
   HelpCircle,
   LayoutDashboard,
   Leaf,
+  LogOut,
   Phone,
   ShoppingCart,
   Sprout,
   X,
 } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
+import { helpWhatsAppUrl } from "@/lib/contact";
 
 type Props = {
   isOpen: boolean;
@@ -20,6 +23,13 @@ type Props = {
 
 export function Sidebar({ isOpen, onClose }: Props) {
   const pathname = usePathname();
+  const router = useRouter();
+
+  async function handleLogout() {
+    await createClient().auth.signOut();
+    router.push("/");
+    router.refresh();
+  }
 
   const menuItems = [
     { name: "Dashboard Analisis", href: "/usaha/analisis", icon: LayoutDashboard },
@@ -31,8 +41,9 @@ export function Sidebar({ isOpen, onClose }: Props) {
     { name: "Produksi", href: "/usaha/analisis/produksi", icon: Sprout },
   ];
 
-  const nomorWA = "6281234567890";
-  const pesanWA = "Halo Admin Desa Jarak, saya butuh bantuan terkait dashboard.";
+  const helpUrl = helpWhatsAppUrl(
+    "Halo Admin Desa Jarak, saya butuh bantuan terkait dashboard."
+  );
 
   return (
     <>
@@ -109,9 +120,18 @@ export function Sidebar({ isOpen, onClose }: Props) {
               <ArrowLeft className="w-4 h-4 lg:w-5 lg:h-5 flex-shrink-0" />
               <span className="truncate">Kembali ke Dashboard Usaha</span>
             </Link>
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="w-full flex items-center gap-3 px-3 py-2.5 min-h-11 rounded-lg text-xs lg:text-sm font-medium text-gray-300 hover:bg-[#2d6a4f]/50 hover:text-white transition-colors whitespace-nowrap"
+            >
+              <LogOut className="w-4 h-4 lg:w-5 lg:h-5 flex-shrink-0" />
+              <span className="truncate">Keluar dari Akun</span>
+            </button>
           </div>
         </nav>
 
+        {helpUrl && (
         <div className="p-3 mt-auto flex-shrink-0">
           <div className="bg-[#2d6a4f] rounded-xl p-3">
             <div className="flex items-center gap-2 mb-1.5 text-white">
@@ -124,9 +144,7 @@ export function Sidebar({ isOpen, onClose }: Props) {
               Hubungi admin desa untuk informasi lebih lanjut.
             </p>
             <a
-              href={`https://wa.me/${nomorWA}?text=${encodeURIComponent(
-                pesanWA
-              )}`}
+              href={helpUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="w-full bg-white text-[#1b4332] py-1.5 rounded-lg text-xs font-medium flex items-center justify-center gap-1.5 hover:bg-gray-100 transition-colors"
@@ -136,6 +154,7 @@ export function Sidebar({ isOpen, onClose }: Props) {
             </a>
           </div>
         </div>
+        )}
       </aside>
     </>
   );

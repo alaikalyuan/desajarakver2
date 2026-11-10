@@ -103,7 +103,7 @@ export function Navbar({ initialUser = null }: NavbarProps) {
       <nav className="navbar" aria-label="Navigasi Utama">
         <Link href="/" className="brand">
           <img
-            src="/assets/Logo Desa Jarak.png"
+            src="/assets/logo-desa-jarak-96.png"
             alt="Logo Desa Jarak"
             className="brand-logo"
             width={36}

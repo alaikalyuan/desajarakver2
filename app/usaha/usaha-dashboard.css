@@ -70,6 +70,19 @@
   font-weight: 800;
 }
 
+.usaha-dashboard-scope .topbar-logout {
+  display: none;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid #c9d6cd;
+  border-radius: 8px;
+  background: white;
+  color: #b42318;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
 .usaha-dashboard-scope .layout {
   display: flex;
   min-height: calc(100vh - 76px);
@@ -511,6 +524,13 @@
   }
   .usaha-dashboard-scope .sidebar-label,
   .usaha-dashboard-scope .sidebar-bottom {
+    display: none;
+  }
+  .usaha-dashboard-scope .topbar-logout {
+    display: inline-flex;
+    align-items: center;
+  }
+  .usaha-dashboard-scope .account > div:first-child {
     display: none;
   }
   .usaha-dashboard-scope .menu-item {
