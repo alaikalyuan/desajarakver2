@@ -1,4 +1,5 @@
 import { parseIndonesianDate } from "@/lib/format";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
 import {
   type EntryStatus,
@@ -6,6 +7,7 @@ import {
   type FormEntry,
   type FormKind,
   type TargetRequestSummary,
+  isEditableStatus,
 } from "@/lib/forms/form-flow";
 
 const PHOTO_BUCKET = "listing-photos";
@@ -103,6 +105,16 @@ export function normalizeAssetUrl(rawUrl?: string | null, fallback = DEFAULT_REQ
     return `/${trimmed}`;
   }
   return trimmed;
+}
+
+/**
+ * A smaller copy of a listing photo for cards, made by Supabase image
+ * transformation. Anything that is not a listing-photos URL is returned as is.
+ */
+export function thumbnailUrl(url: string, width = 480): string {
+  const marker = "/storage/v1/object/public/";
+  if (!url || !url.includes(marker)) return url;
+  return `${url.replace(marker, "/storage/v1/render/image/public/")}?width=${width}&quality=70`;
 }
 
 export function getStoragePhotoUrl(photoPath?: string | null): string {
@@ -566,7 +578,10 @@ export async function getTargetRequestById(
     .eq("id", requestId)
     .single();
 
-  if (error || !row) return null;
+  // Only an open request can receive offers; the database enforces the same.
+  if (error || !row || row.kind !== "request" || row.status !== "published") {
+    return null;
+  }
 
   if (row.format === "form") {
     const entry = rowToFormEntry(row as Record<string, unknown>);
@@ -630,7 +645,7 @@ function dataUrlToBlob(dataUrl: string): { blob: Blob; ext: string } | null {
   return { blob: new Blob([buffer], { type: mime }), ext };
 }
 
-async function uploadPhotoIfNeeded(
+async function uploadPhoto(
   userId: string,
   listingId: string,
   photoPreview: string
@@ -642,28 +657,71 @@ async function uploadPhotoIfNeeded(
   if (!parsed) return null;
 
   const supabase = createClient();
-  const bucket = supabase.storage.from(PHOTO_BUCKET);
-  const path = `${userId}/${listingId}.${parsed.ext}`;
-  const options = { upsert: false, contentType: parsed.blob.type };
-
-  // storage.objects only has INSERT and DELETE policies for this bucket (no
-  // SELECT/UPDATE), so `upsert: true` and remove() are both refused by RLS.
-  // A replacement photo for the same listing therefore gets a versioned name
-  // inside the user's own folder.
-  let finalPath = path;
-  let { error } = await bucket.upload(finalPath, parsed.blob, options);
-  if (error && /exists|duplicate/i.test(error.message)) {
-    finalPath = `${userId}/${listingId}-${Date.now().toString(36)}.${parsed.ext}`;
-    ({ error } = await bucket.upload(finalPath, parsed.blob, options));
-  }
+  // Every upload gets a new name, so a cached copy of the old photo is never
+  // shown for the new one. The old file is removed once the row points at
+  // the new one.
+  const path = `${userId}/${listingId}-${Date.now().toString(36)}.${parsed.ext}`;
+  const { error } = await supabase.storage
+    .from(PHOTO_BUCKET)
+    .upload(path, parsed.blob, { upsert: false, contentType: parsed.blob.type });
 
   if (error) {
     console.error("Unggah foto gagal:", error);
-    throw new Error(
-      "Foto gagal diunggah. Gunakan JPG, PNG, atau WEBP maksimal 5 MB lalu coba lagi."
-    );
+    return null;
   }
-  return finalPath;
+  return path;
+}
+
+/** Best effort: a file left behind is wasted space, never shown. */
+async function removePhotos(paths: (string | null | undefined)[]) {
+  const toRemove = paths.filter(
+    (p): p is string => Boolean(p) && !/^(https?:|data:|\/)/i.test(String(p))
+  );
+  if (toRemove.length === 0) return;
+  const supabase = createClient();
+  const { error } = await supabase.storage.from(PHOTO_BUCKET).remove(toRemove);
+  if (error) console.error("Foto lama gagal dihapus:", error);
+}
+
+function friendlyDbError(message: string, fallback: string): string {
+  if (/listings_one_offer_per_request|duplicate key/i.test(message)) {
+    return "Anda sudah pernah mengirim penawaran untuk permintaan ini.";
+  }
+  if (/row-level security|permission denied/i.test(message)) {
+    return "Anda tidak memiliki izin untuk mengubah data ini.";
+  }
+  if (/failed to fetch|network/i.test(message)) {
+    return "Koneksi internet terputus. Periksa sinyal lalu coba lagi.";
+  }
+  // Messages raised by our own database rules are already in Indonesian.
+  return message || fallback;
+}
+
+/**
+ * The seller's own non-draft offer for a request, if any. Used to stop a
+ * second offer before the seller starts typing (2.10).
+ */
+export async function findMyOfferForRequest(
+  requestId: string
+): Promise<{ id: string; status: string; reference: string } | null> {
+  if (!requestId) return null;
+  const supabase = createClient();
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  if (!session?.user) return null;
+  const { data } = await supabase
+    .from("listings")
+    .select("id, status, reference")
+    .eq("owner_id", session.user.id)
+    .eq("kind", "offer")
+    .eq("request_id", requestId)
+    .neq("status", "draft")
+    .limit(1)
+    .maybeSingle();
+  return data
+    ? { id: String(data.id), status: String(data.status), reference: String(data.reference || "") }
+    : null;
 }
 
 export async function saveFormEntry(entry: FormEntry): Promise<FormEntry> {
@@ -678,46 +736,37 @@ export async function saveFormEntry(entry: FormEntry): Promise<FormEntry> {
 
   const label = entry.kind === "request" ? "Permintaan" : "Penawaran";
 
-  // Check if entry already exists and is sent (final)
-  const { data: existingStatus } = await supabase
+  const { data: existing } = await supabase
     .from("listings")
-    .select("status")
+    .select("status, photo_path")
     .eq("id", entry.id)
     .maybeSingle();
 
-  if (
-    existingStatus?.status === "sent" ||
-    existingStatus?.status === "published"
-  ) {
+  const existingStatus = existing?.status as string | undefined;
+  const oldPhotoPath = (existing?.photo_path as string | null) ?? null;
+
+  // A sent offer (or a closed or decided listing) keeps its content. Saving it
+  // again with the same status is the retry after the contact or photo
+  // failed: skip the listing row and finish those steps.
+  const isRetryOfFinal =
+    existingStatus !== undefined &&
+    !isEditableStatus(existingStatus) &&
+    existingStatus === entry.status;
+
+  if (existingStatus && !isEditableStatus(existingStatus) && !isRetryOfFinal) {
     throw new Error(
-      `${label} yang sudah dikirim bersifat final dan tidak dapat diedit kembali.`
+      `${label} yang sudah dikirim bersifat final dan tidak dapat diubah.`
     );
   }
 
-  // Prevent duplicate sent offer for the same request_id
-  if (entry.kind === "offer" && entry.status === "sent" && entry.requestId) {
-    const { data: duplicateOffer } = await supabase
-      .from("listings")
-      .select("id")
-      .eq("owner_id", session.user.id)
-      .eq("kind", "offer")
-      .eq("status", "sent")
-      .eq("request_id", entry.requestId)
-      .neq("id", entry.id)
-      .limit(1);
+  const requestId = entry.requestId || entry.targetRequest?.id || null;
 
-    if (duplicateOffer && duplicateOffer.length > 0) {
-      throw new Error(
-        "Anda sudah pernah mengirim penawaran untuk permintaan ini."
-      );
+  if (!isRetryOfFinal && entry.kind === "offer" && entry.status !== "draft" && requestId) {
+    const duplicate = await findMyOfferForRequest(requestId);
+    if (duplicate && duplicate.id !== entry.id) {
+      throw new Error("Anda sudah pernah mengirim penawaran untuk permintaan ini.");
     }
   }
-
-  const photoPath = await uploadPhotoIfNeeded(
-    session.user.id,
-    entry.id,
-    entry.data?.photoPreview
-  );
 
   const publicData: Record<string, unknown> = { ...(entry.data || {}) };
   const contactData: Record<string, string> = {};
@@ -729,48 +778,64 @@ export async function saveFormEntry(entry: FormEntry): Promise<FormEntry> {
     }
   });
 
-  if (
-    typeof publicData.photoPreview === "string" &&
-    publicData.photoPreview.startsWith("data:")
-  ) {
-    delete publicData.photoPreview;
-  }
+  // The photo lives in storage; only its path is stored on the row.
+  delete publicData.photoPreview;
+  delete publicData.status;
 
   if (entry.targetRequest) {
     publicData.targetRequest = entry.targetRequest;
   }
 
-  const payload: Record<string, unknown> = {
-    id: entry.id,
-    owner_id: session.user.id,
-    kind: entry.kind,
-    status: entry.status,
-    reference: entry.reference,
-    request_id: entry.requestId || entry.targetRequest?.id || null,
-    format: "form",
-    data: publicData,
-    updated_at: entry.updatedAt || new Date().toISOString(),
-  };
+  if (!isRetryOfFinal) {
+    const payload: Record<string, unknown> = {
+      id: entry.id,
+      owner_id: session.user.id,
+      kind: entry.kind,
+      status: entry.status,
+      reference: entry.reference,
+      request_id: requestId,
+      format: "form",
+      data: publicData,
+      updated_at: new Date().toISOString(),
+    };
 
-  if (photoPath) {
-    payload.photo_path = photoPath;
-  }
+    const { error: upsertError } = await supabase
+      .from("listings")
+      .upsert(payload, { onConflict: "id" });
 
-  const { error: upsertError } = await supabase
-    .from("listings")
-    .upsert(payload, { onConflict: "id" });
-
-  if (upsertError) {
-    if (/row-level security|permission denied/i.test(upsertError.message)) {
+    if (upsertError) {
       throw new Error(
-        `${label} yang sudah dikirim bersifat final dan tidak dapat diubah.`
+        friendlyDbError(upsertError.message, `Gagal menyimpan ${label.toLowerCase()}.`)
       );
     }
-    throw new Error(upsertError.message || `Gagal menyimpan ${label.toLowerCase()}.`);
   }
 
+  // Upload only after the row exists, so a failed save leaves no orphan file.
+  let photoPath = oldPhotoPath;
+  let photoFailed = false;
+  if (entry.data?.photoPreview?.startsWith("data:image/")) {
+    const uploaded = await uploadPhoto(session.user.id, entry.id, entry.data.photoPreview);
+    if (!uploaded) {
+      photoFailed = true;
+    } else {
+      const { error: photoError } = await supabase
+        .from("listings")
+        .update({ photo_path: uploaded })
+        .eq("id", entry.id);
+      if (photoError) {
+        photoFailed = true;
+        await removePhotos([uploaded]);
+      } else {
+        photoPath = uploaded;
+        if (oldPhotoPath && oldPhotoPath !== uploaded) {
+          await removePhotos([oldPhotoPath]);
+        }
+      }
+    }
+  }
+
+  let contactFailed = false;
   if (Object.keys(contactData).length > 0) {
-    // listing_contacts has only (listing_id, contact); see the initial migration.
     const { error: contactError } = await supabase
       .from("listing_contacts")
       .upsert(
@@ -779,21 +844,112 @@ export async function saveFormEntry(entry: FormEntry): Promise<FormEntry> {
       );
     if (contactError) {
       console.error("Kontak gagal disimpan:", contactError);
-      throw new Error(
-        `${label} tersimpan, tetapi kontak gagal disimpan. Coba simpan ulang.`
-      );
+      contactFailed = true;
     }
   }
 
-  const finalPhotoPreview = photoPath
-    ? getStoragePhotoUrl(photoPath)
-    : entry.data.photoPreview;
+  if (photoFailed || contactFailed) {
+    const what = [photoFailed && "foto", contactFailed && "kontak"]
+      .filter(Boolean)
+      .join(" dan ");
+    throw new Error(
+      `${label} tersimpan, tetapi ${what} gagal disimpan. Tekan tombol kirim sekali lagi untuk mencoba ulang.`
+    );
+  }
 
   return {
     ...entry,
+    requestId,
     data: {
       ...entry.data,
-      photoPreview: finalPhotoPreview,
+      photoPreview: photoPath ? getStoragePhotoUrl(photoPath) : "",
     },
   };
+}
+
+/** Deletes a draft and its photo (2.5). Sent and published listings stay. */
+export async function deleteDraft(listingId: string): Promise<void> {
+  const supabase = createClient();
+  const { data: row } = await supabase
+    .from("listings")
+    .select("status, photo_path")
+    .eq("id", listingId)
+    .maybeSingle();
+  if (!row) throw new Error("Draf tidak ditemukan.");
+  if (row.status !== "draft") throw new Error("Hanya draf yang dapat dihapus.");
+
+  const { error } = await supabase.from("listings").delete().eq("id", listingId);
+  if (error) throw new Error(friendlyDbError(error.message, "Draf gagal dihapus."));
+  await removePhotos([row.photo_path as string | null]);
+}
+
+async function callRpc<T>(fn: string, args: Record<string, unknown>, fallback: string): Promise<T> {
+  const supabase = createClient();
+  const { data, error } = await supabase.rpc(fn, args);
+  if (error) throw new Error(friendlyDbError(error.message, fallback));
+  return data as T;
+}
+
+/** The buyer accepts or rejects an offer sent to one of their requests (2.7). */
+export function respondToOffer(offerId: string, decision: "accepted" | "rejected") {
+  return callRpc<string>(
+    "respond_to_offer",
+    { p_offer_id: offerId, p_decision: decision },
+    "Tanggapan gagal disimpan."
+  );
+}
+
+/** The owner closes a published request or directory offer (2.8). */
+export function closeListing(listingId: string) {
+  return callRpc<string>("close_listing", { p_listing_id: listingId }, "Gagal menutup listing.");
+}
+
+/**
+ * Records "Nyatakan Minat" and returns the listing's contact JSON (2.9, D2).
+ * The database limits this to 10 new listings per user per 24 hours.
+ */
+export function expressInterest(listingId: string) {
+  return callRpc<Record<string, unknown>>(
+    "express_interest",
+    { p_listing_id: listingId },
+    "Minat gagal dicatat."
+  );
+}
+
+export interface ListingInterest {
+  listingId: string;
+  name: string;
+  phone: string;
+  createdAt: string;
+}
+
+/** Everyone who pressed "Nyatakan Minat" on the caller's listings. */
+export async function getMyListingInterests(
+  supabase: SupabaseClient = createClient()
+): Promise<ListingInterest[]> {
+  const { data, error } = await supabase.rpc("my_listing_interests");
+  if (error || !Array.isArray(data)) return [];
+  return data.map((row: Record<string, unknown>) => ({
+    listingId: String(row.listing_id),
+    name: String(row.business_name || row.full_name || "Pengguna"),
+    phone: String(row.phone || ""),
+    createdAt: String(row.created_at || ""),
+  }));
+}
+
+/** Contacts the caller may read, keyed by listing id. */
+export async function getContacts(
+  listingIds: string[],
+  supabase: SupabaseClient = createClient()
+): Promise<Record<string, Record<string, string>>> {
+  if (listingIds.length === 0) return {};
+  const { data } = await supabase
+    .from("listing_contacts")
+    .select("listing_id, contact")
+    .in("listing_id", listingIds);
+  const out: Record<string, Record<string, string>> = {};
+  (data || []).forEach((row) => {
+    out[String(row.listing_id)] = (row.contact as Record<string, string>) || {};
+  });
+  return out;
 }

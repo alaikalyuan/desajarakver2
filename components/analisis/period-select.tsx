@@ -55,14 +55,14 @@ export function PeriodSelect({
   return (
     <div className="flex gap-2 w-full lg:w-auto">
       <div className="flex flex-col gap-1 flex-1 lg:flex-none">
-        <label className="text-[10px] md:text-xs font-medium text-gray-600">
+        <label className="text-xs md:text-sm font-medium text-gray-700">
           Bulan
         </label>
         <select
           aria-label="Pilih bulan"
           value={selectedMonth}
           onChange={(e) => onMonthChange(e.target.value)}
-          className="h-10 px-2 md:px-3 rounded-lg border border-gray-200 bg-white text-xs md:text-sm font-medium shadow-sm focus:ring-2 focus:ring-[#1b4332] focus:outline-none cursor-pointer w-full lg:w-32"
+          className="h-11 px-2 md:px-3 rounded-lg border border-gray-500 bg-white text-base md:text-sm font-medium shadow-sm focus:ring-2 focus:ring-[#1b4332] focus:outline-none cursor-pointer w-full lg:w-32"
         >
           {monthNames.map((m) => (
             <option key={m.value} value={m.value}>
@@ -73,7 +73,7 @@ export function PeriodSelect({
       </div>
 
       <div className="flex flex-col gap-1 flex-1 lg:flex-none">
-        <label className="text-[10px] md:text-xs font-medium text-gray-600">
+        <label className="text-xs md:text-sm font-medium text-gray-700">
           Tahun
         </label>
         <input
@@ -86,7 +86,7 @@ export function PeriodSelect({
           onBlur={handleYearBlur}
           onKeyDown={handleYearKeyDown}
           placeholder="2026"
-          className="h-10 px-2 w-full lg:w-24 rounded-lg border border-gray-200 bg-white text-xs md:text-sm font-medium shadow-sm focus:ring-2 focus:ring-[#1b4332] focus:outline-none text-center"
+          className="h-11 px-2 w-full lg:w-24 rounded-lg border border-gray-500 bg-white text-base md:text-sm font-medium shadow-sm focus:ring-2 focus:ring-[#1b4332] focus:outline-none text-center"
         />
       </div>
     </div>

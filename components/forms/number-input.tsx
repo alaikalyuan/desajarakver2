@@ -61,10 +61,10 @@ export function NumberInput({
         }}
         aria-invalid={shownError ? true : undefined}
         aria-describedby={shownError && showMessage ? errorId : rest["aria-describedby"]}
-        className={cn(className, shownError && "border-red-500")}
+        className={cn(className, shownError && "border-red-600")}
       />
       {shownError && showMessage && (
-        <p id={errorId} role="alert" className="mt-1 text-xs text-red-600">
+        <p id={errorId} role="alert" className="mt-1 text-sm text-red-700">
           {shownError}
         </p>
       )}

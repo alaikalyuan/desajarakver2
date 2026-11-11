@@ -55,7 +55,7 @@ export function RevenueDonut({ items }: Props) {
             </PieChart>
           </ResponsiveContainer>
           <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-            <span className="text-[10px] text-gray-500">Total</span>
+            <span className="text-xs text-gray-600">Total</span>
             <span className="font-bold text-xs text-gray-900" title={formatRupiah(total)}>
               {formatRupiahCompact(total)}
             </span>

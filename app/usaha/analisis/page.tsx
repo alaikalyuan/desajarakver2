@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import TopNav from "@/components/analisis/top-nav";
 import { Sidebar } from "@/components/analisis/sidebar";
 import { KpiCards, type HppItem } from "@/components/analisis/kpi-cards";
@@ -69,7 +70,7 @@ const MONTH_NAMES = [
 ];
 
 const FILTER_SELECT_CLASS =
-  "text-xs border border-gray-200 rounded-md px-2 py-1 bg-white text-gray-700 focus:outline-none focus:ring-1 focus:ring-[#1b4332] cursor-pointer max-w-[120px]";
+  "min-h-11 text-sm border border-gray-500 rounded-md px-2 py-1 bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#1b4332] cursor-pointer max-w-[140px]";
 
 const EMPTY_HPP: HppItem = { hpp: null, satuan: null };
 
@@ -128,6 +129,7 @@ export default function AnalisisDashboardPage() {
   const [allTransactions, setAllTransactions] = useState<NormalizedTransaction[]>([]);
   const [allProduksi, setAllProduksi] = useState<NormalizedProduksi[]>([]);
   const [loadError, setLoadError] = useState("");
+  const [loaded, setLoaded] = useState(false);
 
   const years = Array.from({ length: 31 }, (_, i) => currentYear - 5 + i);
 
@@ -165,6 +167,7 @@ export default function AnalisisDashboardPage() {
             tanggalPanen: p.tanggalPanen,
           }))
         );
+        setLoaded(true);
       })
       .catch((err) => {
         console.error(err);
@@ -345,29 +348,53 @@ export default function AnalisisDashboardPage() {
     };
   }, [allTransactions, allProduksi, recapYear]);
 
-  const handleDownloadPDF = () => {
+  const hasAnyData = allTransactions.length > 0 || allProduksi.length > 0;
+  const periodHasData =
+    view.summary.pendapatan > 0 ||
+    view.summary.biaya > 0 ||
+    view.chartDataProduksi.some((b) => b.produksi > 0) ||
+    view.chartDataPenjualan.some((b) => b.penjualan > 0);
+
+  const handlePrintReport = () => {
     const datePrefix =
       selectedMonth === "all" ? selectedYear : `${selectedYear}-${selectedMonth}`;
     const transactions = allTransactions.filter((t) => t.tanggal?.startsWith(datePrefix));
     const produksi = allProduksi.filter((p) => produksiDate(p).startsWith(datePrefix));
+    const penjualan = transactions.filter(isPemasukan);
 
     const printWindow = window.open("", "_blank");
     if (!printWindow) {
-      alert("Mohon izinkan pop-up untuk mengunduh laporan.");
+      alert("Izinkan jendela baru (pop-up) di browser untuk mencetak laporan.");
       return;
     }
 
     const label = escapeHtml(periodLabel(selectedYear, selectedMonth));
     const e = escapeHtml;
+    const { pendapatan, biaya, laba } = view.summary;
+    const modal =
+      view.overallHpp.hpp === null
+        ? "— (belum bisa dihitung: belum ada penjualan atau satuannya berbeda)"
+        : `${formatRupiah(view.overallHpp.hpp)}/${view.overallHpp.satuan}`;
+    const tipeLabel = (t: NormalizedTransaction) =>
+      isPemasukan(t) ? "Penjualan" : t.kategori === "aset" ? "Beli alat/aset" : "Biaya";
 
+    // Every value written below goes through escapeHtml (e).
     printWindow.document.write(`
-      <html><head><title>Laporan ${label}</title><style>body { font-family: Arial, sans-serif; padding: 30px; } h1 { color: #1b4332; } table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12px; } th { background: #1b4332; color: white; padding: 10px; text-align: left; } td { padding: 8px; border-bottom: 1px solid #ddd; }</style></head>
-      <body><h1>Laporan Keuangan & Produksi Desa Jarak</h1><p>Periode: ${label}</p>
-      <h2>Transaksi</h2><table><thead><tr><th>Tanggal</th><th>Tipe</th><th>Deskripsi</th><th>Jumlah</th><th>Total</th></tr></thead><tbody>
+      <html><head><title>Laporan ${label}</title><style>body { font-family: Arial, sans-serif; padding: 30px; color: #1f2d24; } h1 { color: #1b4332; } table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; } th { background: #1b4332; color: white; padding: 10px; text-align: left; } td { padding: 8px; border-bottom: 1px solid #ddd; } .summary td:first-child { width: 45%; color: #444; } .summary td:last-child { font-weight: bold; }</style></head>
+      <body><h1>Laporan Usaha Desa Jarak</h1><p>${userName ? `${e(userName)} · ` : ""}Periode: ${label}</p>
+      <h2>Ringkasan</h2><table class="summary"><tbody>
+      <tr><td>Total penjualan (pendapatan)</td><td>${e(formatRupiah(pendapatan))}</td></tr>
+      <tr><td>Total biaya (tanpa beli alat/aset)</td><td>${e(formatRupiah(biaya))}</td></tr>
+      <tr><td>${laba >= 0 ? "Untung (laba)" : "Rugi"}</td><td>${e(formatRupiah(Math.abs(laba)))}</td></tr>
+      <tr><td>Modal per satuan (HPP)</td><td>${e(modal)}</td></tr>
+      <tr><td>Jumlah terjual</td><td>${e(formatQuantityTotals(sumByUnit(penjualan)))}</td></tr>
+      <tr><td>Jumlah panen</td><td>${e(formatQuantityTotals(sumByUnit(produksi)))}</td></tr>
+      </tbody></table>
+      <h2>Transaksi</h2><table><thead><tr><th>Tanggal</th><th>Tipe</th><th>Keterangan</th><th>Jumlah</th><th>Total</th></tr></thead><tbody>
       ${transactions
         .map(
           (t) =>
-            `<tr><td>${e(formatTanggal(t.tanggal))}</td><td>${e(t.tipe)}</td><td>${e(
+            `<tr><td>${e(formatTanggal(t.tanggal))}</td><td>${e(tipeLabel(t))}</td><td>${e(
               t.deskripsi
             )}</td><td>${e(`${formatNumber(t.jumlah)} ${t.satuan}`)}</td><td>${e(
               formatRupiah(nilai(t))
@@ -399,26 +426,22 @@ export default function AnalisisDashboardPage() {
           <main className="p-3 md:p-6 space-y-4 md:space-y-6">
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
               <div className="min-w-0">
-                <p className="text-xs md:text-sm font-medium text-gray-600">
-                  Selamat Datang{userName ? "," : ""}
-                </p>
-                {userName && (
-                  <h1 className="text-lg md:text-3xl font-bold text-gray-900 mt-1 break-words">
-                    {userName}
-                  </h1>
-                )}
-                <p className="text-xs md:text-sm text-gray-600 mt-1">
-                  Kelola data produksi, penjualan, dan keuangan usaha Anda
-                  dengan mudah.
+                <h1 className="text-lg md:text-3xl font-bold text-gray-900 break-words">
+                  Analisis Desa{userName ? `: ${userName}` : ""}
+                </h1>
+                <p className="text-sm text-gray-700 mt-1">
+                  Catat penjualan, biaya, dan panen. Untung-rugi dihitung otomatis.
                 </p>
               </div>
-              <PeriodSelect
-                selectedMonth={selectedMonth}
-                selectedYear={selectedYear}
-                onMonthChange={setSelectedMonth}
-                onYearChange={handleYearChange}
-                years={years}
-              />
+              {hasAnyData && (
+                <PeriodSelect
+                  selectedMonth={selectedMonth}
+                  selectedYear={selectedYear}
+                  onMonthChange={setSelectedMonth}
+                  onYearChange={handleYearChange}
+                  years={years}
+                />
+              )}
             </div>
 
             {loadError && (
@@ -427,6 +450,56 @@ export default function AnalisisDashboardPage() {
               </p>
             )}
 
+            {!loaded && !loadError && (
+              <p role="status" className="rounded-2xl bg-white border border-gray-100 px-4 py-8 text-center text-gray-700">
+                Memuat catatan Anda…
+              </p>
+            )}
+
+            {loaded && !hasAnyData && (
+              <section className="rounded-2xl bg-white border border-gray-200 p-5 md:p-8 space-y-4">
+                <h2 className="text-lg md:text-2xl font-bold text-gray-900">
+                  Mulai dengan mencatat penjualan pertama
+                </h2>
+                <p className="text-sm md:text-base text-gray-700 max-w-2xl">
+                  Setiap kali Anda menjual hasil panen, catat di sini: barang,
+                  jumlah, dan harganya. Catat juga biaya seperti pupuk atau bibit.
+                  Halaman ini lalu menghitung untung-rugi Anda tiap bulan.
+                </p>
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <Link
+                    href="/usaha/analisis/input-harga"
+                    className="inline-flex items-center justify-center min-h-12 px-5 rounded-lg bg-[#1b4332] text-white font-semibold hover:bg-[#2d6a4f]"
+                  >
+                    Catat Penjualan atau Biaya
+                  </Link>
+                  <Link
+                    href="/usaha/analisis/produksi"
+                    className="inline-flex items-center justify-center min-h-12 px-5 rounded-lg border border-[#1b4332] text-[#1b4332] font-semibold hover:bg-gray-50"
+                  >
+                    Catat Panen
+                  </Link>
+                </div>
+              </section>
+            )}
+
+            {loaded && hasAnyData && !periodHasData && (
+              <p role="status" className="rounded-lg bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-900">
+                Belum ada catatan pada {periodLabel(selectedYear, selectedMonth)}.{" "}
+                {selectedMonth !== "all" && (
+                  <button
+                    type="button"
+                    className="font-semibold underline min-h-11"
+                    onClick={() => setSelectedMonth("all")}
+                  >
+                    Lihat setahun penuh
+                  </button>
+                )}
+              </p>
+            )}
+
+            {loaded && hasAnyData && (
+            <>
             <KpiCards
               pendapatan={view.summary.pendapatan}
               biaya={view.summary.biaya}
@@ -446,7 +519,7 @@ export default function AnalisisDashboardPage() {
                   note={view.produksiNote}
                   headerAction={
                     <select
-                      aria-label="Filter komoditas produksi"
+                      aria-label="Pilih komoditas panen"
                       value={selectedKomoditas}
                       onChange={(e) => setSelectedKomoditas(e.target.value)}
                       className={FILTER_SELECT_CLASS}
@@ -472,7 +545,7 @@ export default function AnalisisDashboardPage() {
                   note={view.penjualanNote}
                   headerAction={
                     <select
-                      aria-label="Filter penjualan"
+                      aria-label="Pilih barang terjual"
                       value={selectedPenjualan}
                       onChange={(e) => setSelectedPenjualan(e.target.value)}
                       className={FILTER_SELECT_CLASS}
@@ -498,7 +571,7 @@ export default function AnalisisDashboardPage() {
                   note="Biaya operasional saja, tanpa pembelian aset (sama dengan Total Biaya)."
                   headerAction={
                     <select
-                      aria-label="Filter pengeluaran"
+                      aria-label="Pilih jenis biaya"
                       value={selectedPengeluaran}
                       onChange={(e) => setSelectedPengeluaran(e.target.value)}
                       className={FILTER_SELECT_CLASS}
@@ -526,20 +599,20 @@ export default function AnalisisDashboardPage() {
                 <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 h-full">
                   <div className="flex justify-between items-center mb-4 gap-2">
                     <h3 className="font-semibold text-gray-900 text-sm md:text-base whitespace-nowrap">
-                      Rekapitulasi Tahunan
+                      Ringkasan Setahun
                     </h3>
                     <input
-                      aria-label="Tahun rekapitulasi"
+                      aria-label="Tahun ringkasan"
                       type="text"
                       inputMode="numeric"
                       maxLength={4}
                       value={recapYear}
                       onChange={(e) => setRecapYear(e.target.value.replace(/\D/g, ""))}
-                      className="text-xs border border-gray-200 rounded-md px-2 py-1 bg-white text-gray-700 focus:outline-none focus:ring-1 focus:ring-[#1b4332] text-center w-16"
+                      className="min-h-11 text-base border border-gray-500 rounded-md px-2 py-1 bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#1b4332] text-center w-20"
                       placeholder={String(currentYear)}
                     />
                   </div>
-                  <div className="space-y-3 text-xs md:text-sm">
+                  <div className="space-y-3 text-sm">
                     <div className="flex justify-between items-center gap-3 py-1.5 border-b border-gray-50">
                       <span className="text-gray-600">Total Produksi</span>
                       <span className="font-semibold text-gray-900 text-right">
@@ -577,7 +650,7 @@ export default function AnalisisDashboardPage() {
                       </span>
                     </div>
                     <div className="flex justify-between items-center py-1.5">
-                      <span className="text-gray-600">HPP Rata-rata</span>
+                      <span className="text-gray-600">Modal per Satuan</span>
                       <span className="font-semibold text-gray-900">
                         {yearly.hpp.hpp === null
                           ? "—"
@@ -595,20 +668,23 @@ export default function AnalisisDashboardPage() {
                   <h2 className="text-base md:text-xl font-bold mb-1">
                     Laporan {periodLabel(selectedYear, selectedMonth)}
                   </h2>
-                  <p className="text-xs md:text-sm text-gray-200">
-                    Unduh laporan lengkap dengan riwayat transaksi, produksi,
-                    dan ringkasan keuangan.
+                  <p className="text-sm text-gray-100">
+                    Cetak ringkasan untung-rugi, modal per satuan, transaksi,
+                    dan panen. Pilih &quot;Simpan sebagai PDF&quot; di layar
+                    cetak untuk menyimpannya.
                   </p>
                 </div>
                 <button
                   type="button"
-                  onClick={handleDownloadPDF}
-                  className="flex items-center gap-2 bg-white text-[#1b4332] px-5 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors shadow-md whitespace-nowrap"
+                  onClick={handlePrintReport}
+                  className="flex items-center gap-2 min-h-12 bg-white text-[#1b4332] px-5 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors shadow-md whitespace-nowrap"
                 >
-                  Unduh Laporan (PDF)
+                  Cetak Laporan
                 </button>
               </div>
             </div>
+            </>
+            )}
           </main>
         </div>
       </div>

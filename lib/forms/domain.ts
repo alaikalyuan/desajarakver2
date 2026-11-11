@@ -39,15 +39,15 @@ export function getRoleMeta(kind: FormKind): RoleMeta {
     return {
       role: "mitra",
       badge: "Alur Mitra Pembeli / Pemohon",
-      actorTitle: "Pemohon Kemitraan",
+      actorTitle: "Mitra",
       actorSubtitle:
         "Mitra pembeli, usaha pengolahan, ritel, atau lembaga pemesan komoditas desa.",
       counterpartTitle: "BUMDes, kelompok tani, dan pelaku usaha Desa Jarak",
       targetBannerLabel: "Permintaan akan tampil pada Direktori Kebutuhan Mitra",
       formActionLabel: "+ Ajukan Permintaan Kemitraan",
-      submitLabel: "Kirim Permintaan Kemitraan",
+      submitLabel: "Kirim Permintaan",
       draftReadyText:
-        "Draf tersimpan di akun Anda dan dapat dilanjutkan kapan saja sebelum dipublikasikan ke direktori.",
+        "Isian tersimpan otomatis di HP ini. Tekan \"Simpan sebagai Draf\" untuk menyimpannya di akun Anda.",
       sentReadyText:
         "Permintaan siap ditinjau dan ditanggapi oleh penyedia Desa Jarak melalui alur penawaran.",
     };
@@ -56,15 +56,15 @@ export function getRoleMeta(kind: FormKind): RoleMeta {
   return {
     role: "desa",
     badge: "Alur Penyedia Desa Jarak",
-    actorTitle: "Penyedia / Pelaku Usaha Desa",
+    actorTitle: "Pelaku Usaha",
     actorSubtitle:
       "BUMDes, kelompok tani, koperasi, UMKM, atau produsen warga yang menanggapi kebutuhan mitra.",
     counterpartTitle: "Mitra pembeli atau pemohon kemitraan",
     targetBannerLabel: "Menanggapi Permintaan Mitra",
     formActionLabel: "Ajukan Penawaran",
-    submitLabel: "Kirim Penawaran ke Mitra",
+    submitLabel: "Kirim Penawaran",
     draftReadyText:
-      "Draf penawaran tersimpan untuk dilengkapi bersama kelompok tani atau pengurus usaha desa.",
+      "Isian tersimpan otomatis di HP ini. Tekan \"Simpan sebagai Draf\" untuk menyimpannya di akun Anda.",
     sentReadyText:
       "Penawaran tercatat dan terhubung ke permintaan mitra yang dipilih.",
   };
@@ -105,58 +105,45 @@ export function buildReadinessItems(
 ): ReadinessItem[] {
   return [
     {
-      label: kind === "request" ? "Pemohon & kontak" : "Penyedia desa & kontak",
-      value:
-        data.ownerName && data.contactName && data.phone
-          ? `${data.ownerName} - ${data.contactName} (${data.phone})`
-          : "Nama usaha, PIC, atau nomor kontak belum lengkap",
-      ready: Boolean(
-        data.ownerName.trim() && data.contactName.trim() && data.phone.trim()
-      ),
-      stepIndex: 0,
-    },
-    {
-      label:
-        kind === "request" ? "Lokasi penerimaan" : "Titik pasok Desa Jarak",
-      value: data.location.trim() || "Lokasi belum diisi",
-      ready: Boolean(data.location.trim()),
-      stepIndex: 0,
-    },
-    {
-      label: "Komoditas & spesifikasi",
+      label: "Barang",
       value:
         data.productType && data.variety
-          ? `${data.productType} - ${data.variety} (${data.grade})`
-          : "Jenis komoditas atau spesifikasi belum lengkap",
+          ? `${data.productType} - ${data.variety}`
+          : "Jenis barang belum lengkap",
       ready: Boolean(data.productType.trim() && data.variety.trim()),
-      stepIndex: 1,
+      stepIndex: 0,
     },
     {
-      label: kind === "request" ? "Volume & jadwal" : "Kapasitas & ketersediaan",
+      label: "Jumlah & waktu",
       value:
         data.quantity && data.neededDate
           ? `${data.quantity} ${data.unit} - ${data.frequency} - ${data.neededDate}`
-          : "Jumlah atau jadwal belum diisi",
+          : "Jumlah atau waktu belum diisi",
       ready: Boolean(data.quantity.trim() && data.neededDate.trim()),
+      stepIndex: 0,
+    },
+    {
+      label: "Nama & nomor HP",
+      value:
+        data.ownerName && data.contactName && data.phone
+          ? `${data.ownerName} - ${data.contactName} (${data.phone})`
+          : "Nama usaha, nama orang, atau nomor HP belum lengkap",
+      ready: Boolean(
+        data.ownerName.trim() && data.contactName.trim() && data.phone.trim()
+      ),
       stepIndex: 1,
     },
     {
-      label: "Skema & penyerahan",
-      value:
-        data.partnershipScheme && data.deliveryType
-          ? `${data.partnershipScheme} - ${data.deliveryType}`
-          : "Skema kerja sama atau penyerahan belum dipilih",
-      ready: Boolean(
-        data.partnershipScheme.trim() && data.deliveryType.trim()
-      ),
-      stepIndex: 2,
+      label: kind === "request" ? "Alamat tujuan" : "Tempat barang diambil",
+      value: data.location.trim() || "Belum diisi",
+      ready: Boolean(data.location.trim()),
+      stepIndex: 1,
     },
     {
-      label: "Rincian operasional",
-      value:
-        data.description.trim() || "Uraian kebutuhan/pasokan belum ditulis",
+      label: "Keterangan",
+      value: data.description.trim() || "Belum ditulis",
       ready: Boolean(data.description.trim()),
-      stepIndex: 2,
+      stepIndex: 1,
     },
   ];
 }

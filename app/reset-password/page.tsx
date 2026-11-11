@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Lock } from "lucide-react";
 import { Navbar } from "@/components/navbar";
 import { createClient } from "@/lib/supabase/client";
+import { cleanPassword, PASSWORD_MIN_LENGTH } from "@/lib/auth";
 import "../masuk/login.css";
 
 export default function ResetPasswordPage() {
@@ -57,19 +58,20 @@ export default function ResetPasswordPage() {
     event.preventDefault();
     setErrorText("");
 
-    if (newPassword.length < 8) {
-      setErrorText("Kata sandi minimal 8 karakter.");
+    const password = cleanPassword(newPassword);
+    if (password.length < PASSWORD_MIN_LENGTH) {
+      setErrorText(`Kata sandi minimal ${PASSWORD_MIN_LENGTH} karakter.`);
       return;
     }
 
-    if (newPassword !== confirmNewPassword) {
+    if (password !== cleanPassword(confirmNewPassword)) {
       setErrorText("Konfirmasi kata sandi tidak sama.");
       return;
     }
 
     setSaving(true);
     const supabase = createClient();
-    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    const { error } = await supabase.auth.updateUser({ password });
 
     if (error) {
       setErrorText(
@@ -99,8 +101,10 @@ export default function ResetPasswordPage() {
           <section className="login-form-section">
             <div className="form-wrapper">
               <div className="form-heading">
-                <h2>Atur Ulang Kata Sandi</h2>
-                <p id="resetIntro">{introText}</p>
+                <h1>Atur Ulang Kata Sandi</h1>
+                <p id="resetIntro" role="status">
+                  {introText}
+                </p>
               </div>
 
               {ready && !savedSuccess && (
@@ -114,8 +118,10 @@ export default function ResetPasswordPage() {
                       <input
                         type="password"
                         id="newPassword"
-                        placeholder="Minimal 8 karakter"
+                        placeholder={`Minimal ${PASSWORD_MIN_LENGTH} karakter`}
                         autoComplete="new-password"
+                        aria-invalid={errorText ? true : undefined}
+                        aria-describedby={errorText ? "resetError" : undefined}
                         value={newPassword}
                         onChange={(e) => setNewPassword(e.target.value)}
                       />
@@ -139,7 +145,7 @@ export default function ResetPasswordPage() {
                         onChange={(e) => setConfirmNewPassword(e.target.value)}
                       />
                     </div>
-                    <small className="error-message" id="resetError">
+                    <small className="error-message" id="resetError" role="alert">
                       {errorText}
                     </small>
                   </div>

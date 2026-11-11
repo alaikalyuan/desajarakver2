@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import { cache } from "react";
 import { SUPABASE_PUBLISHABLE_KEY, SUPABASE_URL } from "./client";
 import type { UserProfile, UserRole } from "@/lib/auth";
 
@@ -24,7 +25,11 @@ export async function createServerSupabaseClient() {
   });
 }
 
-export async function getCurrentUserProfile(): Promise<UserProfile | null> {
+/**
+ * The signed-in user's profile, or null. Cached per request, so a layout and
+ * its page share one lookup.
+ */
+export const getCurrentUserProfile = cache(async function getCurrentUserProfile(): Promise<UserProfile | null> {
   try {
     const supabase = await createServerSupabaseClient();
     const {
@@ -52,4 +57,4 @@ export async function getCurrentUserProfile(): Promise<UserProfile | null> {
   } catch {
     return null;
   }
-}
+});

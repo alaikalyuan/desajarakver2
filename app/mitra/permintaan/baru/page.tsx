@@ -1,6 +1,11 @@
+import type { Metadata } from "next";
 import { Navbar } from "@/components/navbar";
 import { FormWizard } from "@/components/forms/form-wizard";
 import { getCurrentUserProfile } from "@/lib/supabase/server";
+
+export const metadata: Metadata = {
+  title: "Buat Permintaan",
+};
 
 export default async function PermintaanBaruPage({
   searchParams,
@@ -16,6 +21,11 @@ export default async function PermintaanBaruPage({
     <>
       <Navbar initialUser={user} />
       <FormWizard
+        profile={
+          user
+            ? { fullName: user.fullName, businessName: user.businessName, phone: user.phone }
+            : null
+        }
         kind="request"
         initialEntryId={params.entryId || null}
       />

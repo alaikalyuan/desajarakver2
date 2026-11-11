@@ -14,7 +14,7 @@ export function ChartCard({ title, badge, action, children }: Props) {
         <div className="flex items-center gap-2">
           <h2 className="text-sm font-bold text-foreground">{title}</h2>
           {badge ? (
-            <span className="flex items-center gap-1 rounded-md border px-2 py-1 text-[11px] text-muted-foreground">
+            <span className="flex items-center gap-1 rounded-md border px-2 py-1 text-xs text-muted-foreground">
               {badge}
               <ChevronDown className="size-3" aria-hidden="true" />
             </span>

@@ -170,7 +170,7 @@ export default function InputTransaksiPage() {
               <h1 className="text-xl md:text-2xl font-bold text-gray-900">
                 Input Transaksi Keuangan
               </h1>
-              <p className="text-xs md:text-sm text-gray-600">
+              <p className="text-sm text-gray-700">
                 Catat pemasukan dan pengeluaran usaha dengan tanggal yang
                 sesuai.
               </p>
@@ -180,30 +180,35 @@ export default function InputTransaksiPage() {
               onSubmit={handleSubmit}
               className="bg-white p-4 md:p-6 rounded-2xl shadow-sm border border-gray-100 space-y-4"
             >
+              <p className="text-sm text-gray-700">
+                Kolom bertanda <span className="text-red-700">*</span> wajib diisi.
+              </p>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">
-                    Tanggal Transaksi
+                  <label htmlFor="transaksi-tanggal" className="block text-sm font-medium text-gray-800 mb-1">
+                    Tanggal Transaksi <span className="text-red-700" aria-hidden="true">*</span>
                   </label>
                   <input
+                    id="transaksi-tanggal"
                     type="date"
                     value={tanggal}
                     onChange={(e) => setTanggal(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:ring-2 focus:ring-[#1b4332] focus:outline-none"
+                    className="w-full px-3 py-2 rounded-lg border border-gray-500 text-base focus:ring-2 focus:ring-[#1b4332] focus:outline-none"
                     required
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">
+                  <label htmlFor="transaksi-tipe" className="block text-sm font-medium text-gray-800 mb-1">
                     Tipe Transaksi
                   </label>
                   <select
+                    id="transaksi-tipe"
                     value={tipe}
                     onChange={(e) =>
                       setTipe(e.target.value as "pemasukan" | "pengeluaran")
                     }
-                    className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:ring-2 focus:ring-[#1b4332] focus:outline-none bg-white"
+                    className="w-full px-3 py-2 rounded-lg border border-gray-500 text-base focus:ring-2 focus:ring-[#1b4332] focus:outline-none bg-white"
                   >
                     <option value="pemasukan">Pemasukan (Penjualan)</option>
                     <option value="pengeluaran">Pengeluaran (Biaya)</option>
@@ -212,15 +217,16 @@ export default function InputTransaksiPage() {
 
                 {tipe === "pengeluaran" ? (
                   <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">
+                    <label htmlFor="transaksi-kategori" className="block text-sm font-medium text-gray-800 mb-1">
                       Kategori Biaya
                     </label>
                     <select
+                      id="transaksi-kategori"
                       value={kategori}
                       onChange={(e) =>
                         setKategori(e.target.value as "operasional" | "aset")
                       }
-                      className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:ring-2 focus:ring-[#1b4332] focus:outline-none bg-white"
+                      className="w-full px-3 py-2 rounded-lg border border-gray-500 text-base focus:ring-2 focus:ring-[#1b4332] focus:outline-none bg-white"
                     >
                       <option value="operasional">
                         Biaya Operasional (Pupuk, Bibit, Tenaga)
@@ -232,15 +238,16 @@ export default function InputTransaksiPage() {
                   </div>
                 ) : (
                   <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">
-                      Nama Barang / Deskripsi
+                    <label htmlFor="transaksi-deskripsi" className="block text-sm font-medium text-gray-800 mb-1">
+                      Nama Barang / Keterangan <span className="text-red-700" aria-hidden="true">*</span>
                     </label>
                     <input
+                      id="transaksi-deskripsi"
                       type="text"
                       value={deskripsi}
                       onChange={(e) => setDeskripsi(e.target.value)}
                       placeholder="Contoh: Padi, Jagung"
-                      className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:ring-2 focus:ring-[#1b4332] focus:outline-none"
+                      className="w-full px-3 py-2 rounded-lg border border-gray-500 text-base focus:ring-2 focus:ring-[#1b4332] focus:outline-none"
                       required
                     />
                   </div>
@@ -249,10 +256,11 @@ export default function InputTransaksiPage() {
 
               {tipe === "pengeluaran" && (
                 <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">
-                    Nama Barang / Deskripsi Pengeluaran
+                  <label htmlFor="transaksi-deskripsi" className="block text-sm font-medium text-gray-800 mb-1">
+                    Nama Barang / Keterangan Pengeluaran <span className="text-red-700" aria-hidden="true">*</span>
                   </label>
                   <input
+                    id="transaksi-deskripsi"
                     type="text"
                     value={deskripsi}
                     onChange={(e) => setDeskripsi(e.target.value)}
@@ -261,7 +269,7 @@ export default function InputTransaksiPage() {
                         ? "Contoh: Traktor, Cangkul"
                         : "Contoh: Pupuk Urea, Bibit Padi"
                     }
-                    className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:ring-2 focus:ring-[#1b4332] focus:outline-none"
+                    className="w-full px-3 py-2 rounded-lg border border-gray-500 text-base focus:ring-2 focus:ring-[#1b4332] focus:outline-none"
                     required
                   />
                 </div>
@@ -269,8 +277,8 @@ export default function InputTransaksiPage() {
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <label htmlFor="transaksi-jumlah" className="block text-xs font-medium text-gray-700 mb-1">
-                    Jumlah
+                  <label htmlFor="transaksi-jumlah" className="block text-sm font-medium text-gray-800 mb-1">
+                    Jumlah <span className="text-red-700" aria-hidden="true">*</span>
                   </label>
                   <NumberInput
                     id="transaksi-jumlah"
@@ -281,18 +289,19 @@ export default function InputTransaksiPage() {
                     }}
                     error={formErrors.jumlah}
                     placeholder="Contoh: 100 atau 2,5"
-                    className="w-full px-3 py-2 rounded-lg border border-gray-200 text-base md:text-sm focus:ring-2 focus:ring-[#1b4332] focus:outline-none"
+                    className="w-full px-3 py-2 rounded-lg border border-gray-500 text-base focus:ring-2 focus:ring-[#1b4332] focus:outline-none"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">
+                  <label htmlFor="transaksi-satuan" className="block text-sm font-medium text-gray-800 mb-1">
                     Satuan
                   </label>
                   <select
+                    id="transaksi-satuan"
                     value={satuan}
                     onChange={(e) => setSatuan(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:ring-2 focus:ring-[#1b4332] focus:outline-none bg-white"
+                    className="w-full px-3 py-2 rounded-lg border border-gray-500 text-base focus:ring-2 focus:ring-[#1b4332] focus:outline-none bg-white"
                   >
                     <option value="kg">Kilogram (kg)</option>
                     <option value="ton">Ton</option>
@@ -306,8 +315,8 @@ export default function InputTransaksiPage() {
                 </div>
 
                 <div>
-                  <label htmlFor="transaksi-harga" className="block text-xs font-medium text-gray-700 mb-1">
-                    Harga per Satuan (Rp)
+                  <label htmlFor="transaksi-harga" className="block text-sm font-medium text-gray-800 mb-1">
+                    Harga per Satuan (Rp) <span className="text-red-700" aria-hidden="true">*</span>
                   </label>
                   <NumberInput
                     id="transaksi-harga"
@@ -318,7 +327,7 @@ export default function InputTransaksiPage() {
                     }}
                     error={formErrors.harga}
                     placeholder="Contoh: 12000"
-                    className="w-full px-3 py-2 rounded-lg border border-gray-200 text-base md:text-sm focus:ring-2 focus:ring-[#1b4332] focus:outline-none"
+                    className="w-full px-3 py-2 rounded-lg border border-gray-500 text-base focus:ring-2 focus:ring-[#1b4332] focus:outline-none"
                   />
                 </div>
               </div>
@@ -338,13 +347,19 @@ export default function InputTransaksiPage() {
                   Riwayat Transaksi
                 </h2>
               </div>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm text-left">
+              {transactions.length === 0 ? (
+                <p className="px-4 py-8 text-center text-gray-600">
+                  Belum ada transaksi. Isi formulir di atas untuk mencatat
+                  penjualan atau biaya pertama.
+                </p>
+              ) : (
+              <div className="overflow-x-auto px-3 md:px-0 pt-3 md:pt-0">
+                <table className="stack-table w-full text-sm text-left">
                   <thead className="bg-gray-50 text-gray-600 text-xs uppercase">
                     <tr>
                       <th className="px-4 py-3 whitespace-nowrap">Tanggal</th>
                       <th className="px-4 py-3 whitespace-nowrap">Tipe</th>
-                      <th className="px-4 py-3 whitespace-nowrap">Deskripsi</th>
+                      <th className="px-4 py-3 whitespace-nowrap">Keterangan</th>
                       <th className="px-4 py-3 whitespace-nowrap">Jumlah</th>
                       <th className="px-4 py-3 whitespace-nowrap">
                         Harga Satuan
@@ -356,23 +371,14 @@ export default function InputTransaksiPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
-                    {transactions.length === 0 ? (
-                      <tr>
-                        <td
-                          colSpan={7}
-                          className="px-4 py-8 text-center text-gray-500"
-                        >
-                          Belum ada transaksi
-                        </td>
-                      </tr>
-                    ) : (
-                      transactions.map((t) => (
+                    {transactions.map((t) => (
                         <tr key={t.id} className="hover:bg-gray-50">
                           {editingId === t.id && editData ? (
                             <>
-                              <td className="px-3 py-2">
+                              <td data-label="Tanggal" className="cell-first px-3 py-2">
                                 <input
                                   type="date"
+                                  aria-label="Tanggal"
                                   value={editData.tanggal}
                                   onChange={(e) =>
                                     setEditData({
@@ -380,11 +386,12 @@ export default function InputTransaksiPage() {
                                       tanggal: e.target.value,
                                     })
                                   }
-                                  className="border rounded px-2 py-1 text-xs w-32"
+                                  className="border border-gray-500 rounded px-2 py-2 text-base"
                                 />
                               </td>
-                              <td className="px-3 py-2">
+                              <td data-label="Tipe" className="px-3 py-2">
                                 <select
+                                  aria-label="Tipe"
                                   value={editData.tipe}
                                   onChange={(e) =>
                                     setEditData({
@@ -394,7 +401,7 @@ export default function InputTransaksiPage() {
                                         | "pengeluaran",
                                     })
                                   }
-                                  className="border rounded px-2 py-1 text-xs"
+                                  className="border border-gray-500 rounded px-2 py-2 text-base bg-white"
                                 >
                                   <option value="pemasukan">Pemasukan</option>
                                   <option value="pengeluaran">
@@ -402,9 +409,10 @@ export default function InputTransaksiPage() {
                                   </option>
                                 </select>
                               </td>
-                              <td className="px-3 py-2">
+                              <td className="cell-title px-3 py-2">
                                 <input
                                   type="text"
+                                  aria-label="Keterangan"
                                   value={editData.deskripsi}
                                   onChange={(e) =>
                                     setEditData({
@@ -412,10 +420,10 @@ export default function InputTransaksiPage() {
                                       deskripsi: e.target.value,
                                     })
                                   }
-                                  className="border rounded px-2 py-1 text-xs w-32"
+                                  className="border border-gray-500 rounded px-2 py-2 text-base w-full md:w-32"
                                 />
                               </td>
-                              <td className="px-3 py-2">
+                              <td data-label="Jumlah" className="px-3 py-2">
                                 <input
                                   type="text"
                                   inputMode="decimal"
@@ -428,10 +436,10 @@ export default function InputTransaksiPage() {
                                     })
                                   }
                                   aria-invalid={positiveNumberError(editData.jumlah) ? true : undefined}
-                                  className="border rounded px-2 py-1 text-xs w-20 aria-[invalid=true]:border-red-500"
+                                  className="border border-gray-500 rounded px-2 py-2 text-base w-28 md:w-20 aria-[invalid=true]:border-red-600"
                                 />
                               </td>
-                              <td className="px-3 py-2">
+                              <td data-label="Harga" className="px-3 py-2">
                                 <input
                                   type="text"
                                   inputMode="decimal"
@@ -444,21 +452,21 @@ export default function InputTransaksiPage() {
                                     })
                                   }
                                   aria-invalid={positiveNumberError(editData.harga) ? true : undefined}
-                                  className="border rounded px-2 py-1 text-xs w-24 aria-[invalid=true]:border-red-500"
+                                  className="border border-gray-500 rounded px-2 py-2 text-base w-28 md:w-24 aria-[invalid=true]:border-red-600"
                                 />
                               </td>
-                              <td className="px-3 py-2 font-semibold whitespace-nowrap">
+                              <td data-label="Total" className="px-3 py-2 font-semibold whitespace-nowrap">
                                 {formatRupiah(
                                   (parseDecimal(editData.jumlah) ?? 0) *
                                     (parseDecimal(editData.harga) ?? 0)
                                 )}
                                 {editError && (
-                                  <p role="alert" className="text-xs font-normal text-red-600 whitespace-normal">
+                                  <p role="alert" className="text-sm font-normal text-red-700 whitespace-normal">
                                     {editError}
                                   </p>
                                 )}
                               </td>
-                              <td className="px-2 py-1 text-right whitespace-nowrap">
+                              <td className="cell-actions px-2 py-1 text-right whitespace-nowrap">
                                 <button
                                   type="button"
                                   onClick={saveEdit}
@@ -482,10 +490,10 @@ export default function InputTransaksiPage() {
                             </>
                           ) : (
                             <>
-                              <td className="px-4 py-3 text-gray-600 whitespace-nowrap">
+                              <td data-label="Tanggal" className="cell-first px-4 py-3 text-gray-700 whitespace-nowrap">
                                 {formatTanggal(t.tanggal)}
                               </td>
-                              <td className="px-4 py-3 whitespace-nowrap">
+                              <td data-label="Tipe" className="px-4 py-3 whitespace-nowrap">
                                 <span
                                   className={`px-2 py-1 rounded-full text-xs font-medium ${
                                     t.tipe === "pemasukan"
@@ -502,19 +510,19 @@ export default function InputTransaksiPage() {
                                       : "Biaya Operasional"}
                                 </span>
                               </td>
-                              <td className="px-4 py-3 font-medium text-gray-900 whitespace-nowrap">
+                              <td className="cell-title px-4 py-3 font-medium text-gray-900 whitespace-nowrap">
                                 {t.deskripsi}
                               </td>
-                              <td className="px-4 py-3 whitespace-nowrap">
+                              <td data-label="Jumlah" className="px-4 py-3 whitespace-nowrap">
                                 {formatNumber(t.jumlah)} {t.satuan}
                               </td>
-                              <td className="px-4 py-3 whitespace-nowrap">
+                              <td data-label="Harga Satuan" className="px-4 py-3 whitespace-nowrap">
                                 {formatRupiah(t.harga)}
                               </td>
-                              <td className="px-4 py-3 font-semibold text-gray-900 whitespace-nowrap">
+                              <td data-label="Total" className="px-4 py-3 font-semibold text-gray-900 whitespace-nowrap">
                                 {formatRupiah(t.jumlah * t.harga)}
                               </td>
-                              <td className="px-2 py-1 text-right whitespace-nowrap">
+                              <td className="cell-actions px-2 py-1 text-right whitespace-nowrap">
                                 <button
                                   type="button"
                                   onClick={() => startEdit(t)}
@@ -535,11 +543,11 @@ export default function InputTransaksiPage() {
                             </>
                           )}
                         </tr>
-                      ))
-                    )}
+                      ))}
                   </tbody>
                 </table>
               </div>
+              )}
             </div>
           </main>
         </div>

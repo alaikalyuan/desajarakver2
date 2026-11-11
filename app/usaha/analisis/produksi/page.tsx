@@ -159,7 +159,7 @@ export default function ProduksiPage() {
               <h1 className="text-xl md:text-2xl font-bold text-gray-900">
                 Data Produksi Pertanian
               </h1>
-              <p className="text-xs md:text-sm text-gray-600">
+              <p className="text-sm text-gray-700">
                 Catat jadwal tanam dan hasil panen komoditas desa.
               </p>
             </div>
@@ -168,23 +168,27 @@ export default function ProduksiPage() {
               onSubmit={handleSubmit}
               className="bg-white p-4 md:p-6 rounded-2xl shadow-sm border border-gray-100 space-y-4"
             >
+              <p className="text-sm text-gray-700">
+                Kolom bertanda <span className="text-red-700">*</span> wajib diisi.
+              </p>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">
-                    Nama Komoditas
+                  <label htmlFor="produksi-komoditas" className="block text-sm font-medium text-gray-800 mb-1">
+                    Nama Komoditas <span className="text-red-700" aria-hidden="true">*</span>
                   </label>
                   <input
+                    id="produksi-komoditas"
                     type="text"
                     value={komoditas}
                     onChange={(e) => setKomoditas(e.target.value)}
                     placeholder="Contoh: Padi, Cabai"
-                    className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:ring-2 focus:ring-[#1b4332] focus:outline-none"
+                    className="w-full px-3 py-2 rounded-lg border border-gray-500 text-base focus:ring-2 focus:ring-[#1b4332] focus:outline-none"
                     required
                   />
                 </div>
                 <div>
-                  <label htmlFor="produksi-jumlah" className="block text-xs font-medium text-gray-700 mb-1">
-                    Hasil Panen / Target
+                  <label htmlFor="produksi-jumlah" className="block text-sm font-medium text-gray-800 mb-1">
+                    Hasil Panen / Target <span className="text-red-700" aria-hidden="true">*</span>
                   </label>
                   <NumberInput
                     id="produksi-jumlah"
@@ -195,17 +199,18 @@ export default function ProduksiPage() {
                     }}
                     error={jumlahError}
                     placeholder="Contoh: 500 atau 2,5"
-                    className="w-full px-3 py-2 rounded-lg border border-gray-200 text-base md:text-sm focus:ring-2 focus:ring-[#1b4332] focus:outline-none"
+                    className="w-full px-3 py-2 rounded-lg border border-gray-500 text-base focus:ring-2 focus:ring-[#1b4332] focus:outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">
+                  <label htmlFor="produksi-satuan" className="block text-sm font-medium text-gray-800 mb-1">
                     Satuan
                   </label>
                   <select
+                    id="produksi-satuan"
                     value={satuan}
                     onChange={(e) => setSatuan(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:ring-2 focus:ring-[#1b4332] focus:outline-none bg-white"
+                    className="w-full px-3 py-2 rounded-lg border border-gray-500 text-base focus:ring-2 focus:ring-[#1b4332] focus:outline-none bg-white"
                   >
                     <option value="kg">Kilogram (kg)</option>
                     <option value="ton">Ton</option>
@@ -218,33 +223,35 @@ export default function ProduksiPage() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">
-                    Tanggal Tanam
+                  <label htmlFor="produksi-tanam" className="block text-sm font-medium text-gray-800 mb-1">
+                    Tanggal Tanam <span className="text-red-700" aria-hidden="true">*</span>
                   </label>
                   <input
+                    id="produksi-tanam"
                     type="date"
                     value={tanggalTanam}
                     onChange={(e) => setTanggalTanam(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:ring-2 focus:ring-[#1b4332] focus:outline-none"
+                    className="w-full px-3 py-2 rounded-lg border border-gray-500 text-base focus:ring-2 focus:ring-[#1b4332] focus:outline-none"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">
-                    Tanggal Panen (atau Estimasi)
+                  <label htmlFor="produksi-panen" className="block text-sm font-medium text-gray-800 mb-1">
+                    Tanggal Panen (atau perkiraan) <span className="text-red-700" aria-hidden="true">*</span>
                   </label>
                   <input
+                    id="produksi-panen"
                     type="date"
                     value={tanggalPanen}
                     min={tanggalTanam || undefined}
                     onChange={(e) => setTanggalPanen(e.target.value)}
                     aria-invalid={tanggalError ? true : undefined}
                     aria-describedby={tanggalError ? "produksi-tanggal-error" : undefined}
-                    className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:ring-2 focus:ring-[#1b4332] focus:outline-none aria-[invalid=true]:border-red-500"
+                    className="w-full px-3 py-2 rounded-lg border border-gray-500 text-base focus:ring-2 focus:ring-[#1b4332] focus:outline-none aria-[invalid=true]:border-red-500"
                     required
                   />
                   {tanggalError && (
-                    <p id="produksi-tanggal-error" role="alert" className="mt-1 text-xs text-red-600">
+                    <p id="produksi-tanggal-error" role="alert" className="mt-1 text-sm text-red-700">
                       {tanggalError}
                     </p>
                   )}
@@ -264,8 +271,14 @@ export default function ProduksiPage() {
               <div className="p-4 md:p-6 border-b border-gray-100">
                 <h2 className="font-semibold text-gray-900">Daftar Produksi</h2>
               </div>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm text-left">
+              {list.length === 0 ? (
+                <p className="px-4 py-8 text-center text-gray-600">
+                  Belum ada data produksi. Isi formulir di atas untuk mencatat
+                  panen pertama.
+                </p>
+              ) : (
+              <div className="overflow-x-auto px-3 md:px-0 pt-3 md:pt-0">
+                <table className="stack-table w-full text-sm text-left">
                   <thead className="bg-gray-50 text-gray-600 text-xs uppercase">
                     <tr>
                       <th className="px-4 py-3 whitespace-nowrap">Komoditas</th>
@@ -282,23 +295,14 @@ export default function ProduksiPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
-                    {list.length === 0 ? (
-                      <tr>
-                        <td
-                          colSpan={5}
-                          className="px-4 py-8 text-center text-gray-500"
-                        >
-                          Belum ada data produksi
-                        </td>
-                      </tr>
-                    ) : (
-                      list.map((item) => (
+                    {list.map((item) => (
                         <tr key={item.id} className="hover:bg-gray-50">
                           {editingId === item.id && editData ? (
                             <>
-                              <td className="px-3 py-2">
+                              <td className="cell-title px-3 py-2">
                                 <input
                                   type="text"
+                                  aria-label="Nama komoditas"
                                   value={editData.komoditas}
                                   onChange={(e) =>
                                     setEditData({
@@ -306,10 +310,10 @@ export default function ProduksiPage() {
                                       komoditas: e.target.value,
                                     })
                                   }
-                                  className="border rounded px-2 py-1 text-xs w-28"
+                                  className="border border-gray-500 rounded px-2 py-2 text-base w-full md:w-28"
                                 />
                               </td>
-                              <td className="px-3 py-2">
+                              <td data-label="Jumlah" className="px-3 py-2">
                                 <input
                                   type="text"
                                   inputMode="decimal"
@@ -322,12 +326,13 @@ export default function ProduksiPage() {
                                     })
                                   }
                                   aria-invalid={positiveNumberError(editData.jumlah) ? true : undefined}
-                                  className="border rounded px-2 py-1 text-xs w-20 aria-[invalid=true]:border-red-500"
+                                  className="border border-gray-500 rounded px-2 py-2 text-base w-28 md:w-20 aria-[invalid=true]:border-red-600"
                                 />
                               </td>
-                              <td className="px-3 py-2">
+                              <td data-label="Tanam" className="px-3 py-2">
                                 <input
                                   type="date"
+                                  aria-label="Tanggal tanam"
                                   value={editData.tanggalTanam}
                                   onChange={(e) =>
                                     setEditData({
@@ -335,12 +340,13 @@ export default function ProduksiPage() {
                                       tanggalTanam: e.target.value,
                                     })
                                   }
-                                  className="border rounded px-2 py-1 text-xs"
+                                  className="border border-gray-500 rounded px-2 py-2 text-base"
                                 />
                               </td>
-                              <td className="px-3 py-2">
+                              <td data-label="Panen" className="px-3 py-2">
                                 <input
                                   type="date"
+                                  aria-label="Tanggal panen"
                                   value={editData.tanggalPanen}
                                   onChange={(e) =>
                                     setEditData({
@@ -348,12 +354,12 @@ export default function ProduksiPage() {
                                       tanggalPanen: e.target.value,
                                     })
                                   }
-                                  className="border rounded px-2 py-1 text-xs"
+                                  className="border border-gray-500 rounded px-2 py-2 text-base"
                                 />
                               </td>
-                              <td className="px-2 py-1 text-right whitespace-nowrap">
+                              <td className="cell-actions px-2 py-1 text-right whitespace-nowrap">
                                 {editError && (
-                                  <p role="alert" className="text-xs text-red-600 whitespace-normal text-left">
+                                  <p role="alert" className="text-sm text-red-700 whitespace-normal text-left">
                                     {editError}
                                   </p>
                                 )}
@@ -380,20 +386,20 @@ export default function ProduksiPage() {
                             </>
                           ) : (
                             <>
-                              <td className="px-4 py-3 font-medium text-gray-900 whitespace-nowrap">
+                              <td className="cell-title px-4 py-3 font-medium text-gray-900 whitespace-nowrap">
                                 {item.komoditas}
                               </td>
-                              <td className="px-4 py-3 whitespace-nowrap">
+                              <td data-label="Jumlah" className="px-4 py-3 whitespace-nowrap">
                                 {formatNumber(item.jumlah)}{" "}
                                 {item.satuan}
                               </td>
-                              <td className="px-4 py-3 text-gray-600 whitespace-nowrap">
+                              <td data-label="Tanam" className="cell-first px-4 py-3 text-gray-700 whitespace-nowrap">
                                 {formatTanggal(item.tanggalTanam)}
                               </td>
-                              <td className="px-4 py-3 text-gray-600 whitespace-nowrap">
+                              <td data-label="Panen" className="cell-first px-4 py-3 text-gray-700 whitespace-nowrap">
                                 {formatTanggal(item.tanggalPanen)}
                               </td>
-                              <td className="px-2 py-1 text-right whitespace-nowrap">
+                              <td className="cell-actions px-2 py-1 text-right whitespace-nowrap">
                                 <button
                                   type="button"
                                   onClick={() => startEdit(item)}
@@ -414,11 +420,11 @@ export default function ProduksiPage() {
                             </>
                           )}
                         </tr>
-                      ))
-                    )}
+                      ))}
                   </tbody>
                 </table>
               </div>
+              )}
             </div>
           </main>
         </div>

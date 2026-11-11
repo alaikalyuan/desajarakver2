@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -18,9 +18,53 @@ import {
   User,
 } from "lucide-react";
 import { Navbar } from "@/components/navbar";
+import {
+  Turnstile,
+  TURNSTILE_SITE_KEY,
+  type TurnstileHandle,
+} from "@/components/turnstile";
 import { createClient } from "@/lib/supabase/client";
-import type { UserRole } from "@/lib/auth";
+import { cleanPassword, PASSWORD_MIN_LENGTH, type UserRole } from "@/lib/auth";
 import "./daftar.css";
+
+type FieldKey =
+  | "fullName"
+  | "businessName"
+  | "email"
+  | "phone"
+  | "password"
+  | "confirmPassword"
+  | "agreeTerms";
+
+const ROLE_CHOICES: {
+  value: UserRole;
+  label: string;
+  description: string;
+  Icon: typeof Handshake;
+}[] = [
+  {
+    value: "mitra",
+    label: "Mitra",
+    description: "Saya ingin membeli hasil desa (toko, pengolah, pedagang).",
+    Icon: Handshake,
+  },
+  {
+    value: "usaha",
+    label: "Pelaku Usaha",
+    description: "Saya menjual hasil panen atau olahan (petani, kelompok tani, UMKM).",
+    Icon: Store,
+  },
+  {
+    value: "bumdes",
+    label: "BUMDes/KDMP",
+    description:
+      "Saya pengurus BUMDes atau Koperasi Desa Merah Putih (KDMP) yang menjual hasil warga.",
+    Icon: Building2,
+  },
+];
+
+const DUPLICATE_EMAIL_TEXT =
+  "Pendaftaran belum berhasil. Jika email ini sudah pernah didaftarkan, silakan masuk atau pakai \"Lupa kata sandi?\".";
 
 export default function DaftarPage() {
   const router = useRouter();
@@ -35,24 +79,27 @@ export default function DaftarPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState("");
+  const turnstileRef = useRef<TurnstileHandle>(null);
   const [message, setMessage] = useState<{
     type: "error" | "success" | "";
     text: string;
   }>({ type: "", text: "" });
+  const [errorField, setErrorField] = useState<FieldKey | null>(null);
 
   const nameLabel =
     role === "usaha"
       ? "Nama Pemilik / Penanggung Jawab"
       : role === "bumdes"
         ? "Nama Pengurus / Penanggung Jawab"
-        : "Nama lengkap / nama PIC";
+        : "Nama Lengkap";
 
   const namePlaceholder =
     role === "usaha"
-      ? "Masukkan nama pemilik atau PIC"
+      ? "Nama pemilik usaha"
       : role === "bumdes"
-        ? "Masukkan nama pengurus atau PIC"
-        : "Masukkan nama lengkap Anda";
+        ? "Nama pengurus"
+        : "Nama lengkap Anda";
 
   const businessLabel =
     role === "usaha"
@@ -68,58 +115,68 @@ export default function DaftarPage() {
         ? "Masukkan nama BUMDes/KDMP"
         : "Masukkan nama usaha atau instansi";
 
+  /** Show one error next to its field and move focus there. */
+  function fail(field: FieldKey, text: string) {
+    setErrorField(field);
+    setMessage({ type: "error", text });
+    requestAnimationFrame(() => document.getElementById(field)?.focus());
+  }
+
+  function invalid(field: FieldKey) {
+    return errorField === field ? true : undefined;
+  }
+
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setMessage({ type: "", text: "" });
+    setErrorField(null);
 
     const trimmedName = fullName.trim();
     const trimmedBusiness = businessName.trim();
     const trimmedEmail = email.trim();
     const trimmedPhone = phone.trim();
+    const cleanedPassword = cleanPassword(password);
 
     if (!trimmedName) {
-      setMessage({ type: "error", text: "Nama lengkap wajib diisi." });
+      fail("fullName", "Nama wajib diisi.");
       return;
     }
 
     if (role !== "mitra" && !trimmedBusiness) {
-      setMessage({
-        type: "error",
-        text: `${businessLabel} wajib diisi.`,
-      });
+      fail("businessName", `${businessLabel} wajib diisi.`);
       return;
     }
 
     if (!trimmedEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
-      setMessage({ type: "error", text: "Alamat email tidak valid." });
+      fail("email", "Alamat email belum benar. Contoh: nama@gmail.com");
       return;
     }
 
-    if (!trimmedPhone) {
-      setMessage({ type: "error", text: "Nomor telepon wajib diisi." });
+    const phoneDigits = trimmedPhone.replace(/\D/g, "");
+    if (!trimmedPhone || /[^\d\s+()-]/.test(trimmedPhone) || phoneDigits.length < 9) {
+      fail("phone", "Nomor HP berisi angka saja, minimal 9 angka. Contoh: 0812 3456 7890");
       return;
     }
 
-    if (password.length < 8) {
-      setMessage({
-        type: "error",
-        text: "Kata sandi harus minimal 8 karakter.",
-      });
+    if (cleanedPassword.length < PASSWORD_MIN_LENGTH) {
+      fail("password", `Kata sandi minimal ${PASSWORD_MIN_LENGTH} karakter.`);
       return;
     }
 
-    if (password !== confirmPassword) {
-      setMessage({
-        type: "error",
-        text: "Konfirmasi kata sandi tidak sama.",
-      });
+    if (cleanedPassword !== cleanPassword(confirmPassword)) {
+      fail("confirmPassword", "Kata sandi dan ulangannya tidak sama.");
       return;
     }
 
     if (!agreeTerms) {
+      fail("agreeTerms", "Centang persetujuan syarat dan ketentuan dulu.");
+      return;
+    }
+
+    if (TURNSTILE_SITE_KEY && !captchaToken) {
       setMessage({
         type: "error",
-        text: "Setujui syarat dan ketentuan terlebih dahulu.",
+        text: "Tunggu centang verifikasi \"Saya bukan robot\" selesai, lalu coba lagi.",
       });
       return;
     }
@@ -130,7 +187,7 @@ export default function DaftarPage() {
     try {
       const { data, error } = await supabase.auth.signUp({
         email: trimmedEmail,
-        password,
+        password: cleanedPassword,
         options: {
           data: {
             full_name: trimmedName,
@@ -139,16 +196,29 @@ export default function DaftarPage() {
             role,
           },
           emailRedirectTo: `${window.location.origin}/masuk`,
+          ...(captchaToken ? { captchaToken } : {}),
         },
       });
+      // Each verification token works once.
+      turnstileRef.current?.reset();
 
       if (error) {
+        if (/captcha/i.test(error.message)) {
+          throw new Error(
+            "Verifikasi \"Saya bukan robot\" gagal atau kedaluwarsa. Ulangi centangnya lalu daftar lagi."
+          );
+        }
+        if (/rate limit|too many/i.test(error.message)) {
+          throw new Error(
+            "Terlalu banyak percobaan pendaftaran. Tunggu beberapa menit lalu coba lagi."
+          );
+        }
         if (/already registered/i.test(error.message)) {
-          throw new Error("Email sudah terdaftar. Silakan masuk.");
+          throw new Error(DUPLICATE_EMAIL_TEXT);
         }
         if (/password/i.test(error.message)) {
           throw new Error(
-            "Kata sandi terlalu lemah. Gunakan minimal 8 karakter."
+            "Kata sandi terlalu mudah ditebak. Pakai gabungan huruf dan angka, minimal 8 karakter."
           );
         }
         if (
@@ -175,7 +245,7 @@ export default function DaftarPage() {
         Array.isArray(data.user.identities) &&
         data.user.identities.length === 0
       ) {
-        throw new Error("Email sudah terdaftar. Silakan masuk.");
+        throw new Error(DUPLICATE_EMAIL_TEXT);
       }
 
       const perluKonfirmasi = !data.session;
@@ -213,17 +283,17 @@ export default function DaftarPage() {
           <section className="register-intro">
             <span className="intro-label">JARAK CONNECT</span>
 
-            <h1>
+            <p className="intro-title">
               Mulai Langkah
               <br />
               Bersama
               <br />
               Desa Jarak
-            </h1>
+            </p>
 
             <p className="intro-description">
-              Bergabunglah dengan ekosistem Desa Jarak untuk membuka peluang
-              kolaborasi dan mendukung pertumbuhan ekonomi lokal.
+              Daftar gratis untuk menjual hasil desa atau mencari pemasok dari
+              Desa Jarak.
             </p>
 
             <div className="benefits">
@@ -232,9 +302,9 @@ export default function DaftarPage() {
                   <Handshake size={20} />
                 </span>
                 <span>
-                  <strong>Bangun kemitraan</strong>
+                  <strong>Temukan pembeli</strong>
                   <br />
-                  dengan peluang yang tepat
+                  dan penjual yang cocok
                 </span>
               </div>
 
@@ -269,51 +339,30 @@ export default function DaftarPage() {
           </section>
 
           <section className="register-form-section">
-            <h2>Buat Akun Desa Jarak</h2>
-            <p className="subtitle">
-              Daftar untuk mulai menggunakan fitur yang Anda butuhkan.
-            </p>
+            <h1>Buat Akun Desa Jarak</h1>
+            <p className="subtitle">Gratis. Pilih dulu Anda ingin membeli atau menjual.</p>
 
             <form id="registerForm" onSubmit={handleSubmit} noValidate>
-              <p className="section-label">Daftar sebagai</p>
-
-              <div className="account-options">
-                <button
-                  type="button"
-                  className={`account-option ${
-                    role === "mitra" ? "active" : ""
-                  }`}
-                  data-role="mitra"
-                  onClick={() => setRole("mitra")}
-                >
-                  <Handshake />
-                  <span>Mitra</span>
-                </button>
-
-                <button
-                  type="button"
-                  className={`account-option ${
-                    role === "usaha" ? "active" : ""
-                  }`}
-                  data-role="usaha"
-                  onClick={() => setRole("usaha")}
-                >
-                  <Store />
-                  <span>Pelaku Usaha</span>
-                </button>
-
-                <button
-                  type="button"
-                  className={`account-option ${
-                    role === "bumdes" ? "active" : ""
-                  }`}
-                  data-role="bumdes"
-                  onClick={() => setRole("bumdes")}
-                >
-                  <Building2 />
-                  <span>BUMDes/KDMP</span>
-                </button>
-              </div>
+              <fieldset className="role-fieldset">
+                <legend className="section-label">Daftar sebagai</legend>
+                <div className="account-options">
+                  {ROLE_CHOICES.map(({ value, label, description, Icon }) => (
+                    <button
+                      key={value}
+                      type="button"
+                      className={`account-option ${role === value ? "active" : ""}`}
+                      aria-pressed={role === value}
+                      onClick={() => setRole(value)}
+                    >
+                      <Icon aria-hidden="true" />
+                      <span className="account-option-text">
+                        <strong>{label}</strong>
+                        <small>{description}</small>
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </fieldset>
 
               <div className="form-group">
                 <label htmlFor="fullName" id="nameLabel">
@@ -328,6 +377,9 @@ export default function DaftarPage() {
                     id="fullName"
                     placeholder={namePlaceholder}
                     autoComplete="name"
+                    aria-required="true"
+                    aria-invalid={invalid("fullName")}
+                    aria-describedby={invalid("fullName") ? "formMessage" : undefined}
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
                     required
@@ -348,6 +400,10 @@ export default function DaftarPage() {
                       type="text"
                       id="businessName"
                       placeholder={businessPlaceholder}
+                      autoComplete="organization"
+                      aria-required="true"
+                      aria-invalid={invalid("businessName")}
+                      aria-describedby={invalid("businessName") ? "formMessage" : undefined}
                       value={businessName}
                       onChange={(e) => setBusinessName(e.target.value)}
                       required
@@ -365,8 +421,12 @@ export default function DaftarPage() {
                   <input
                     type="email"
                     id="email"
-                    placeholder="Masukkan email Anda"
+                    placeholder="Contoh: nama@gmail.com"
                     autoComplete="email"
+                    inputMode="email"
+                    aria-required="true"
+                    aria-invalid={invalid("email")}
+                    aria-describedby={invalid("email") ? "formMessage" : undefined}
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
@@ -375,7 +435,7 @@ export default function DaftarPage() {
               </div>
 
               <div className="form-group">
-                <label htmlFor="phone">Nomor Telepon</label>
+                <label htmlFor="phone">Nomor HP / WhatsApp</label>
                 <div className="input-wrapper">
                   <span className="field-icon" aria-hidden="true">
                     <Phone size={15} />
@@ -383,8 +443,12 @@ export default function DaftarPage() {
                   <input
                     type="tel"
                     id="phone"
-                    placeholder="Contoh: 081234567890"
+                    placeholder="Contoh: 0812 3456 7890"
                     autoComplete="tel"
+                    inputMode="tel"
+                    aria-required="true"
+                    aria-invalid={invalid("phone")}
+                    aria-describedby={invalid("phone") ? "formMessage" : undefined}
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     required
@@ -402,8 +466,11 @@ export default function DaftarPage() {
                     <input
                       type={showPassword ? "text" : "password"}
                       id="password"
-                      placeholder="Minimal 8 karakter"
-                      minLength={8}
+                      placeholder={`Minimal ${PASSWORD_MIN_LENGTH} karakter`}
+                      autoComplete="new-password"
+                      aria-required="true"
+                      aria-invalid={invalid("password")}
+                      aria-describedby={invalid("password") ? "formMessage" : undefined}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       required
@@ -424,7 +491,7 @@ export default function DaftarPage() {
                 </div>
 
                 <div className="form-group">
-                  <label htmlFor="confirmPassword">Konfirmasi Sandi</label>
+                  <label htmlFor="confirmPassword">Ulangi Kata Sandi</label>
                   <div className="input-wrapper">
                     <span className="field-icon" aria-hidden="true">
                       <Lock size={15} />
@@ -432,7 +499,11 @@ export default function DaftarPage() {
                     <input
                       type={showConfirmPassword ? "text" : "password"}
                       id="confirmPassword"
-                      placeholder="Ulangi kata sandi"
+                      placeholder="Ketik ulang kata sandi"
+                      autoComplete="new-password"
+                      aria-required="true"
+                      aria-invalid={invalid("confirmPassword")}
+                      aria-describedby={invalid("confirmPassword") ? "formMessage" : undefined}
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       required
@@ -461,6 +532,8 @@ export default function DaftarPage() {
                 <input
                   type="checkbox"
                   id="agreeTerms"
+                  aria-invalid={invalid("agreeTerms")}
+                  aria-describedby={invalid("agreeTerms") ? "formMessage" : undefined}
                   checked={agreeTerms}
                   onChange={(e) => setAgreeTerms(e.target.checked)}
                   required
@@ -471,6 +544,25 @@ export default function DaftarPage() {
                 </span>
               </label>
 
+              <Turnstile
+                ref={turnstileRef}
+                onToken={setCaptchaToken}
+                onError={() =>
+                  setMessage({
+                    type: "error",
+                    text: "Verifikasi tidak dapat dimuat. Periksa koneksi internet lalu muat ulang halaman.",
+                  })
+                }
+              />
+
+              <p
+                id="formMessage"
+                className={`message ${message.type}`}
+                role={message.type === "error" ? "alert" : "status"}
+              >
+                {message.text}
+              </p>
+
               <button
                 type="submit"
                 className="register-button"
@@ -478,16 +570,6 @@ export default function DaftarPage() {
               >
                 {loading ? "Memproses..." : "Daftar Sekarang"}
               </button>
-
-              {message.text && (
-                <p
-                  id="formMessage"
-                  className={`message ${message.type}`}
-                  role="status"
-                >
-                  {message.text}
-                </p>
-              )}
             </form>
 
             <p className="signin">
@@ -498,11 +580,8 @@ export default function DaftarPage() {
             <div className="register-info">
               <Info size={18} className="info-icon-svg" aria-hidden="true" />
               <p>
-                <strong>Pilih akun sesuai peran Anda</strong>
-                <br />
-                Mitra dapat membuat permintaan kemitraan, sedangkan Pelaku Usaha
-                dapat mengajukan penawaran. BUMDes/KDMP dapat mendaftar sebagai
-                pengelola usaha desa.
+                Belum yakin? <Link href="/cara-kerja">Baca cara kerjanya</Link>.
+                Jenis akun tidak bisa diganti setelah mendaftar.
               </p>
             </div>
           </section>

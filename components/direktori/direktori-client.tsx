@@ -1,23 +1,138 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { UserProfile } from "@/lib/auth";
 import {
+  expressInterest,
   mapRowToDirectoryOffer,
   mapRowToDirectoryRequest,
+  thumbnailUrl,
   type DirectoryOfferItem,
   type DirectoryRequestItem,
 } from "@/lib/listings";
+import { DIRECTORY_PAGE_SIZE, fetchDirectoryPage } from "@/lib/directory-data";
 import { createClient } from "@/lib/supabase/client";
 import { todayWIB } from "@/lib/format";
 import { telUrl, whatsAppUrl } from "@/lib/contact";
 
+/** Append a page, skipping anything already shown (a listing added meanwhile shifts the pages). */
+function mergeById<T extends { id: string }>(current: T[], next: T[]): T[] {
+  const seen = new Set(current.map((item) => item.id));
+  return [...current, ...next.filter((item) => !seen.has(item.id))];
+}
+
+/** True when the viewer has been given this listing's contact. */
+function hasContact(contact: { pic: string; phone: string; email: string }) {
+  return Boolean(contact.pic || contact.phone || contact.email);
+}
+
+/**
+ * Shown to a logged-in viewer before the contact is revealed (decision D2):
+ * pressing the button records interest, which the owner can see.
+ */
+function InterestGate({
+  ownerLabel,
+  busy,
+  error,
+  onConfirm,
+}: {
+  ownerLabel: string;
+  busy: boolean;
+  error: string;
+  onConfirm: () => void;
+}) {
+  return (
+    <div className="modal-contact-locked">
+      <span className="modal-lock-icon" aria-hidden="true">
+        🔒
+      </span>
+      <div>
+        <strong>Kontak terlihat setelah Anda menyatakan minat</strong>
+        <p>
+          Dengan menekan tombol ini, {ownerLabel} akan melihat nama dan nomor HP
+          akun Anda agar bisa saling menghubungi. Anda bisa menyatakan minat pada
+          10 listing per hari.
+        </p>
+        <button
+          type="button"
+          className="card-button button-offer"
+          onClick={onConfirm}
+          disabled={busy}
+        >
+          {busy ? "Mencatat minat..." : "Nyatakan Minat & Lihat Kontak"}
+        </button>
+        {error && (
+          <p className="modal-interest-error" role="alert">
+            {error}
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+
 interface DirektoriClientProps {
   initialRequests: DirectoryRequestItem[];
+  requestTotal: number;
   initialOffers: DirectoryOfferItem[];
+  offerTotal: number;
   initialUser: UserProfile | null;
+  initialTab: "permintaan" | "penawaran";
+}
+
+/**
+ * Card photo: a small server-resized copy first, the original if the
+ * resized one cannot be loaded.
+ */
+function CardImage({ src, alt }: { src: string; alt: string }) {
+  const thumb = thumbnailUrl(src);
+  const [failed, setFailed] = useState(false);
+  return (
+    <img
+      src={failed ? src : thumb}
+      alt={alt}
+      className="card-image"
+      loading="lazy"
+      decoding="async"
+      onError={() => {
+        if (!failed && thumb !== src) setFailed(true);
+      }}
+    />
+  );
+}
+
+function MoreButton({
+  shown,
+  total,
+  loading,
+  error,
+  onClick,
+  noun,
+}: {
+  shown: number;
+  total: number;
+  loading: boolean;
+  error: string;
+  onClick: () => void;
+  noun: string;
+}) {
+  if (shown >= total && !error) return null;
+  return (
+    <div className="load-more">
+      {error && (
+        <p role="alert" className="load-more-error">
+          {error}
+        </p>
+      )}
+      {shown < total && (
+        <button type="button" className="secondary-button" onClick={onClick} disabled={loading}>
+          {loading ? "Memuat…" : `Muat lagi (${total - shown} ${noun} lagi)`}
+        </button>
+      )}
+    </div>
+  );
 }
 
 /** A phone number as a tap-to-call link when it looks like a real number. */
@@ -233,17 +348,26 @@ function getOfferCoverageLabel(item: DirectoryOfferItem): string {
 
 export function DirektoriClient({
   initialRequests,
+  requestTotal,
   initialOffers,
+  offerTotal,
   initialUser,
+  initialTab,
 }: DirektoriClientProps) {
   const router = useRouter();
-  const [user, setUser] = useState<UserProfile | null>(initialUser);
+  const user = initialUser;
   const [requests, setRequests] =
     useState<DirectoryRequestItem[]>(initialRequests);
   const [offers, setOffers] = useState<DirectoryOfferItem[]>(initialOffers);
-  const [activeTab, setActiveTab] = useState<"permintaan" | "penawaran">(
-    "permintaan"
+  const [totals, setTotals] = useState({ request: requestTotal, offer: offerTotal });
+  const [loadingKind, setLoadingKind] = useState<"request" | "offer" | null>(null);
+  const [loadError, setLoadError] = useState<{ kind: "request" | "offer"; message: string } | null>(
+    null
   );
+  const [activeTab, setActiveTab] = useState<"permintaan" | "penawaran">(initialTab);
+  const tabRefs = useRef<Record<string, HTMLButtonElement | null>>({});
+  const modalRef = useRef<HTMLDivElement>(null);
+  const lastFocusRef = useRef<HTMLElement | null>(null);
 
   // Request search & filters
   const [requestSearch, setRequestSearch] = useState("");
@@ -299,64 +423,92 @@ export function DirektoriClient({
     | null
   >(null);
 
-  // Re-fetch with client session so RLS on listing_contacts returns contact info when logged in
-  useEffect(() => {
-    const supabase = createClient();
-
-    async function refreshWithSession() {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-
-      if (session?.user) {
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("full_name, business_name, phone, role")
-          .eq("id", session.user.id)
-          .single();
-
-        if (profile) {
-          setUser({
-            id: session.user.id,
-            email: session.user.email,
-            fullName: profile.full_name,
-            businessName: profile.business_name,
-            phone: profile.phone,
-            role: profile.role,
-          });
+  /**
+   * Fetch the next page, or everything that is left (`all`). Search and
+   * filters run in the browser, so they first load the rest of the list.
+   */
+  const loadMore = useCallback(
+    async (kind: "request" | "offer", all = false) => {
+      const shown = kind === "request" ? requests.length : offers.length;
+      const total = totals[kind];
+      if (shown >= total || loadingKind === kind) return;
+      setLoadingKind(kind);
+      setLoadError(null);
+      try {
+        const limit = all ? total - shown : DIRECTORY_PAGE_SIZE;
+        const supabase = createClient();
+        if (kind === "request") {
+          const page = await fetchDirectoryPage(supabase, "request", shown, limit, Boolean(user));
+          setRequests((prev) => mergeById(prev, page.items));
+          setTotals((t) => ({ ...t, request: page.total }));
+        } else {
+          const page = await fetchDirectoryPage(supabase, "offer", shown, limit, Boolean(user));
+          setOffers((prev) => mergeById(prev, page.items));
+          setTotals((t) => ({ ...t, offer: page.total }));
         }
-      } else {
-        setUser(null);
-      }
-
-      const selectCols = session?.user
-        ? "id, kind, status, reference, format, data, photo_path, created_at, listing_contacts(contact)"
-        : "id, kind, status, reference, format, data, photo_path, created_at";
-
-      const { data: rows } = await supabase
-        .from("listings")
-        .select(selectCols)
-        .in("status", ["sent", "published"])
-        .order("created_at", { ascending: true });
-
-      if (rows && rows.length > 0) {
-        const nextReqs: DirectoryRequestItem[] = [];
-        const nextOffers: DirectoryOfferItem[] = [];
-        rows.forEach((row) => {
-          const r = row as unknown as Record<string, unknown>;
-          if (r.kind === "request") {
-            nextReqs.push(mapRowToDirectoryRequest(r));
-          } else if (r.kind === "offer") {
-            nextOffers.push(mapRowToDirectoryOffer(r));
-          }
+      } catch (err) {
+        setLoadError({
+          kind,
+          message: err instanceof Error ? err.message : "Daftar gagal dimuat. Coba lagi.",
         });
-        setRequests(nextReqs);
-        setOffers(nextOffers);
+      } finally {
+        setLoadingKind(null);
+      }
+    },
+    [requests.length, offers.length, totals, loadingKind, user]
+  );
+
+  // Searching or opening the filters needs the whole list; the handlers
+  // below load the rest as soon as either starts.
+  const requestsNeedAll = requestSearch.trim() !== "" || requestFilterOpen;
+  const offersNeedAll = offerSearch.trim() !== "" || offerFilterOpen;
+
+  // Modal: move focus in, keep Tab inside, close on Escape, give focus back.
+  const modalOpen = selectedModal !== null;
+  useEffect(() => {
+    if (!modalOpen) return;
+    lastFocusRef.current = document.activeElement as HTMLElement | null;
+    const dialog = modalRef.current;
+    dialog?.querySelector<HTMLElement>(".modal-close")?.focus();
+
+    function onKey(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setSelectedModal(null);
+        return;
+      }
+      if (event.key !== "Tab" || !dialog) return;
+      const focusable = Array.from(
+        dialog.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), input:not([disabled]), select, textarea, [tabindex]:not([tabindex="-1"])'
+        )
+      );
+      if (focusable.length === 0) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
       }
     }
+    document.addEventListener("keydown", onKey);
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = "";
+      lastFocusRef.current?.focus();
+    };
+  }, [modalOpen]);
 
-    refreshWithSession();
-  }, []);
+  function handleTabKey(event: React.KeyboardEvent<HTMLButtonElement>) {
+    if (event.key !== "ArrowRight" && event.key !== "ArrowLeft") return;
+    event.preventDefault();
+    const next = activeTab === "permintaan" ? "penawaran" : "permintaan";
+    setActiveTab(next);
+    tabRefs.current[next]?.focus();
+  }
 
   useEffect(() => {
     function handleOutsideClick(event: MouseEvent) {
@@ -616,6 +768,52 @@ export function DirektoriClient({
     router.push(`/masuk?next=${encodeURIComponent("/mitra/permintaan/baru")}`);
   }
 
+  // Listings whose contact this viewer unlocked in this visit (some have no
+  // contact saved at all, so hasContact() alone cannot tell).
+  const [revealedIds, setRevealedIds] = useState<Set<string>>(() => new Set());
+  const [interestBusyId, setInterestBusyId] = useState<string | null>(null);
+  const [interestError, setInterestError] = useState<{ id: string; message: string } | null>(null);
+
+  function isRevealed(item: { id: string; contact: { pic: string; phone: string; email: string } }) {
+    return revealedIds.has(item.id) || hasContact(item.contact);
+  }
+
+  async function handleExpressInterest(listingId: string, kind: "request" | "offer") {
+    setInterestBusyId(listingId);
+    setInterestError(null);
+    try {
+      await expressInterest(listingId);
+      const supabase = createClient();
+      const { data: row } = await supabase
+        .from("listings")
+        .select(
+          "id, kind, status, reference, format, data, photo_path, created_at, listing_contacts(contact)"
+        )
+        .eq("id", listingId)
+        .maybeSingle();
+      setRevealedIds((prev) => new Set(prev).add(listingId));
+      if (row) {
+        const r = row as unknown as Record<string, unknown>;
+        if (kind === "request") {
+          const next = mapRowToDirectoryRequest(r);
+          setRequests((prev) => prev.map((x) => (x.id === listingId ? next : x)));
+          setSelectedModal((m) => (m && m.item.id === listingId ? { type: "request", item: next } : m));
+        } else {
+          const next = mapRowToDirectoryOffer(r);
+          setOffers((prev) => prev.map((x) => (x.id === listingId ? next : x)));
+          setSelectedModal((m) => (m && m.item.id === listingId ? { type: "offer", item: next } : m));
+        }
+      }
+    } catch (err) {
+      setInterestError({
+        id: listingId,
+        message: err instanceof Error ? err.message : "Minat gagal dicatat.",
+      });
+    } finally {
+      setInterestBusyId(null);
+    }
+  }
+
   function handleAddOfferClick(requestId?: string) {
     const targetPath = requestId
       ? `/usaha/penawaran/baru?requestId=${encodeURIComponent(requestId)}`
@@ -643,16 +841,23 @@ export function DirektoriClient({
           </p>
         </section>
 
-        <div className="directory-tabs" role="tablist">
+        <div className="directory-tabs" role="tablist" aria-label="Jenis daftar">
           <button
             type="button"
             role="tab"
+            id="tab-permintaan"
+            ref={(el) => {
+              tabRefs.current.permintaan = el;
+            }}
             aria-selected={activeTab === "permintaan"}
+            aria-controls="permintaan"
+            tabIndex={activeTab === "permintaan" ? 0 : -1}
             className={`tab-button ${
               activeTab === "permintaan" ? "active" : ""
             }`}
             data-tab="permintaan"
             onClick={() => setActiveTab("permintaan")}
+            onKeyDown={handleTabKey}
           >
             Permintaan Mitra
           </button>
@@ -660,12 +865,19 @@ export function DirektoriClient({
           <button
             type="button"
             role="tab"
+            id="tab-penawaran"
+            ref={(el) => {
+              tabRefs.current.penawaran = el;
+            }}
             aria-selected={activeTab === "penawaran"}
+            aria-controls="penawaran"
+            tabIndex={activeTab === "penawaran" ? 0 : -1}
             className={`tab-button ${
               activeTab === "penawaran" ? "active" : ""
             }`}
             data-tab="penawaran"
             onClick={() => setActiveTab("penawaran")}
+            onKeyDown={handleTabKey}
           >
             Penawaran Desa
           </button>
@@ -674,6 +886,8 @@ export function DirektoriClient({
         {/* TAB PERMINTAAN MITRA */}
         <section
           id="permintaan"
+          role="tabpanel"
+          aria-labelledby="tab-permintaan"
           className={`tab-content ${
             activeTab === "permintaan" ? "active" : ""
           }`}
@@ -693,17 +907,20 @@ export function DirektoriClient({
                 id="addRequestButton"
                 onClick={handleAddRequestClick}
               >
-                + Ajukan Kebutuhan Kemitraan
+                + Buat Permintaan
               </button>
 
               <div className="search-box">
                 <input
                   type="search"
                   id="searchRequest"
-                  placeholder="Cari produk atau mitra..."
+                  placeholder="Cari barang atau mitra"
                   aria-label="Cari permintaan mitra"
                   value={requestSearch}
-                  onChange={(e) => setRequestSearch(e.target.value)}
+                  onChange={(e) => {
+                    setRequestSearch(e.target.value);
+                    if (e.target.value.trim()) void loadMore("request", true);
+                  }}
                 />
               </div>
 
@@ -714,9 +931,12 @@ export function DirektoriClient({
                   id="toggleRequestFilters"
                   aria-expanded={requestFilterOpen}
                   aria-controls="requestFiltersPanel"
-                  onClick={() => setRequestFilterOpen((prev) => !prev)}
+                  onClick={() => {
+                    setRequestFilterOpen((prev) => !prev);
+                    void loadMore("request", true);
+                  }}
                 >
-                  <span aria-hidden="true">☷</span> Filter
+                  <span aria-hidden="true">☷</span> Saring
                 </button>
 
                 <div
@@ -911,8 +1131,34 @@ export function DirektoriClient({
           <div id="requestList" className="card-grid">
             {filteredRequests.length === 0 ? (
               <div className="request-empty-state">
-                <h3>Permintaan tidak ditemukan</h3>
-                <p>Coba ubah kata kunci atau filter pencarian Anda.</p>
+                {requests.length === 0 ? (
+                  <>
+                    <h3>Belum ada permintaan</h3>
+                    <p>Permintaan dari pembeli akan muncul di sini.</p>
+                  </>
+                ) : loadingKind === "request" ? (
+                  <p role="status">Mencari di semua permintaan…</p>
+                ) : (
+                  <>
+                    <h3>Permintaan tidak ditemukan</h3>
+                    <p>Coba kata lain, atau hapus saringan.</p>
+                    <button
+                      type="button"
+                      className="secondary-button"
+                      onClick={() => {
+                        setRequestSearch("");
+                        setDraftReqJenis("semua");
+                        setDraftReqStatus("semua");
+                        setDraftReqLocation("semua");
+                        setAppliedReqJenis("semua");
+                        setAppliedReqStatus("semua");
+                        setAppliedReqLocation("semua");
+                      }}
+                    >
+                      Hapus saringan
+                    </button>
+                  </>
+                )}
               </div>
             ) : (
               filteredRequests.map((item) => {
@@ -928,12 +1174,7 @@ export function DirektoriClient({
                 return (
                   <article key={item.id} className="directory-card">
                     <div className="card-image-wrapper">
-                      <img
-                        src={item.image}
-                        alt={item.title}
-                        className="card-image"
-                        loading="lazy"
-                      />
+                      <CardImage src={item.image} alt={item.title} />
                       <span className={`status ${statusClass}`}>
                         {statusText}
                       </span>
@@ -1003,11 +1244,23 @@ export function DirektoriClient({
               })
             )}
           </div>
+          {!requestsNeedAll && (
+            <MoreButton
+              shown={requests.length}
+              total={totals.request}
+              loading={loadingKind === "request"}
+              error={loadError?.kind === "request" ? loadError.message : ""}
+              onClick={() => void loadMore("request")}
+              noun="permintaan"
+            />
+          )}
         </section>
 
         {/* TAB PENAWARAN DESA */}
         <section
           id="penawaran"
+          role="tabpanel"
+          aria-labelledby="tab-penawaran"
           className={`tab-content ${
             activeTab === "penawaran" ? "active" : ""
           }`}
@@ -1035,10 +1288,13 @@ export function DirektoriClient({
                   <input
                     type="search"
                     id="searchOffer"
-                    placeholder="Cari produk, jasa, atau pelaku usaha..."
+                    placeholder="Cari barang atau penjual"
                     aria-label="Cari penawaran desa"
                     value={offerSearch}
-                    onChange={(e) => setOfferSearch(e.target.value)}
+                    onChange={(e) => {
+                      setOfferSearch(e.target.value);
+                      if (e.target.value.trim()) void loadMore("offer", true);
+                    }}
                   />
                 </div>
 
@@ -1048,9 +1304,12 @@ export function DirektoriClient({
                   id="toggleOfferFilters"
                   aria-expanded={offerFilterOpen}
                   aria-controls="offerFiltersPanel"
-                  onClick={() => setOfferFilterOpen((prev) => !prev)}
+                  onClick={() => {
+                    setOfferFilterOpen((prev) => !prev);
+                    void loadMore("offer", true);
+                  }}
                 >
-                  <span aria-hidden="true">☷</span> Filter
+                  <span aria-hidden="true">☷</span> Saring
                 </button>
               </div>
             </div>
@@ -1135,7 +1394,7 @@ export function DirektoriClient({
                       [
                         { key: "semua", label: "Semua ketersediaan" },
                         { key: "stok", label: "Stok tersedia" },
-                        { key: "po", label: "Pre-Order (PO)" },
+                        { key: "po", label: "Pesan dulu" },
                         { key: "musiman", label: "Musiman" },
                       ] as const
                     ).map((opt) => (
@@ -1300,18 +1559,43 @@ export function DirektoriClient({
 
           <div className="offer-results-header">
             <p id="offerCount">
-              Menampilkan {filteredOffers.length} dari {offers.length} penawaran
+              Menampilkan {filteredOffers.length} dari {totals.offer} penawaran
               desa
             </p>
           </div>
 
           {filteredOffers.length === 0 ? (
             <div id="offerEmptyState" className="offer-empty-state show">
-              <h3>Belum ada penawaran yang sesuai</h3>
-              <p>
-                Coba ubah kata kunci atau filter pencarian untuk melihat
-                penawaran dari pelaku usaha Desa Jarak.
-              </p>
+              {offers.length === 0 ? (
+                <>
+                  <h3>Belum ada penawaran</h3>
+                  <p>Penawaran dari pelaku usaha Desa Jarak akan muncul di sini.</p>
+                </>
+              ) : loadingKind === "offer" ? (
+                <p role="status">Mencari di semua penawaran…</p>
+              ) : (
+                <>
+                  <h3>Belum ada penawaran yang sesuai</h3>
+                  <p>Coba kata lain, atau hapus saringan.</p>
+                  <button
+                    type="button"
+                    className="secondary-button"
+                    onClick={() => {
+                      setOfferSearch("");
+                      setDraftOfferJenis("semua");
+                      setDraftOfferAvail("semua");
+                      setDraftOfferStatus("semua");
+                      setDraftOfferCoverage("semua");
+                      setAppliedOfferJenis("semua");
+                      setAppliedOfferAvail("semua");
+                      setAppliedOfferStatus("semua");
+                      setAppliedOfferCoverage("semua");
+                    }}
+                  >
+                    Hapus saringan
+                  </button>
+                </>
+              )}
             </div>
           ) : (
             <div id="offerList" className="card-grid offer-product-grid">
@@ -1328,12 +1612,7 @@ export function DirektoriClient({
                   <article key={item.id} className="directory-card">
                     <div className="card-image-wrapper">
                       {item.image ? (
-                        <img
-                          src={item.image}
-                          alt={item.title}
-                          className="card-image"
-                          loading="lazy"
-                        />
+                        <CardImage src={item.image} alt={item.title} />
                       ) : (
                         <div
                           className="offer-image-placeholder"
@@ -1399,9 +1678,8 @@ export function DirektoriClient({
                         Lihat Detail
                       </button>
 
-                      {/* Until interest is recorded in the app (Phase 2), "Nyatakan
-                          Minat" opens WhatsApp to the seller. Without a login or
-                          a usable number it opens the detail, which explains why. */}
+                      {/* "Nyatakan Minat" opens the detail, where the viewer
+                          confirms; the contact is revealed after that. */}
                       {statusText !== "Selesai" &&
                       user &&
                       whatsAppUrl(item.contact.phone) ? (
@@ -1416,7 +1694,7 @@ export function DirektoriClient({
                           target="_blank"
                           rel="noopener noreferrer"
                         >
-                          Nyatakan Minat
+                          Hubungi via WhatsApp
                         </a>
                       ) : (
                         <button
@@ -1443,6 +1721,16 @@ export function DirektoriClient({
               })}
             </div>
           )}
+          {!offersNeedAll && (
+            <MoreButton
+              shown={offers.length}
+              total={totals.offer}
+              loading={loadingKind === "offer"}
+              error={loadError?.kind === "offer" ? loadError.message : ""}
+              onClick={() => void loadMore("offer")}
+              noun="penawaran"
+            />
+          )}
         </section>
       </main>
 
@@ -1453,13 +1741,14 @@ export function DirektoriClient({
           className="modal show"
           role="dialog"
           aria-modal="true"
+          aria-label={`Detail ${selectedModal.item.title}`}
           onClick={(e) => {
             if (e.target === e.currentTarget) {
               setSelectedModal(null);
             }
           }}
         >
-          <div className="modal-content">
+          <div className="modal-content" ref={modalRef}>
             <button
               type="button"
               className="modal-close"
@@ -1569,10 +1858,17 @@ export function DirektoriClient({
 
                       <div className="modal-section">
                         <h4>Informasi Mitra</h4>
-                        {user ? (
+                        {user && !isRevealed(reqItem) ? (
+                          <InterestGate
+                            ownerLabel="pembeli"
+                            busy={interestBusyId === reqItem.id}
+                            error={interestError?.id === reqItem.id ? interestError.message : ""}
+                            onConfirm={() => handleExpressInterest(reqItem.id, "request")}
+                          />
+                        ) : user ? (
                           <div className="modal-contact">
                             <p>
-                              <strong>PIC:</strong>{" "}
+                              <strong>Penanggung jawab:</strong>{" "}
                               {reqItem.contact.pic || "-"} (
                               {reqItem.contact.role || "Penanggung Jawab"})
                             </p>
@@ -1719,7 +2015,14 @@ export function DirektoriClient({
 
                       <div className="modal-section">
                         <h4>Informasi Pelaku Usaha</h4>
-                        {user ? (
+                        {user && !isRevealed(offerItem) ? (
+                          <InterestGate
+                            ownerLabel="penjual"
+                            busy={interestBusyId === offerItem.id}
+                            error={interestError?.id === offerItem.id ? interestError.message : ""}
+                            onConfirm={() => handleExpressInterest(offerItem.id, "offer")}
+                          />
+                        ) : user ? (
                           <div className="modal-contact">
                             <p>
                               <strong>Nama penawar:</strong>{" "}
@@ -1727,7 +2030,7 @@ export function DirektoriClient({
                             </p>
                             {offerItem.contact.pic && (
                               <p>
-                                <strong>PIC:</strong> {offerItem.contact.pic}
+                                <strong>Penanggung jawab:</strong> {offerItem.contact.pic}
                               </p>
                             )}
                             {offerItem.contact.phone && (

@@ -114,6 +114,146 @@
   }
 }
 
+/* Loading skeleton shared by the dashboards (loading.tsx). */
+.dashboard-skeleton {
+  min-height: 100vh;
+  background: #f4f8f6;
+}
+
+.skeleton-body {
+  display: grid;
+  gap: 14px;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 24px 16px;
+}
+
+.skeleton-bar {
+  border-radius: 12px;
+  background: linear-gradient(90deg, #e3ebe6 25%, #eef3f0 50%, #e3ebe6 75%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.4s ease-in-out infinite;
+}
+
+.skeleton-topbar {
+  height: 64px;
+  border-radius: 0;
+  background: #0f2d1f;
+  animation: none;
+}
+
+.skeleton-title {
+  width: min(320px, 70%);
+  height: 28px;
+}
+
+.skeleton-card {
+  height: 96px;
+}
+
+@keyframes skeleton-shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+
+/* Tables that turn into one card per row below 768 px.
+   Each <td> carries data-label; .cell-title becomes the card heading and
+   .cell-first is moved to the top of the card. The page stylesheets set
+   white-space, alignment and min-width on their tables with scoped
+   selectors, so the overrides here need !important to win. */
+@media (max-width: 767px) {
+  table.stack-table,
+  table.stack-table > tbody,
+  table.stack-table > tbody > tr,
+  table.stack-table > tbody > tr > td {
+    display: block !important;
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  table.stack-table > thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  table.stack-table > tbody > tr {
+    display: flex !important;
+    flex-direction: column;
+    margin: 0 0 12px;
+    padding: 12px 14px;
+    border: 1px solid #d5e0d8;
+    border-radius: 12px;
+    background: #ffffff;
+  }
+
+  table.stack-table > tbody > tr > td {
+    display: flex !important;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+    padding: 6px 0 !important;
+    border: 0 !important;
+    text-align: right !important;
+    white-space: normal !important;
+    overflow-wrap: anywhere;
+    font-size: 14px;
+  }
+
+  table.stack-table > tbody > tr > td[data-label]::before {
+    content: attr(data-label);
+    flex-shrink: 0;
+    max-width: 45%;
+    color: #4f6155;
+    font-size: 13px;
+    font-weight: 600;
+    text-align: left;
+  }
+
+  table.stack-table > tbody > tr > td.cell-first {
+    order: -1;
+  }
+
+  table.stack-table > tbody > tr > td.cell-title {
+    order: -2;
+    display: block !important;
+    text-align: left !important;
+    font-size: 16px;
+    font-weight: 700;
+  }
+
+  table.stack-table > tbody > tr > td.cell-actions {
+    display: block !important;
+    padding-top: 10px !important;
+    text-align: left !important;
+  }
+
+  table.stack-table > tbody > tr > td.cell-actions::before,
+  table.stack-table > tbody > tr > td.cell-title::before,
+  table.stack-table > tbody > tr > td.cell-hide-mobile {
+    display: none;
+  }
+
+  /* Expanded detail rows and empty rows span the whole card. */
+  table.stack-table > tbody > tr.stack-full {
+    padding: 0;
+    overflow: hidden;
+  }
+
+  table.stack-table > tbody > tr.stack-full > td {
+    display: block !important;
+    padding: 0 !important;
+    text-align: left !important;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -261,7 +401,7 @@
 
 .user-info small {
   color: #d9eee7;
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .dropdown-arrow {
@@ -332,7 +472,7 @@
 
 .hero-label {
   color: #7ec8a0;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
   letter-spacing: 3px;
   margin-bottom: 16px;
@@ -505,4 +645,301 @@
     font-size: 13px;
     padding: 13px 26px;
   }
+}
+
+/* =========================
+   NAVBAR: Daftar button, open-menu icon
+   ========================= */
+
+.nav-menu > a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+}
+
+.nav-menu > a.nav-cta {
+  margin-left: 6px;
+  background: #7ec8a0;
+  color: #0f2d1f;
+  font-weight: 700;
+}
+
+.nav-menu > a.nav-cta:hover {
+  background: #a6dcbd;
+  color: #0f2d1f;
+}
+
+.menu-toggle {
+  width: 44px;
+  height: 44px;
+}
+
+.menu-toggle span {
+  transition: transform 0.2s, opacity 0.2s;
+}
+
+.menu-toggle.is-open span:nth-child(1) {
+  transform: translateY(7px) rotate(45deg);
+}
+
+.menu-toggle.is-open span:nth-child(2) {
+  opacity: 0;
+}
+
+.menu-toggle.is-open span:nth-child(3) {
+  transform: translateY(-7px) rotate(-45deg);
+}
+
+.user-dropdown a,
+.user-dropdown button {
+  min-height: 44px;
+}
+
+@media (max-width: 900px) {
+  .nav-menu.show > a.nav-cta {
+    margin: 4px 0 0;
+    justify-content: center;
+  }
+}
+
+/* =========================
+   HOME: two paths
+   ========================= */
+
+.home-paths {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 48px 20px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.home-path {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 26px;
+  border: 1px solid #d5e0d8;
+  border-radius: 16px;
+  background: #ffffff;
+  color: #0f2d1f;
+  text-decoration: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.home-path:hover {
+  border-color: #2d6a4f;
+  box-shadow: 0 8px 24px rgba(15, 45, 31, 0.08);
+}
+
+.home-path h2 {
+  font-size: 22px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.home-path p {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.6;
+  color: #40564a;
+}
+
+.home-path .home-path-cta {
+  margin-top: auto;
+  padding-top: 8px;
+  font-weight: 700;
+  color: #2d6a4f;
+}
+
+.home-path-icon {
+  font-size: 30px;
+}
+
+.home-steps-link {
+  grid-column: 1 / -1;
+  text-align: center;
+  font-size: 15px;
+  color: #40564a;
+}
+
+.home-steps-link a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: #2d6a4f;
+  font-weight: 700;
+}
+
+@media (max-width: 700px) {
+  .home-paths {
+    grid-template-columns: 1fr;
+    padding: 28px 16px;
+  }
+
+  .home-path {
+    padding: 20px;
+  }
+}
+
+/* =========================
+   FOOTER
+   ========================= */
+
+.site-footer {
+  margin-top: auto;
+  background: #0f2d1f;
+  color: #e3f1e9;
+}
+
+.site-footer-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 32px 20px;
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  gap: 24px;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.site-footer h2 {
+  margin: 0 0 8px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.site-footer p {
+  margin: 0;
+}
+
+.site-footer ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.site-footer a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: #bfe6cf;
+}
+
+.site-footer a:hover {
+  color: #ffffff;
+}
+
+@media (max-width: 700px) {
+  .site-footer-inner {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+}
+
+/* =========================
+   CARA KERJA
+   ========================= */
+
+.info-page {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 110px 20px 48px;
+  color: #0f2d1f;
+}
+
+.info-page h1 {
+  font-size: 30px;
+  font-weight: 700;
+  margin: 0 0 8px;
+}
+
+.info-page > p {
+  font-size: 16px;
+  line-height: 1.7;
+  color: #40564a;
+  margin: 0 0 28px;
+}
+
+.info-page h2 {
+  font-size: 20px;
+  font-weight: 700;
+  margin: 28px 0 12px;
+}
+
+.info-steps {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: step;
+  display: grid;
+  gap: 12px;
+}
+
+.info-steps li {
+  position: relative;
+  padding: 14px 16px 14px 56px;
+  border: 1px solid #d5e0d8;
+  border-radius: 12px;
+  background: #ffffff;
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.info-steps li::before {
+  counter-increment: step;
+  content: counter(step);
+  position: absolute;
+  left: 14px;
+  top: 14px;
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #2d6a4f;
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.info-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 28px;
+}
+
+.info-actions .button {
+  min-height: 48px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.info-actions .button.secondary {
+  background: #ffffff;
+  color: #2d6a4f;
+  border: 1px solid #2d6a4f;
+}
+
+@media (max-width: 700px) {
+  .info-page {
+    padding: 92px 16px 36px;
+  }
+
+  .info-page h1 {
+    font-size: 24px;
+  }
+}
+
+
+.skeleton-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 16px;
+}
+
+.skeleton-tile {
+  height: 280px;
 }
