@@ -22,7 +22,7 @@
 .section-label {
     color: #2d6a4f;
 
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 600;
 
     letter-spacing: 3px;
@@ -131,7 +131,7 @@
 }
 
 .toolbar p {
-    color: #777;
+    color: #5a6b5f;
 
     font-size: 13px;
     font-weight: 300;
@@ -241,7 +241,7 @@
 .card-category {
     color: #2d6a4f;
 
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 600;
 
     letter-spacing: 1px;
@@ -257,7 +257,7 @@
 
     border-radius: 20px;
 
-    font-size: 10px;
+    font-size: 12px;
     font-weight: 600;
 }
 
@@ -356,9 +356,9 @@
 .info-item small {
     display: block;
 
-    color: #888;
+    color: #5a6b5f;
 
-    font-size: 10px;
+    font-size: 12px;
 
     margin-bottom: 4px;
 }
@@ -377,8 +377,8 @@
 
 .card-note small {
     display: block;
-    color: #888;
-    font-size: 10px;
+    color: #5a6b5f;
+    font-size: 12px;
     margin-bottom: 5px;
 }
 
@@ -583,7 +583,7 @@ a.card-button {
     border-radius: 999px;
 
     font-family: 'Poppins', sans-serif;
-    font-size: 10px;
+    font-size: 12px;
     font-weight: 600;
     line-height: 1.2;
 
@@ -773,7 +773,7 @@ a.card-button {
     }
 
 }
-.local-privacy-note{font-size:10px;color:#64796b;margin-top:8px}
+.local-privacy-note{font-size:12px;color:#64796b;margin-top:8px}
 .local-directory-card[hidden]{display:none}
 
 /* Layout Penawaran Desa */
@@ -909,7 +909,7 @@ a.card-button {
     max-width: 320px;
     font-size: 12px;
     line-height: 1.7;
-    color: #718078;
+    color: #5a6b5f;
 }
 
 #penawaran .offer-information {
@@ -924,9 +924,9 @@ a.card-button {
 }
 
 #penawaran .offer-information p {
-    font-size: 11px;
+    font-size: 12px;
     line-height: 1.7;
-    color: #718078;
+    color: #5a6b5f;
 }
 
 #penawaran .offer-create-button {
@@ -947,7 +947,7 @@ a.card-button {
     border-radius: 5px;
     background: #effaf6;
     color: #527366;
-    font-size: 10px;
+    font-size: 12px;
     line-height: 1.7;
 }
 
@@ -1148,7 +1148,7 @@ a.card-button {
 
 .summary-item small {
     display: block;
-    font-size: 10px;
+    font-size: 12px;
     color: #64748b;
 }
 
@@ -1158,7 +1158,7 @@ a.card-button {
     align-items: center;
     gap: 6px;
     margin: 10px 0;
-    font-size: 11px;
+    font-size: 12px;
 }
 
 .commodity-track {
@@ -1381,8 +1381,8 @@ a.card-button {
 }
 
 #permintaan #requestList .info-item small {
-    color: #748176;
-    font-size: 11px;
+    color: #5a6b5f;
+    font-size: 12px;
     line-height: 1.5;
 }
 
@@ -1400,8 +1400,8 @@ a.card-button {
 }
 
 #permintaan #requestList .card-note small {
-    color: #748176;
-    font-size: 11px;
+    color: #5a6b5f;
+    font-size: 12px;
 }
 
 #permintaan #requestList .card-note p {
@@ -1474,7 +1474,7 @@ a.card-button {
 #permintaan #requestList .card-button:disabled {
     border-color: #e0e5e1;
     background: #ecefed;
-    color: #87928a;
+    color: #5a6b5f;
     opacity: 1;
     cursor: not-allowed;
 }
@@ -1549,7 +1549,7 @@ a.card-button {
 
 #detailModal .modal-info-grid small {
     color: #68776b;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 500;
     line-height: 1.5;
 }
@@ -1596,7 +1596,7 @@ a.card-button {
 #detailModal .modal-action button:disabled {
     border-color: #e0e5e1;
     background: #ecefed;
-    color: #87928a;
+    color: #5a6b5f;
     cursor: not-allowed;
 }
 
@@ -1983,8 +1983,8 @@ a.card-button {
 #penawaran #offerList .offer-card-meta small {
     display: block;
     margin-bottom: 4px;
-    color: #718078;
-    font-size: 11px;
+    color: #5a6b5f;
+    font-size: 12px;
 }
 
 #penawaran #offerList .offer-card-meta strong {
@@ -2002,7 +2002,7 @@ a.card-button {
     border-radius: 20px;
     background: #edf5f0;
     color: #276749;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 600;
 }
 
@@ -2034,7 +2034,7 @@ a.card-button {
 
 #penawaran .offer-empty-state p {
     max-width: 380px;
-    color: #718078;
+    color: #5a6b5f;
     font-size: 13px;
     line-height: 1.7;
 }
@@ -2379,7 +2379,7 @@ html {
     background: #edf1ee;
     color: #466251;
     font-family: "Poppins", sans-serif;
-    font-size: 10px;
+    font-size: 12px;
     line-height: 1;
 }
 
@@ -2428,7 +2428,7 @@ html {
     padding: 8px 13px;
     border-radius: 7px;
     font-family: "Poppins", sans-serif;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 600;
     cursor: pointer;
 }
@@ -2499,7 +2499,7 @@ html {
     border-radius: 20px;
     background: #edf1ee;
     color: #466251;
-    font-size: 10px;
+    font-size: 12px;
 }
 
 #permintaan .request-filter-footer {
@@ -2512,7 +2512,7 @@ html {
 #permintaan #resetRequestFilters {
     min-height: 32px;
     padding: 7px 12px;
-    font-size: 11px;
+    font-size: 12px;
     cursor: pointer;
 }
 
@@ -2712,7 +2712,7 @@ html {
     background: #edf1ee;
     color: #466251;
     font-family: "Poppins", sans-serif;
-    font-size: 10px;
+    font-size: 12px;
     line-height: 1;
     box-sizing: border-box;
 }
@@ -2745,7 +2745,7 @@ html {
     background: #2d6a4f;
     color: #ffffff;
     font-family: "Poppins", sans-serif;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 600;
     line-height: 1.4;
     white-space: nowrap;
@@ -2812,7 +2812,7 @@ html {
     #permintaan .request-filter-option,
     #penawaran .offer-filter-option {
         padding: 6px 7px;
-        font-size: 11px;
+        font-size: 12px;
     }
 
     #permintaan #applyRequestFilters,
@@ -2821,7 +2821,7 @@ html {
     #penawaran #resetOfferFilters {
         min-height: 34px;
         padding: 7px 10px;
-        font-size: 10px;
+        font-size: 12px;
     }
 }
 
@@ -3180,8 +3180,8 @@ body {
 #penawaran #offerList .offer-card-meta small {
     display: block;
     margin-bottom: 4px;
-    color: #748176;
-    font-size: 11px;
+    color: #5a6b5f;
+    font-size: 12px;
     font-weight: 400;
     line-height: 1.5;
 }
@@ -3205,8 +3205,8 @@ body {
 #penawaran #offerList .card-note small {
     display: block;
     margin-bottom: 5px;
-    color: #748176;
-    font-size: 11px;
+    color: #5a6b5f;
+    font-size: 12px;
 }
 
 #penawaran #offerList .card-note p {
@@ -3330,7 +3330,7 @@ body {
 #penawaran #offerList .button-disabled {
     border: 1px solid #e0e5e1;
     background: #ecefed;
-    color: #87928a;
+    color: #5a6b5f;
     cursor: not-allowed;
 }
 
@@ -3429,7 +3429,7 @@ body {
 
 .user-info small {
     color: #d9eee7;
-    font-size: 11px;
+    font-size: 12px;
 }
 
 .dropdown-arrow {
@@ -3579,7 +3579,7 @@ body {
     min-height: 36px;
     padding: 8px 14px;
     border-radius: 8px;
-    font-size: 11.5px;
+    font-size: 12px;
     font-weight: 600;
 }
 
@@ -3592,4 +3592,24 @@ body {
     margin-top: 8px;
     color: #a52d2a;
     font-weight: 600;
+}
+
+/* Phase 3: "Muat lagi" */
+.directory-page .load-more {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin: 24px 0 8px;
+}
+
+.directory-page .load-more .secondary-button {
+  min-height: 48px;
+  padding: 0 22px;
+}
+
+.directory-page .load-more-error {
+  color: #b42318;
+  font-weight: 600;
+  font-size: 14px;
 }

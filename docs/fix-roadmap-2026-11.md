@@ -40,7 +40,7 @@ Some items cannot be built until the owner decides. Each decision is listed with
 |---|---|---|---|
 | D1 | The real WhatsApp help number (village office or admin) | Phase 0 | 0.5 |
 | D2 | When contacts become visible: after an offer is accepted, after "Nyatakan Minat", or on request with a limit. **Decided 10 Nov 2026:** after "Nyatakan Minat" (max 10 new listings per user per day), plus the owner and both sides of an accepted offer. | Phase 2 | 2.3 |
-| D3 | Final words for the two roles, e.g. **Pembeli** and **Penjual** | Phase 3 | 3.6 (plain-language pass) |
+| D3 | Final words for the two roles, e.g. **Pembeli** and **Penjual**. **Decided 11 Nov 2026:** keep **Mitra** and **Pelaku Usaha**. | Phase 3 | 3.6 (plain-language pass) |
 | D4 | What "BUMDes/KDMP" means, and whether it needs admin verification | Phase 4 | 4.2 |
 | D5 | Budget and provider for phone or WhatsApp OTP (SMS costs money per message) | Phase 4 | 4.1 |
 

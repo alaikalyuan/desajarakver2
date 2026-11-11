@@ -1,4 +1,5 @@
 import { parseIndonesianDate } from "@/lib/format";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
 import {
   type EntryStatus,
@@ -104,6 +105,16 @@ export function normalizeAssetUrl(rawUrl?: string | null, fallback = DEFAULT_REQ
     return `/${trimmed}`;
   }
   return trimmed;
+}
+
+/**
+ * A smaller copy of a listing photo for cards, made by Supabase image
+ * transformation. Anything that is not a listing-photos URL is returned as is.
+ */
+export function thumbnailUrl(url: string, width = 480): string {
+  const marker = "/storage/v1/object/public/";
+  if (!url || !url.includes(marker)) return url;
+  return `${url.replace(marker, "/storage/v1/render/image/public/")}?width=${width}&quality=70`;
 }
 
 export function getStoragePhotoUrl(photoPath?: string | null): string {
@@ -913,8 +924,9 @@ export interface ListingInterest {
 }
 
 /** Everyone who pressed "Nyatakan Minat" on the caller's listings. */
-export async function getMyListingInterests(): Promise<ListingInterest[]> {
-  const supabase = createClient();
+export async function getMyListingInterests(
+  supabase: SupabaseClient = createClient()
+): Promise<ListingInterest[]> {
   const { data, error } = await supabase.rpc("my_listing_interests");
   if (error || !Array.isArray(data)) return [];
   return data.map((row: Record<string, unknown>) => ({
@@ -927,10 +939,10 @@ export async function getMyListingInterests(): Promise<ListingInterest[]> {
 
 /** Contacts the caller may read, keyed by listing id. */
 export async function getContacts(
-  listingIds: string[]
+  listingIds: string[],
+  supabase: SupabaseClient = createClient()
 ): Promise<Record<string, Record<string, string>>> {
   if (listingIds.length === 0) return {};
-  const supabase = createClient();
   const { data } = await supabase
     .from("listing_contacts")
     .select("listing_id, contact")

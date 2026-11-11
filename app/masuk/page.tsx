@@ -1,11 +1,10 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   AlertCircle,
-  Building2,
   Eye,
   EyeOff,
   Handshake,
@@ -13,13 +12,12 @@ import {
   Lock,
   Mail,
   Sprout,
-  Store,
   TrendingUp,
   X,
 } from "lucide-react";
 import { Navbar } from "@/components/navbar";
 import { createClient } from "@/lib/supabase/client";
-import { dashboardUrl, ROLE_NAMES, type UserRole } from "@/lib/auth";
+import { cleanPassword, dashboardUrl, type UserRole } from "@/lib/auth";
 import "./login.css";
 
 function pesanErrorLogin(error: { code?: string; message?: string } | null) {
@@ -47,37 +45,23 @@ function pesanErrorLogin(error: { code?: string; message?: string } | null) {
 function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [selectedRole, setSelectedRole] = useState<UserRole>("mitra");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [emailError, setEmailError] = useState("");
-  const [passwordError, setPasswordError] = useState("");
+  // Errors handed back by the Google sign-in callback (?error=...).
+  const callbackError = searchParams.get("error");
+  const googleNotRegistered =
+    callbackError === "google_not_registered" ||
+    /Database error saving new user/i.test(searchParams.get("error_description") || "");
+  const [passwordError, setPasswordError] = useState(() =>
+    callbackError === "oauth_failed" ? "Gagal masuk dengan Google. Silakan coba lagi." : ""
+  );
   const [infoMessage, setInfoMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
-  const [showGoogleBanner, setShowGoogleBanner] = useState(false);
-
-  useEffect(() => {
-    const err = searchParams.get("error");
-    const errDesc = searchParams.get("error_description") || "";
-    const actualRole = searchParams.get("actualRole") as UserRole | null;
-
-    if (
-      err === "google_not_registered" ||
-      /Database error saving new user/i.test(errDesc)
-    ) {
-      setShowGoogleBanner(true);
-    } else if (err === "role_mismatch" && actualRole) {
-      const roleName = ROLE_NAMES[actualRole] || actualRole;
-      setSelectedRole(actualRole);
-      setPasswordError(
-        `Akun Google ini terdaftar sebagai ${roleName}. Silakan masuk sebagai ${roleName}.`
-      );
-    } else if (err === "oauth_failed") {
-      setPasswordError("Gagal masuk dengan Google. Silakan coba lagi.");
-    }
-  }, [searchParams]);
+  const [bannerDismissed, setBannerDismissed] = useState(false);
+  const showGoogleBanner = googleNotRegistered && !bannerDismissed;
 
   function getPostLoginRedirect(role: UserRole): string {
     const next = searchParams.get("next");
@@ -106,7 +90,7 @@ function LoginContent() {
     setInfoMessage("");
 
     const trimmedEmail = email.trim();
-    const trimmedPassword = password.trim();
+    const trimmedPassword = cleanPassword(password);
     let valid = true;
 
     if (!trimmedEmail) {
@@ -117,15 +101,19 @@ function LoginContent() {
       valid = false;
     }
 
+    // No length rule here: older accounts may have shorter passwords, and
+    // the server is the judge of a wrong one.
     if (!trimmedPassword) {
       setPasswordError("Kata sandi wajib diisi.");
       valid = false;
-    } else if (trimmedPassword.length < 6) {
-      setPasswordError("Kata sandi minimal 6 karakter.");
-      valid = false;
     }
 
-    if (!valid) return;
+    if (!valid) {
+      requestAnimationFrame(() => {
+        document.querySelector<HTMLElement>('#loginForm [aria-invalid="true"]')?.focus();
+      });
+      return;
+    }
 
     setLoading(true);
     const supabase = createClient();
@@ -155,26 +143,6 @@ function LoginContent() {
         );
         setLoading(false);
         return;
-      }
-
-      if (profile.role !== selectedRole) {
-        await supabase.auth.signOut();
-        const roleLabel = ROLE_NAMES[profile.role as UserRole] || profile.role;
-        setPasswordError(
-          `Akun ini terdaftar sebagai ${roleLabel}. Pilih peran ${roleLabel} di atas.`
-        );
-        setLoading(false);
-        return;
-      }
-
-      if (typeof window !== "undefined") {
-        sessionStorage.setItem(
-          "jarakConnectDemoUser",
-          JSON.stringify({
-            role: profile.role,
-            fullName: profile.full_name,
-          })
-        );
       }
 
       const destination = getPostLoginRedirect(profile.role as UserRole);
@@ -226,14 +194,13 @@ function LoginContent() {
   }
 
   async function handleGoogleLogin() {
-    setShowGoogleBanner(false);
+    setBannerDismissed(true);
     setEmailError("");
     setPasswordError("");
     setGoogleLoading(true);
 
     const supabase = createClient();
     const callbackUrl = new URL("/auth/callback", window.location.origin);
-    callbackUrl.searchParams.set("role", selectedRole);
 
     const next = searchParams.get("next");
     if (next) {
@@ -270,13 +237,13 @@ function LoginContent() {
           <div className="intro-overlay"></div>
           <div className="intro-content">
             <span className="intro-label">JARAK CONNECT</span>
-            <h1>
+            <p className="intro-title">
               Bersama
               <br />
               Membangun
               <br />
               Desa Jarak
-            </h1>
+            </p>
             <p>
               Menghubungkan kebutuhan mitra dengan potensi desa untuk
               menciptakan peluang kerja sama yang berkelanjutan.
@@ -288,8 +255,8 @@ function LoginContent() {
                   <Handshake size={20} />
                 </span>
                 <div>
-                  <strong>Akses kesempatan</strong>
-                  <small>kemitraan</small>
+                  <strong>Temukan pembeli</strong>
+                  <small>dan penjual</small>
                 </div>
               </div>
 
@@ -328,10 +295,8 @@ function LoginContent() {
         <section className="login-form-section">
           <div className="form-wrapper">
             <div className="form-heading">
-              <h2>Masuk ke Desa Jarak</h2>
-              <p>
-                Silakan masuk untuk melanjutkan ke fitur yang Anda butuhkan.
-              </p>
+              <h1>Masuk ke Desa Jarak</h1>
+              <p>Masuk dengan email dan kata sandi yang Anda pakai saat mendaftar.</p>
             </div>
 
             {showGoogleBanner && (
@@ -356,7 +321,7 @@ function LoginContent() {
                   className="login-banner-close"
                   id="googleBannerClose"
                   aria-label="Tutup pemberitahuan"
-                  onClick={() => setShowGoogleBanner(false)}
+                  onClick={() => setBannerDismissed(true)}
                 >
                   <X size={16} />
                 </button>
@@ -364,46 +329,6 @@ function LoginContent() {
             )}
 
             <form id="loginForm" onSubmit={handleSubmit} noValidate>
-              <div className="account-type">
-                <p className="account-type-title">Masuk sebagai</p>
-                <div className="account-options">
-                  <button
-                    type="button"
-                    className={`account-option ${
-                      selectedRole === "mitra" ? "active" : ""
-                    }`}
-                    data-role="mitra"
-                    onClick={() => setSelectedRole("mitra")}
-                  >
-                    <Handshake />
-                    <span>Mitra</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    className={`account-option ${
-                      selectedRole === "usaha" ? "active" : ""
-                    }`}
-                    data-role="usaha"
-                    onClick={() => setSelectedRole("usaha")}
-                  >
-                    <Store />
-                    <span>Pelaku Usaha</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    className={`account-option ${
-                      selectedRole === "bumdes" ? "active" : ""
-                    }`}
-                    data-role="bumdes"
-                    onClick={() => setSelectedRole("bumdes")}
-                  >
-                    <Building2 />
-                    <span>BUMDes/KDMP</span>
-                  </button>
-                </div>
-              </div>
 
               <div className="form-group">
                 <label htmlFor="identity">Email</label>
@@ -415,8 +340,11 @@ function LoginContent() {
                     type="email"
                     id="identity"
                     name="identity"
-                    placeholder="Masukkan email Anda"
+                    placeholder="Contoh: nama@gmail.com"
                     autoComplete="username"
+                    inputMode="email"
+                    aria-invalid={emailError ? true : undefined}
+                    aria-describedby={emailError ? "identityError" : undefined}
                     value={email}
                     onChange={(e) => {
                       setEmail(e.target.value);
@@ -425,7 +353,7 @@ function LoginContent() {
                     className={emailError ? "input-error" : ""}
                   />
                 </div>
-                <small className="error-message" id="identityError">
+                <small className="error-message" id="identityError" role="alert">
                   {emailError}
                 </small>
               </div>
@@ -451,8 +379,10 @@ function LoginContent() {
                     type={showPassword ? "text" : "password"}
                     id="password"
                     name="password"
-                    placeholder="Masukkan kata sandi Anda"
+                    placeholder="Kata sandi Anda"
                     autoComplete="current-password"
+                    aria-invalid={passwordError ? true : undefined}
+                    aria-describedby={passwordError ? "passwordError" : undefined}
                     value={password}
                     onChange={(e) => {
                       setPassword(e.target.value);
@@ -474,7 +404,7 @@ function LoginContent() {
                     {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
                 </div>
-                <small className="error-message" id="passwordError">
+                <small className="error-message" id="passwordError" role="alert">
                   {passwordError}
                 </small>
                 {infoMessage && (
@@ -545,10 +475,8 @@ function LoginContent() {
                   <Info size={12} />
                 </span>
                 <p>
-                  <strong>Pilih akun sesuai peran Anda</strong>
-                  <br />
-                  Mitra (perusahaan/instansi) untuk membuat permintaan
-                  kemitraan, atau Pelaku Usaha untuk mengajukan penawaran.
+                  Setelah masuk, Anda langsung dibawa ke Halaman Saya sesuai
+                  jenis akun (Mitra, Pelaku Usaha, atau BUMDes/KDMP).
                 </p>
               </div>
             </form>

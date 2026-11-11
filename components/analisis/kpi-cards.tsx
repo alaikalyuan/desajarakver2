@@ -40,14 +40,14 @@ export function KpiCards({
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 w-full">
       <div className="bg-[#e8f5e9] p-3 md:p-5 rounded-2xl flex flex-col md:flex-row md:items-center gap-2 md:gap-3 min-w-0">
         <div className="w-9 h-9 md:w-12 md:h-12 bg-white rounded-full flex items-center justify-center shadow-sm flex-shrink-0">
-          <span className="text-base md:text-xl">🌱</span>
+          <span className="text-base md:text-xl" aria-hidden="true">🌱</span>
         </div>
         <div className="min-w-0 flex-1">
-          <p className="text-[10px] md:text-xs text-gray-600 truncate">
+          <p className="text-xs md:text-sm text-gray-700">
             Total Pendapatan
           </p>
           <h3
-            className="text-base md:text-lg font-bold text-gray-900 truncate"
+            className="text-base md:text-lg font-bold text-gray-900 break-words"
             title={formatRupiah(pendapatan)}
           >
             {formatRupiahCompact(pendapatan)}
@@ -57,14 +57,14 @@ export function KpiCards({
 
       <div className="bg-[#fce4ec] p-3 md:p-5 rounded-2xl flex flex-col md:flex-row md:items-center gap-2 md:gap-3 min-w-0">
         <div className="w-9 h-9 md:w-12 md:h-12 bg-white rounded-full flex items-center justify-center shadow-sm flex-shrink-0">
-          <span className="text-base md:text-xl">💸</span>
+          <span className="text-base md:text-xl" aria-hidden="true">💸</span>
         </div>
         <div className="min-w-0 flex-1">
-          <p className="text-[10px] md:text-xs text-gray-600 truncate">
+          <p className="text-xs md:text-sm text-gray-700">
             Total Biaya
           </p>
           <h3
-            className="text-base md:text-lg font-bold text-gray-900 truncate"
+            className="text-base md:text-lg font-bold text-gray-900 break-words"
             title={formatRupiah(biaya)}
           >
             {formatRupiahCompact(biaya)}
@@ -78,16 +78,16 @@ export function KpiCards({
         } p-3 md:p-5 rounded-2xl flex flex-col md:flex-row md:items-center gap-2 md:gap-3 min-w-0`}
       >
         <div className="w-9 h-9 md:w-12 md:h-12 bg-white rounded-full flex items-center justify-center shadow-sm flex-shrink-0">
-          <span className="text-base md:text-xl">
+          <span className="text-base md:text-xl" aria-hidden="true">
             {laba >= 0 ? "📈" : "📉"}
           </span>
         </div>
         <div className="min-w-0 flex-1">
-          <p className="text-[10px] md:text-xs text-gray-600 truncate">
+          <p className="text-xs md:text-sm text-gray-700">
             {laba >= 0 ? "Total Untung" : "Total Rugi"}
           </p>
           <h3
-            className="text-base md:text-lg font-bold text-gray-900 truncate"
+            className="text-base md:text-lg font-bold text-gray-900 break-words"
             title={formatRupiah(Math.abs(laba))}
           >
             {formatRupiahCompact(Math.abs(laba))}
@@ -98,17 +98,17 @@ export function KpiCards({
       <div className="bg-[#fff8e1] p-3 md:p-5 rounded-2xl min-w-0">
         <div className="flex items-center gap-2 mb-1.5">
           <div className="w-8 h-8 md:w-10 md:h-10 bg-white rounded-full flex items-center justify-center shadow-sm flex-shrink-0">
-            <span className="text-sm md:text-lg">📦</span>
+            <span className="text-sm md:text-lg" aria-hidden="true">📦</span>
           </div>
-          <p className="text-[10px] md:text-xs text-gray-600 truncate">
-            HPP Rata-rata
+          <p className="text-xs md:text-sm text-gray-700">
+            Modal per Satuan
           </p>
         </div>
         <select
-          aria-label="Pilih barang untuk HPP rata-rata"
+          aria-label="Pilih barang untuk modal per satuan"
           value={selectedItem}
           onChange={(e) => setSelectedItem(e.target.value)}
-          className="w-full text-[10px] md:text-xs border border-gray-200 rounded-md px-1.5 md:px-2 py-1 bg-white text-gray-700 mb-1.5 focus:outline-none focus:ring-1 focus:ring-[#1b4332] cursor-pointer"
+          className="w-full min-h-11 text-sm border border-gray-500 rounded-md px-2 py-1 bg-white text-gray-800 mb-1.5 focus:outline-none focus:ring-2 focus:ring-[#1b4332] cursor-pointer"
         >
           <option value="all">Semua Barang</option>
           {items.map((k) => (
@@ -119,18 +119,18 @@ export function KpiCards({
         </select>
         {currentHpp.hpp === null ? (
           <h3
-            className="text-base md:text-lg font-bold text-gray-900 truncate"
+            className="text-base md:text-lg font-bold text-gray-900 break-words"
             title="Belum bisa dihitung: belum ada penjualan, atau satuannya berbeda-beda."
           >
             —
           </h3>
         ) : (
           <h3
-            className="text-base md:text-lg font-bold text-gray-900 truncate"
+            className="text-base md:text-lg font-bold text-gray-900 break-words"
             title={`${formatRupiah(currentHpp.hpp)}/${currentHpp.satuan}`}
           >
             {formatRupiahCompact(currentHpp.hpp)}
-            <span className="text-[10px] md:text-xs font-normal text-gray-600">
+            <span className="text-xs md:text-sm font-normal text-gray-700">
               /{currentHpp.satuan}
             </span>
           </h3>

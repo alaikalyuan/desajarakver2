@@ -44,6 +44,10 @@
   gap: 11px;
 }
 
+.usaha-dashboard-scope .account-text {
+  text-align: right;
+}
+
 .usaha-dashboard-scope .account strong,
 .usaha-dashboard-scope .account small {
   display: block;
@@ -56,7 +60,7 @@
 .usaha-dashboard-scope .account small {
   color: var(--muted);
   margin-top: 2px;
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .usaha-dashboard-scope .avatar {
@@ -99,7 +103,7 @@
 }
 
 .usaha-dashboard-scope .sidebar-label {
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 800;
   letter-spacing: 1.3px;
   color: #6b7a6f;
@@ -142,7 +146,7 @@
   border-radius: 20px;
   background: #f1a34b;
   color: #241600;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
 }
 
@@ -198,7 +202,7 @@
 }
 
 .usaha-dashboard-scope .eyebrow {
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 800;
   letter-spacing: 1.5px;
   color: var(--green);
@@ -316,7 +320,7 @@
 
 .usaha-dashboard-scope .stat-card small {
   color: #6b7a6f;
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .usaha-dashboard-scope .content-card {
@@ -353,7 +357,7 @@
   color: #4d5c50;
   padding: 7px 10px;
   border-radius: 6px;
-  font-size: 11px;
+  font-size: 12px;
   white-space: nowrap;
 }
 
@@ -402,7 +406,7 @@
 
 .usaha-dashboard-scope th {
   color: #5c6b61;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
 }
 
@@ -424,7 +428,7 @@
   display: inline-block;
   padding: 5px 10px;
   border-radius: 20px;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
 }
 
@@ -460,7 +464,7 @@
   border-radius: 6px;
   background: white;
   color: var(--green-dark);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   cursor: pointer;
   text-decoration: none;
@@ -543,6 +547,27 @@
   }
   .usaha-dashboard-scope .toolbar {
     flex-direction: column;
+  }
+  .usaha-dashboard-scope .content-card {
+    padding: 16px 12px;
+  }
+  .usaha-dashboard-scope .welcome {
+    padding: 18px 16px;
+  }
+  .usaha-dashboard-scope .welcome h1 {
+    font-size: 20px;
+  }
+  .usaha-dashboard-scope .stats {
+    gap: 10px;
+  }
+  .usaha-dashboard-scope .stat-card {
+    padding: 14px;
+  }
+  .usaha-dashboard-scope .stat-card h2 {
+    font-size: 22px;
+  }
+  .usaha-dashboard-scope .action-btn {
+    padding: 0 14px;
   }
 }
 

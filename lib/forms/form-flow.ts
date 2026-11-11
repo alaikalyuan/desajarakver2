@@ -103,67 +103,57 @@ export interface ValidationResult {
   errors: Partial<Record<keyof FormData, string>>;
 }
 
+/** Index of the last (review) step; steps before it hold the fields. */
+export const REVIEW_STEP = 2;
+
 export const REQUEST_STEPS: StepConfig[] = [
   {
-    id: "identitas",
-    label: "Identitas",
-    title: "Identitas Mitra & Kebutuhan Awal",
-    description:
-      "Isi data usaha pemohon agar pengelola desa tahu siapa yang sedang mencari pasokan.",
+    id: "barang",
+    label: "Barang",
+    title: "Barang yang Anda Cari",
+    description: "Tulis barang, jumlah, dan kapan Anda membutuhkannya.",
   },
   {
-    id: "spesifikasi",
-    label: "Komoditas",
-    title: "Spesifikasi Komoditas yang Dicari",
+    id: "kontak",
+    label: "Kontak & Kirim",
+    title: "Kontak dan Cara Kirim",
     description:
-      "Jelaskan produk, jumlah kebutuhan, ritme pasok, dan target kualitas yang diharapkan.",
+      "Nama dan nomor HP diambil dari akun Anda. Ubah bila perlu.",
   },
   {
-    id: "kemitraan",
-    label: "Kerja Sama",
-    title: "Skema Kerja Sama & Pengiriman",
-    description:
-      "Tentukan pola kerja sama, cara pembayaran, dan catatan tambahan untuk calon pemasok desa.",
-  },
-  {
-    id: "tinjauan",
-    label: "Tinjauan",
-    title: "Periksa Kembali Permintaan",
-    description:
-      "Pastikan informasi utama sudah jelas sebelum permintaan disimpan sebagai draf atau dikirim.",
+    id: "periksa",
+    label: "Periksa",
+    title: "Periksa Permintaan",
+    description: "Cek sekali lagi, lalu kirim.",
   },
 ];
 
 export const OFFER_STEPS: StepConfig[] = [
   {
-    id: "identitas",
-    label: "Penyedia",
-    title: "Identitas Penyedia Desa",
-    description:
-      "Lengkapi data pelaku usaha atau kelompok pemasok yang siap mengajukan penawaran.",
+    id: "barang",
+    label: "Barang",
+    title: "Barang yang Anda Tawarkan",
+    description: "Tulis barang, jumlah yang sanggup dikirim, dan kapan siap.",
   },
   {
-    id: "spesifikasi",
-    label: "Pasokan",
-    title: "Kapasitas Produk & Ketersediaan",
+    id: "kontak",
+    label: "Kontak & Kirim",
+    title: "Kontak dan Cara Kirim",
     description:
-      "Tulis jenis produk, kapasitas yang sanggup dipasok, jadwal ketersediaan, dan acuan harga.",
+      "Nama dan nomor HP diambil dari akun Anda. Ubah bila perlu.",
   },
   {
-    id: "kemitraan",
-    label: "Penawaran",
-    title: "Skema Penawaran & Bukti Produk",
-    description:
-      "Jelaskan cara kirim, skema kerja sama, catatan pasokan, dan lampiran foto bila tersedia.",
-  },
-  {
-    id: "tinjauan",
-    label: "Tinjauan",
-    title: "Periksa Kembali Penawaran",
-    description:
-      "Tinjau kesesuaian isi penawaran sebelum disimpan sebagai draf atau dikirim ke mitra.",
+    id: "periksa",
+    label: "Periksa",
+    title: "Periksa Penawaran",
+    description: "Cek sekali lagi, lalu kirim.",
   },
 ];
+
+/** Label shown for a stored option value (values stay as saved). */
+export function optionLabel(options: SelectOption[], value: string): string {
+  return options.find((o) => o.value === value)?.label || value;
+}
 
 export const REQUEST_OWNER_TYPES: SelectOption[] = [
   {
@@ -274,24 +264,24 @@ export const FREQUENCY_OPTIONS: SelectOption[] = [
 export const PARTNERSHIP_OPTIONS: SelectOption[] = [
   {
     value: "Pembelian Putus Terjadwal",
-    label: "Pembelian Putus Terjadwal",
+    label: "Beli langsung per kiriman",
     description:
       "Transaksi jelas per pengiriman dengan jadwal yang disepakati.",
   },
   {
     value: "Kontrak Pasok Berkala",
-    label: "Kontrak Pasok Berkala",
+    label: "Kirim rutin dengan kontrak",
     description: "Komitmen volume dan jangka waktu tertentu.",
   },
   {
     value: "Kemitraan Budidaya / Produksi",
-    label: "Kemitraan Budidaya / Produksi",
+    label: "Tanam bersama (pembeli ikut atur tanam)",
     description:
       "Mitra dan desa menyepakati pola tanam atau standar produksi.",
   },
   {
     value: "Konsinyasi / Titip Jual Terbatas",
-    label: "Konsinyasi Terbatas",
+    label: "Titip jual",
     description: "Cocok untuk produk olahan atau kemasan siap jual.",
   },
 ];
@@ -304,22 +294,25 @@ export const PAYMENT_OPTIONS: SelectOption[] = [
   },
   {
     value: "Uang muka + pelunasan saat kirim",
-    label: "Uang muka + pelunasan",
+    label: "Uang muka, sisanya saat kirim",
   },
-  { value: "Tempo 7-14 hari terverifikasi", label: "Tempo 7-14 hari" },
+  {
+    value: "Tempo 7-14 hari terverifikasi",
+    label: "Bayar 7–14 hari setelah barang diterima",
+  },
 ];
 
 export const DELIVERY_OPTIONS: SelectOption[] = [
-  { value: "Diambil di titik kumpul desa", label: "Diambil di titik kumpul desa" },
-  { value: "Diantar ke gudang mitra", label: "Diantar ke gudang mitra" },
+  { value: "Diambil di titik kumpul desa", label: "Pembeli ambil di desa" },
+  { value: "Diantar ke gudang mitra", label: "Diantar ke gudang pembeli" },
   {
     value: "Titik temu pasar / ekspedisi",
-    label: "Titik temu / ekspedisi bersama",
+    label: "Bertemu di pasar / lewat ekspedisi",
   },
 ];
 
 export const DURATION_OPTIONS: SelectOption[] = [
-  { value: "Uji coba 1 kali pengiriman", label: "Uji coba 1 kali pengiriman" },
+  { value: "Uji coba 1 kali pengiriman", label: "Coba 1 kali kirim dulu" },
   { value: "1 musim panen (3 bulan)", label: "1 musim panen (3 bulan)" },
   { value: "6 bulan", label: "6 bulan" },
   { value: "12 bulan", label: "12 bulan" },
@@ -363,7 +356,7 @@ export function createEmptyFormData(
     ownerType: "Mitra Pembeli",
     ownerName: "",
     contactName: "",
-    position: "Penanggung Jawab Pembelian",
+    position: "",
     phone: "",
     email: "",
     location: "",
@@ -390,10 +383,29 @@ export function getSteps(kind: FormKind): StepConfig[] {
   return kind === "request" ? REQUEST_STEPS : OFFER_STEPS;
 }
 
+/** Phone number check shared by the wizard: digits, spaces, +, - and () only. */
+export function phoneError(raw: string): string | null {
+  const value = raw.trim();
+  if (!value) return "Nomor HP wajib diisi.";
+  if (/[^\d\s+()-]/.test(value)) {
+    return "Nomor HP hanya boleh berisi angka. Contoh: 0812 3456 7890";
+  }
+  const digits = value.replace(/\D/g, "");
+  if (digits.length < 9 || digits.length > 15) {
+    return "Nomor HP terdiri dari 9 sampai 15 angka. Contoh: 0812 3456 7890";
+  }
+  return null;
+}
+
+/**
+ * Step 0 (Barang) and step 1 (Kontak & Kirim) hold the fields; step 2 is the
+ * review. `today` (YYYY-MM-DD) is used to refuse a date in the past.
+ */
 export function validateStep(
   kind: FormKind,
   stepIndex: number,
-  data: FormData
+  data: FormData,
+  today?: string
 ): ValidationResult {
   const errors: Partial<Record<keyof FormData, string>> = {};
 
@@ -404,88 +416,71 @@ export function validateStep(
   };
 
   if (stepIndex === 0) {
-    requireField(
-      "ownerType",
-      kind === "request"
-        ? "Pilih kategori pemohon."
-        : "Pilih kategori penyedia desa."
-    );
-    requireField(
-      "ownerName",
-      kind === "request"
-        ? "Nama usaha atau lembaga wajib diisi."
-        : "Nama kelompok, BUMDes, atau usaha wajib diisi."
-    );
-    requireField("contactName", "Nama penanggung jawab wajib diisi.");
-    requireField("phone", "Nomor WhatsApp atau telepon aktif wajib diisi.");
-    requireField(
-      "location",
-      kind === "request"
-        ? "Lokasi usaha atau gudang tujuan wajib diisi."
-        : "Dusun atau lokasi titik kumpul wajib diisi."
-    );
-
-    if (
-      data.phone.trim() &&
-      data.phone.replace(/[^\d]/g, "").length < 9
-    ) {
-      errors.phone = "Masukkan nomor telepon yang dapat dihubungi.";
-    }
-    if (
-      data.email.trim() &&
-      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email.trim())
-    ) {
-      errors.email = "Format email belum sesuai.";
-    }
-  }
-
-  if (stepIndex === 1) {
-    requireField("productType", "Pilih jenis produk atau komoditas.");
+    requireField("productType", "Pilih jenis barang.");
     requireField(
       "variety",
       kind === "request"
-        ? "Tulis varietas atau spesifikasi singkat yang dicari."
-        : "Tulis varietas atau bentuk produk yang ditawarkan."
+        ? "Tulis barang yang Anda cari, misalnya \"Beras medium IR64\"."
+        : "Tulis barang yang Anda tawarkan, misalnya \"Beras Ciherang\"."
     );
     requireField(
       "quantity",
-      kind === "request"
-        ? "Jumlah kebutuhan wajib diisi."
-        : "Kapasitas pasok wajib diisi."
+      kind === "request" ? "Tulis jumlah yang dibutuhkan." : "Tulis jumlah yang sanggup dikirim."
     );
-    requireField("unit", "Pilih satuan jumlah.");
-    requireField(
-      "frequency",
-      "Pilih frekuensi kebutuhan atau ketersediaan."
-    );
+    requireField("unit", "Pilih satuan.");
+    requireField("frequency", "Pilih seberapa sering.");
     requireField(
       "neededDate",
-      kind === "request"
-        ? "Target waktu mulai pasok wajib diisi."
-        : "Waktu ketersediaan pasokan wajib diisi."
+      kind === "request" ? "Pilih tanggal barang dibutuhkan." : "Pilih bulan barang siap dikirim."
     );
 
     if (data.quantity.trim() && positiveNumberError(data.quantity)) {
       errors.quantity = POSITIVE_NUMBER_MESSAGE;
     }
+    const iso = neededDateToInput(kind, data.neededDate);
+    if (today && iso) {
+      const pastLimit = kind === "request" ? today : today.slice(0, 7);
+      if (iso < pastLimit) {
+        errors.neededDate =
+          kind === "request"
+            ? "Tanggal sudah lewat. Pilih hari ini atau sesudahnya."
+            : "Bulan sudah lewat. Pilih bulan ini atau sesudahnya.";
+      }
+    }
   }
 
-  if (stepIndex === 2) {
-    requireField("partnershipScheme", "Pilih skema kerja sama.");
+  if (stepIndex === 1) {
     requireField(
-      "paymentMethod",
-      "Pilih cara pembayaran yang diharapkan."
+      "ownerName",
+      kind === "request"
+        ? "Tulis nama usaha atau toko Anda."
+        : "Tulis nama usaha, kelompok tani, atau BUMDes Anda."
     );
+    requireField("ownerType", "Pilih jenis usaha.");
+    requireField("contactName", "Tulis nama orang yang bisa dihubungi.");
+    const phoneMessage = phoneError(data.phone);
+    if (phoneMessage) errors.phone = phoneMessage;
     requireField(
-      "deliveryType",
-      "Pilih mekanisme penyerahan barang."
+      "location",
+      kind === "request"
+        ? "Tulis alamat atau kecamatan tujuan kirim."
+        : "Tulis dusun atau tempat barang diambil."
     );
+    requireField("partnershipScheme", "Pilih cara kerja sama.");
+    requireField("paymentMethod", "Pilih cara bayar.");
+    requireField("deliveryType", "Pilih cara barang diserahkan.");
     requireField(
       "description",
       kind === "request"
-        ? "Jelaskan kebutuhan penggunaan atau standar penerimaan barang."
-        : "Jelaskan kondisi komoditas, sumber panen, atau kesiapan pasok."
+        ? "Jelaskan singkat barang yang Anda terima (mutu, kemasan, jadwal)."
+        : "Jelaskan singkat kondisi barang (asal panen, kemasan, kesiapan kirim)."
     );
+    if (
+      data.email.trim() &&
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email.trim())
+    ) {
+      errors.email = "Alamat email belum benar. Contoh: nama@gmail.com";
+    }
   }
 
   return {
@@ -494,9 +489,67 @@ export function validateStep(
   };
 }
 
+const MONTHS_LONG = [
+  "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+  "Juli", "Agustus", "September", "Oktober", "November", "Desember",
+];
+const MONTHS_SHORT = [
+  "Jan", "Feb", "Mar", "Apr", "Mei", "Jun",
+  "Jul", "Agu", "Sep", "Okt", "Nov", "Des",
+];
+
+/**
+ * The stored neededDate is a readable label ("20 Okt 2026" for a request,
+ * "Mulai Desember 2026" for an offer), so the directory can show it as is
+ * and still tell when a request has passed its date. These two helpers
+ * convert between that label and the value of a date/month input.
+ */
+export function neededDateFromInput(kind: FormKind, inputValue: string): string {
+  if (kind === "request") {
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(inputValue);
+    if (!m) return "";
+    return `${Number(m[3])} ${MONTHS_SHORT[Number(m[2]) - 1]} ${m[1]}`;
+  }
+  const m = /^(\d{4})-(\d{2})$/.exec(inputValue);
+  if (!m) return "";
+  return `Mulai ${MONTHS_LONG[Number(m[2]) - 1]} ${m[1]}`;
+}
+
+export function neededDateToInput(kind: FormKind, label: string): string {
+  const s = String(label || "").trim();
+  if (kind === "request") {
+    let m = /^(\d{4})-(\d{2})-(\d{2})/.exec(s);
+    if (m) return `${m[1]}-${m[2]}-${m[3]}`;
+    m = /^(\d{1,2})\s+([A-Za-z]+)\.?\s+(\d{4})$/.exec(s);
+    if (!m) return "";
+    const month = monthIndex(m[2]);
+    return month ? `${m[3]}-${pad2(month)}-${pad2(Number(m[1]))}` : "";
+  }
+  const m = /([A-Za-z]+)\s+(\d{4})/.exec(s);
+  if (!m) return "";
+  const month = monthIndex(m[1]);
+  return month ? `${m[2]}-${pad2(month)}` : "";
+}
+
+function pad2(n: number): string {
+  return String(n).padStart(2, "0");
+}
+
+function monthIndex(name: string): number {
+  const lower = name.toLowerCase();
+  const i = MONTHS_LONG.findIndex(
+    (long, idx) => long.toLowerCase() === lower || MONTHS_SHORT[idx].toLowerCase() === lower
+  );
+  if (i >= 0) return i + 1;
+  if (lower === "agt" || lower === "agus") return 8;
+  if (lower === "sept") return 9;
+  return 0;
+}
+
 export function validateAllSteps(
   kind: FormKind,
-  data: FormData
+  data: FormData,
+  today?: string
 ): {
   valid: boolean;
   firstInvalidStep: number | null;
@@ -505,8 +558,8 @@ export function validateAllSteps(
   const mergedErrors: Partial<Record<keyof FormData, string>> = {};
   let firstInvalidStep: number | null = null;
 
-  for (let step = 0; step < 3; step += 1) {
-    const result = validateStep(kind, step, data);
+  for (let step = 0; step < REVIEW_STEP; step += 1) {
+    const result = validateStep(kind, step, data, today);
     if (!result.valid && firstInvalidStep === null) {
       firstInvalidStep = step;
     }
@@ -520,10 +573,12 @@ export function validateAllSteps(
   };
 }
 
+/** Short code like "PRM-JRK-K3F9Q2": time plus random letters, so two never match. */
 export function createReference(kind: FormKind): string {
   const prefix = kind === "request" ? "PRM-JRK" : "PNW-JRK";
-  const stamp = String(Date.now()).slice(-4);
-  return `${prefix}-${stamp}`;
+  const time = Date.now().toString(36).slice(-3);
+  const random = Math.random().toString(36).slice(2, 5);
+  return `${prefix}-${(time + random).toUpperCase()}`;
 }
 
 export function formatTimestamp(isoString: string): string {
