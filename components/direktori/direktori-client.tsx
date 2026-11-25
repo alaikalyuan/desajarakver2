@@ -390,7 +390,6 @@ export function DirektoriClient({
   const [appliedReqStatus, setAppliedReqStatus] = useState("semua");
   const [appliedReqLocation, setAppliedReqLocation] = useState("semua");
   const [reqOpenSections, setReqOpenSections] = useState(REQ_SECTIONS_CLOSED);
-  const reqFilterRef = useRef<HTMLDivElement>(null);
 
   // Offer search & filters
   const [offerSearch, setOfferSearch] = useState("");
@@ -406,7 +405,6 @@ export function DirektoriClient({
   const [appliedOfferStatus, setAppliedOfferStatus] = useState("semua");
   const [appliedOfferCoverage, setAppliedOfferCoverage] = useState("semua");
   const [offerOpenSections, setOfferOpenSections] = useState(OFFER_SECTIONS_CLOSED);
-  const offerFilterRef = useRef<HTMLDivElement>(null);
 
   // Modal state
   const [selectedModal, setSelectedModal] = useState<
@@ -501,25 +499,6 @@ export function DirektoriClient({
     setActiveTab(next);
     tabRefs.current[next]?.focus();
   }
-
-  useEffect(() => {
-    function handleOutsideClick(event: MouseEvent) {
-      if (
-        reqFilterRef.current &&
-        !reqFilterRef.current.contains(event.target as Node)
-      ) {
-        setRequestFilterOpen(false);
-      }
-      if (
-        offerFilterRef.current &&
-        !offerFilterRef.current.contains(event.target as Node)
-      ) {
-        setOfferFilterOpen(false);
-      }
-    }
-    document.addEventListener("click", handleOutsideClick);
-    return () => document.removeEventListener("click", handleOutsideClick);
-  }, []);
 
   // Counts for Request filters
   const reqCounts = useMemo(() => {
@@ -884,6 +863,7 @@ export function DirektoriClient({
             activeTab === "permintaan" ? "active" : ""
           }`}
         >
+          <div className="filter-toolbar-wrap">
           <div className="toolbar">
             <div className="toolbar-heading">
               <h2>Permintaan Mitra</h2>
@@ -916,191 +896,190 @@ export function DirektoriClient({
                 />
               </div>
 
-              <div className="request-filter-wrap" ref={reqFilterRef}>
+              <button
+                type="button"
+                className="secondary-button request-filter-toggle"
+                id="toggleRequestFilters"
+                aria-expanded={requestFilterOpen}
+                aria-controls="requestFiltersPanel"
+                onClick={() => {
+                  setRequestFilterOpen((prev) => !prev);
+                  void loadMore("request", true);
+                }}
+              >
+                <span aria-hidden="true">☷</span> Saring
+              </button>
+            </div>
+          </div>
+
+            <div
+              id="requestFiltersPanel"
+              className="request-filters-panel filter-accordion-panel"
+              hidden={!requestFilterOpen}
+            >
+              {/* Accordion 1: Jenis */}
+              <div className="filter-accordion-section">
                 <button
                   type="button"
-                  className="secondary-button request-filter-toggle"
-                  id="toggleRequestFilters"
-                  aria-expanded={requestFilterOpen}
-                  aria-controls="requestFiltersPanel"
-                  onClick={() => {
-                    setRequestFilterOpen((prev) => !prev);
-                    void loadMore("request", true);
-                  }}
+                  className={`filter-accordion-header ${
+                    reqOpenSections.jenis ? "open" : ""
+                  }`}
+                  aria-expanded={reqOpenSections.jenis}
+                  onClick={() =>
+                    setReqOpenSections((prev) => ({
+                      ...REQ_SECTIONS_CLOSED,
+                      jenis: !prev.jenis,
+                    }))
+                  }
                 >
-                  <span aria-hidden="true">☷</span> Saring
+                  <span>Jenis</span>
+                  <ChevronDown className="filter-accordion-chevron" size={16} aria-hidden="true" />
                 </button>
 
-                <div
-                  id="requestFiltersPanel"
-                  className="request-filters-panel filter-accordion-panel"
-                  hidden={!requestFilterOpen}
+                {reqOpenSections.jenis && (
+                  <div className="filter-accordion-body">
+                    {JENIS_FILTER_OPTIONS.map((opt) => (
+                      <button
+                        key={opt.key}
+                        type="button"
+                        className={`request-filter-option ${
+                          draftReqJenis === opt.key ? "active" : ""
+                        }`}
+                        onClick={() => setDraftReqJenis(opt.key)}
+                      >
+                        <span>{opt.label}</span>
+                        <span className="request-filter-count">
+                          {reqCounts.jenis[opt.key]}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Accordion 2: Status Permintaan */}
+              <div className="filter-accordion-section">
+                <button
+                  type="button"
+                  className={`filter-accordion-header ${
+                    reqOpenSections.status ? "open" : ""
+                  }`}
+                  aria-expanded={reqOpenSections.status}
+                  onClick={() =>
+                    setReqOpenSections((prev) => ({
+                      ...REQ_SECTIONS_CLOSED,
+                      status: !prev.status,
+                    }))
+                  }
                 >
-                  {/* Accordion 1: Jenis */}
-                  <div className="filter-accordion-section">
-                    <button
-                      type="button"
-                      className={`filter-accordion-header ${
-                        reqOpenSections.jenis ? "open" : ""
-                      }`}
-                      aria-expanded={reqOpenSections.jenis}
-                      onClick={() =>
-                        setReqOpenSections((prev) => ({
-                          ...REQ_SECTIONS_CLOSED,
-                          jenis: !prev.jenis,
-                        }))
-                      }
-                    >
-                      <span>Jenis</span>
-                      <ChevronDown className="filter-accordion-chevron" size={16} aria-hidden="true" />
-                    </button>
+                  <span>Status Permintaan</span>
+                  <ChevronDown className="filter-accordion-chevron" size={16} aria-hidden="true" />
+                </button>
 
-                    {reqOpenSections.jenis && (
-                      <div className="filter-accordion-body">
-                        {JENIS_FILTER_OPTIONS.map((opt) => (
-                          <button
-                            key={opt.key}
-                            type="button"
-                            className={`request-filter-option ${
-                              draftReqJenis === opt.key ? "active" : ""
-                            }`}
-                            onClick={() => setDraftReqJenis(opt.key)}
-                          >
-                            <span>{opt.label}</span>
-                            <span className="request-filter-count">
-                              {reqCounts.jenis[opt.key]}
-                            </span>
-                          </button>
-                        ))}
-                      </div>
-                    )}
+                {reqOpenSections.status && (
+                  <div className="filter-accordion-body">
+                    {(
+                      ["semua", "Baru", "Dalam Proses", "Selesai"] as const
+                    ).map((statusKey) => (
+                      <button
+                        key={statusKey}
+                        type="button"
+                        className={`request-filter-option ${
+                          draftReqStatus === statusKey ? "active" : ""
+                        }`}
+                        onClick={() => setDraftReqStatus(statusKey)}
+                      >
+                        <span>
+                          {statusKey === "semua"
+                            ? "Semua status"
+                            : statusKey}
+                        </span>
+                        <span className="request-filter-count">
+                          {reqCounts.status[statusKey]}
+                        </span>
+                      </button>
+                    ))}
                   </div>
+                )}
+              </div>
 
-                  {/* Accordion 2: Status Permintaan */}
-                  <div className="filter-accordion-section">
-                    <button
-                      type="button"
-                      className={`filter-accordion-header ${
-                        reqOpenSections.status ? "open" : ""
-                      }`}
-                      aria-expanded={reqOpenSections.status}
-                      onClick={() =>
-                        setReqOpenSections((prev) => ({
-                          ...REQ_SECTIONS_CLOSED,
-                          status: !prev.status,
-                        }))
-                      }
-                    >
-                      <span>Status Permintaan</span>
-                      <ChevronDown className="filter-accordion-chevron" size={16} aria-hidden="true" />
-                    </button>
+              {/* Accordion 3: Lokasi Permintaan */}
+              <div className="filter-accordion-section">
+                <button
+                  type="button"
+                  className={`filter-accordion-header ${
+                    reqOpenSections.location ? "open" : ""
+                  }`}
+                  aria-expanded={reqOpenSections.location}
+                  onClick={() =>
+                    setReqOpenSections((prev) => ({
+                      ...REQ_SECTIONS_CLOSED,
+                      location: !prev.location,
+                    }))
+                  }
+                >
+                  <span>Lokasi Permintaan</span>
+                  <ChevronDown className="filter-accordion-chevron" size={16} aria-hidden="true" />
+                </button>
 
-                    {reqOpenSections.status && (
-                      <div className="filter-accordion-body">
-                        {(
-                          ["semua", "Baru", "Dalam Proses", "Selesai"] as const
-                        ).map((statusKey) => (
-                          <button
-                            key={statusKey}
-                            type="button"
-                            className={`request-filter-option ${
-                              draftReqStatus === statusKey ? "active" : ""
-                            }`}
-                            onClick={() => setDraftReqStatus(statusKey)}
-                          >
-                            <span>
-                              {statusKey === "semua"
-                                ? "Semua status"
-                                : statusKey}
-                            </span>
-                            <span className="request-filter-count">
-                              {reqCounts.status[statusKey]}
-                            </span>
-                          </button>
-                        ))}
-                      </div>
-                    )}
+                {reqOpenSections.location && (
+                  <div className="filter-accordion-body">
+                    {(
+                      [
+                        { key: "semua", label: "Semua lokasi" },
+                        { key: "jatim", label: "Jawa Timur" },
+                        { key: "luar_jatim", label: "Luar Jawa Timur" },
+                      ] as const
+                    ).map((loc) => (
+                      <button
+                        key={loc.key}
+                        type="button"
+                        className={`request-filter-option ${
+                          draftReqLocation === loc.key ? "active" : ""
+                        }`}
+                        onClick={() => setDraftReqLocation(loc.key)}
+                      >
+                        <span>{loc.label}</span>
+                        <span className="request-filter-count">
+                          {reqCounts.location[loc.key]}
+                        </span>
+                      </button>
+                    ))}
                   </div>
+                )}
+              </div>
 
-                  {/* Accordion 3: Lokasi Permintaan */}
-                  <div className="filter-accordion-section">
-                    <button
-                      type="button"
-                      className={`filter-accordion-header ${
-                        reqOpenSections.location ? "open" : ""
-                      }`}
-                      aria-expanded={reqOpenSections.location}
-                      onClick={() =>
-                        setReqOpenSections((prev) => ({
-                          ...REQ_SECTIONS_CLOSED,
-                          location: !prev.location,
-                        }))
-                      }
-                    >
-                      <span>Lokasi Permintaan</span>
-                      <ChevronDown className="filter-accordion-chevron" size={16} aria-hidden="true" />
-                    </button>
+              <div className="request-filter-footer">
+                <button
+                  type="button"
+                  className="secondary-button"
+                  id="applyRequestFilters"
+                  onClick={() => {
+                    setAppliedReqJenis(draftReqJenis);
+                    setAppliedReqStatus(draftReqStatus);
+                    setAppliedReqLocation(draftReqLocation);
+                    setRequestFilterOpen(false);
+                  }}
+                >
+                  Terapkan filter
+                </button>
 
-                    {reqOpenSections.location && (
-                      <div className="filter-accordion-body">
-                        {(
-                          [
-                            { key: "semua", label: "Semua lokasi" },
-                            { key: "jatim", label: "Jawa Timur" },
-                            { key: "luar_jatim", label: "Luar Jawa Timur" },
-                          ] as const
-                        ).map((loc) => (
-                          <button
-                            key={loc.key}
-                            type="button"
-                            className={`request-filter-option ${
-                              draftReqLocation === loc.key ? "active" : ""
-                            }`}
-                            onClick={() => setDraftReqLocation(loc.key)}
-                          >
-                            <span>{loc.label}</span>
-                            <span className="request-filter-count">
-                              {reqCounts.location[loc.key]}
-                            </span>
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="request-filter-footer">
-                    <button
-                      type="button"
-                      className="secondary-button"
-                      id="applyRequestFilters"
-                      onClick={() => {
-                        setAppliedReqJenis(draftReqJenis);
-                        setAppliedReqStatus(draftReqStatus);
-                        setAppliedReqLocation(draftReqLocation);
-                        setRequestFilterOpen(false);
-                      }}
-                    >
-                      Terapkan filter
-                    </button>
-
-                    <button
-                      type="button"
-                      className="secondary-button"
-                      id="resetRequestFilters"
-                      onClick={() => {
-                        setDraftReqJenis("semua");
-                        setDraftReqStatus("semua");
-                        setDraftReqLocation("semua");
-                        setAppliedReqJenis("semua");
-                        setAppliedReqStatus("semua");
-                        setAppliedReqLocation("semua");
-                        setRequestFilterOpen(false);
-                      }}
-                    >
-                      Reset filter
-                    </button>
-                  </div>
-                </div>
+                <button
+                  type="button"
+                  className="secondary-button"
+                  id="resetRequestFilters"
+                  onClick={() => {
+                    setDraftReqJenis("semua");
+                    setDraftReqStatus("semua");
+                    setDraftReqLocation("semua");
+                    setAppliedReqJenis("semua");
+                    setAppliedReqStatus("semua");
+                    setAppliedReqLocation("semua");
+                    setRequestFilterOpen(false);
+                  }}
+                >
+                  Reset filter
+                </button>
               </div>
             </div>
           </div>
@@ -1242,7 +1221,7 @@ export function DirektoriClient({
             activeTab === "penawaran" ? "active" : ""
           }`}
         >
-          <div className="offer-toolbar-wrap" ref={offerFilterRef}>
+          <div className="filter-toolbar-wrap">
             <div className="toolbar">
               <div>
                 <h2>Penawaran Desa</h2>
