@@ -14,6 +14,7 @@ import {
 import { fetchMitraDashboard, type MitraDashboardData } from "@/lib/dashboard-data";
 import { telUrl, whatsAppUrl } from "@/lib/contact";
 import { toKg } from "@/lib/units";
+import { UserMenu } from "@/components/user-menu";
 import "./mitra-dashboard.css";
 
 interface IncomingOfferItem {
@@ -340,16 +341,9 @@ export function MitraDashboard({ userId, userName, initialData }: MitraDashboard
             </Link>
           </nav>
 
-          <div className="account">
-            <span className="avatar" aria-hidden="true">
-              {initials(userName)}
-            </span>
-            <span className="account-name">{userName}</span>
-            <button type="button" className="account-logout" onClick={handleLogout}>
-              Keluar
-            </button>
-          </div>
         </div>
+
+        <UserMenu name={userName} role="mitra" onLogout={handleLogout} />
       </header>
 
       <aside className="sidebar" aria-label="Menu mitra">

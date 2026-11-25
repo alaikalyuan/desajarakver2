@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { dashboardUrl, ROLE_NAMES, type UserProfile } from "@/lib/auth";
+import { UserMenu } from "@/components/user-menu";
+import type { UserProfile } from "@/lib/auth";
 
 interface NavbarProps {
   /**
@@ -25,8 +26,6 @@ export function Navbar({ initialUser }: NavbarProps) {
   const [fetchedUser, setFetchedUser] = useState<UserProfile | null>(null);
   const [loggedOut, setLoggedOut] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [userDropdownOpen, setUserDropdownOpen] = useState(false);
-  const userMenuRef = useRef<HTMLDivElement>(null);
   const knowsUser = initialUser !== undefined;
   const user = loggedOut ? null : knowsUser ? (initialUser ?? null) : fetchedUser;
 
@@ -62,37 +61,28 @@ export function Navbar({ initialUser }: NavbarProps) {
   }, [knowsUser]);
 
   useEffect(() => {
-    function handleOutsideClick(event: MouseEvent) {
-      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
-        setUserDropdownOpen(false);
-      }
-    }
     function handleEscape(event: KeyboardEvent) {
-      if (event.key === "Escape") {
-        setMenuOpen(false);
-        setUserDropdownOpen(false);
-      }
+      if (event.key === "Escape") setMenuOpen(false);
     }
-    document.addEventListener("click", handleOutsideClick);
     document.addEventListener("keydown", handleEscape);
-    return () => {
-      document.removeEventListener("click", handleOutsideClick);
-      document.removeEventListener("keydown", handleEscape);
-    };
+    return () => document.removeEventListener("keydown", handleEscape);
   }, []);
 
   async function handleLogout() {
     const supabase = await loadSupabase();
     await supabase.auth.signOut();
     setLoggedOut(true);
-    setUserDropdownOpen(false);
     setMenuOpen(false);
     router.push("/");
     router.refresh();
   }
 
   const closeMenu = () => setMenuOpen(false);
-  const initialLetter = (user?.fullName || "P").trim().charAt(0).toUpperCase();
+  const linkProps = (active: boolean) => ({
+    className: active ? "active" : "",
+    "aria-current": active ? ("page" as const) : undefined,
+    onClick: closeMenu,
+  });
 
   return (
     <header className="header">
@@ -111,31 +101,19 @@ export function Navbar({ initialUser }: NavbarProps) {
         </Link>
 
         <div id="nav-menu" className={`nav-menu ${menuOpen ? "open show" : ""}`}>
-          <Link href="/" className={pathname === "/" ? "active" : ""} onClick={closeMenu}>
+          <Link href="/" {...linkProps(pathname === "/")}>
             BERANDA
           </Link>
-          <Link
-            href="/direktori"
-            className={pathname?.startsWith("/direktori") ? "active" : ""}
-            onClick={closeMenu}
-          >
+          <Link href="/direktori" {...linkProps(Boolean(pathname?.startsWith("/direktori")))}>
             DIREKTORI USAHA
           </Link>
-          <Link
-            href="/cara-kerja"
-            className={pathname?.startsWith("/cara-kerja") ? "active" : ""}
-            onClick={closeMenu}
-          >
+          <Link href="/cara-kerja" {...linkProps(Boolean(pathname?.startsWith("/cara-kerja")))}>
             CARA KERJA
           </Link>
 
           {!user ? (
             <>
-              <Link
-                href="/masuk"
-                className={pathname?.startsWith("/masuk") ? "active" : ""}
-                onClick={closeMenu}
-              >
+              <Link href="/masuk" {...linkProps(Boolean(pathname?.startsWith("/masuk")))}>
                 MASUK
               </Link>
               <Link href="/daftar" className="nav-cta" onClick={closeMenu}>
@@ -143,41 +121,12 @@ export function Navbar({ initialUser }: NavbarProps) {
               </Link>
             </>
           ) : (
-            <div ref={userMenuRef} className={`user-menu ${userDropdownOpen ? "open" : ""}`}>
-              <button
-                type="button"
-                className="user-profile-btn"
-                aria-expanded={userDropdownOpen}
-                aria-controls="user-dropdown"
-                onClick={() => setUserDropdownOpen((prev) => !prev)}
-              >
-                <span className="user-avatar" aria-hidden="true">
-                  {initialLetter}
-                </span>
-                <span className="user-info">
-                  <strong>{user.fullName || "Pengguna"}</strong>
-                  <small>{ROLE_NAMES[user.role] || user.role}</small>
-                </span>
-                <span className="dropdown-arrow" aria-hidden="true">
-                  ▼
-                </span>
-              </button>
-
-              <div className="user-dropdown" id="user-dropdown">
-                <Link
-                  href={dashboardUrl(user.role)}
-                  onClick={() => {
-                    setUserDropdownOpen(false);
-                    closeMenu();
-                  }}
-                >
-                  Halaman Saya
-                </Link>
-                <button type="button" onClick={handleLogout}>
-                  Keluar
-                </button>
-              </div>
-            </div>
+            <UserMenu
+              name={user.fullName}
+              role={user.role}
+              onLogout={handleLogout}
+              onNavigate={closeMenu}
+            />
           )}
         </div>
 

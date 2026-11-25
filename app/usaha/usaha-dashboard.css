@@ -38,53 +38,19 @@
   object-fit: contain;
 }
 
-.usaha-dashboard-scope .account {
-  display: flex;
-  align-items: center;
-  gap: 11px;
+/* This top bar is white, the shared profile menu is drawn for a dark one. */
+.usaha-dashboard-scope .topbar .user-profile-btn,
+.usaha-dashboard-scope .topbar .user-info strong {
+  color: var(--text);
 }
 
-.usaha-dashboard-scope .account-text {
-  text-align: right;
-}
-
-.usaha-dashboard-scope .account strong,
-.usaha-dashboard-scope .account small {
-  display: block;
-}
-
-.usaha-dashboard-scope .account strong {
-  font-size: 13px;
-}
-
-.usaha-dashboard-scope .account small {
-  color: var(--muted);
-  margin-top: 2px;
-  font-size: 12px;
-}
-
-.usaha-dashboard-scope .avatar {
-  width: 39px;
-  height: 39px;
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
+.usaha-dashboard-scope .topbar .user-profile-btn:hover,
+.usaha-dashboard-scope .topbar .user-avatar {
   background: var(--green-light);
-  color: var(--green);
-  font-weight: 800;
 }
 
-.usaha-dashboard-scope .topbar-logout {
-  display: none;
-  min-height: 44px;
-  padding: 0 14px;
-  border: 1px solid #c9d6cd;
-  border-radius: 8px;
-  background: white;
-  color: #b42318;
-  font: inherit;
-  font-weight: 700;
-  cursor: pointer;
+.usaha-dashboard-scope .topbar .user-info small {
+  color: var(--muted);
 }
 
 .usaha-dashboard-scope .layout {
@@ -530,12 +496,15 @@
   .usaha-dashboard-scope .sidebar-bottom {
     display: none;
   }
-  .usaha-dashboard-scope .topbar-logout {
-    display: inline-flex;
-    align-items: center;
-  }
-  .usaha-dashboard-scope .account > div:first-child {
+  .usaha-dashboard-scope .topbar .user-info,
+  .usaha-dashboard-scope .topbar .dropdown-arrow {
     display: none;
+  }
+  .usaha-dashboard-scope .topbar .user-profile-btn {
+    min-width: 44px;
+    min-height: 44px;
+    padding: 3px;
+    justify-content: center;
   }
   .usaha-dashboard-scope .menu-item {
     width: auto;

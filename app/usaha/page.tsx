@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { ROLE_NAMES } from "@/lib/auth";
 import { fetchUsahaDashboard } from "@/lib/dashboard-data";
 import {
   createServerSupabaseClient,
@@ -23,7 +22,7 @@ export default async function UsahaPage() {
     <UsahaDashboard
       userId={user.id}
       userName={user.businessName || user.fullName || "Pelaku Usaha"}
-      userRoleLabel={ROLE_NAMES[user.role] || "Pelaku Usaha"}
+      userRole={user.role}
       initialData={data}
     />
   );
