@@ -2106,11 +2106,6 @@ html {
     min-width: 160px;
 }
 
-#permintaan .request-filter-wrap {
-    position: relative;
-    flex: 0 0 auto;
-}
-
 #permintaan .request-filter-toggle {
     display: inline-flex;
     align-items: center;
@@ -2473,23 +2468,6 @@ html {
     }
 }
 
-
-/* =========================================
-   PENYEMPURNAAN DIREKTORI USAHA
-   ========================================= */
-
-/* 1. Posisi panel Penawaran Desa */
-#penawaran .offer-toolbar-wrap {
-    position: relative;
-    width: 100%;
-    min-width: 0;
-    margin-bottom: 25px;
-}
-
-#penawaran .offer-toolbar-wrap > .toolbar {
-    margin-bottom: 0;
-}
-
 /* Samakan tombol Filter di kedua tab */
 #permintaan #toggleRequestFilters,
 #penawaran #toggleOfferFilters {
@@ -2513,12 +2491,6 @@ html {
 #permintaan #toggleRequestFilters:hover,
 #penawaran #toggleOfferFilters:hover {
     background: #edf5f0;
-}
-
-/* 2. Panel filter tampil dekat dengan tombol Filter */
-#permintaan .request-filter-wrap,
-#penawaran .offer-toolbar-wrap {
-    position: relative;
 }
 
 /* 3. Samakan judul dan pilihan di panel */
@@ -2785,13 +2757,6 @@ body {
     box-sizing: border-box;
 }
 
-/* Filter tidak boleh mengecil atau menempel pada pencarian */
-#permintaan .request-filter-wrap {
-    position: relative;
-    flex: none;
-    min-width: max-content;
-}
-
 #permintaan #toggleRequestFilters,
 #penawaran #toggleOfferFilters {
     width: auto;
@@ -2799,18 +2764,6 @@ body {
     min-height: 40px;
     padding: 10px 14px;
     flex-shrink: 0;
-}
-
-/* Panel Penawaran mengikuti wrapper toolbar-nya */
-#penawaran .offer-toolbar-wrap {
-    position: relative;
-    width: 100%;
-    min-width: 0;
-    margin-bottom: 22px;
-}
-
-#penawaran .offer-toolbar-wrap > .toolbar {
-    margin-bottom: 0;
 }
 
 /* Tablet: judul di atas, tombol dan pencarian di baris berikutnya */
@@ -3309,26 +3262,30 @@ body {
 
 /* =========================================
    ACCORDION FILTER PANEL (PERMINTAAN & PENAWARAN)
+   In the page flow: opening it moves the cards down instead of covering them.
    ========================================= */
+
+.directory-page .filter-toolbar-wrap {
+    margin-bottom: 22px;
+}
+
+#permintaan .filter-toolbar-wrap > .toolbar,
+#penawaran .filter-toolbar-wrap > .toolbar {
+    margin-bottom: 0;
+}
 
 #permintaan .request-filters-panel.filter-accordion-panel,
 #penawaran .offer-filters-panel.filter-accordion-panel {
-    position: absolute;
-    top: calc(100% + 8px);
-    right: 0;
     display: flex;
-    flex-direction: column;
-    align-items: stretch;
-    width: 300px;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 0 12px;
+    margin-top: 12px;
     padding: 8px 12px 0;
     border: 1px solid #e0e8e2;
     border-radius: 14px;
     background: #ffffff;
-    box-shadow: 0 12px 32px rgba(15, 45, 31, 0.14);
     box-sizing: border-box;
-    z-index: 100;
-    max-height: min(420px, calc(100vh - 120px));
-    overflow-y: auto;
 }
 
 .directory-page .filter-accordion-panel[hidden] {
@@ -3337,8 +3294,9 @@ body {
 
 .filter-accordion-section {
     display: flex;
+    flex: 1 1 130px;
     flex-direction: column;
-    border-bottom: 1px solid #e8efea;
+    min-width: 0;
     padding: 4px 0;
 }
 
@@ -3399,11 +3357,9 @@ body {
     display: flex;
     align-items: center;
     justify-content: flex-end;
-    position: sticky;
-    bottom: 0;
+    flex: 1 0 100%;
     gap: 10px;
     padding: 10px 0;
-    background: #ffffff;
 }
 
 #permintaan .filter-accordion-panel #applyRequestFilters,
@@ -3417,25 +3373,19 @@ body {
     font-weight: 600;
 }
 
-/* Phones: as wide as the toolbar, at most half the screen tall */
+/* Phones: one section per row */
 @media (max-width: 680px) {
-    #permintaan .request-filter-wrap {
-        position: static;
-    }
-
-    #permintaan .request-toolbar-actions {
-        position: relative;
-    }
-
     #permintaan .request-filters-panel.filter-accordion-panel,
     #penawaran .offer-filters-panel.filter-accordion-panel {
-        left: 0;
-        width: auto;
-        max-height: min(50vh, 360px);
+        flex-direction: column;
+        flex-wrap: nowrap;
+        align-items: stretch;
         padding: 4px 8px 0;
     }
 
     .filter-accordion-section {
+        flex: none;
+        border-bottom: 1px solid #e8efea;
         padding: 0;
     }
 
@@ -3457,6 +3407,7 @@ body {
 
     #permintaan .filter-accordion-panel .request-filter-footer,
     #penawaran .filter-accordion-panel .offer-filter-actions {
+        flex: none;
         padding: 8px 0;
     }
 
