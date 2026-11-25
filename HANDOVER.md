@@ -166,7 +166,8 @@ These were tested on the preview. Re-test each one on the new app (see §9).
    - `NEXT_PUBLIC_SUPABASE_URL=https://sxhqfrvmdjkpbfoqdnhq.supabase.co`
    - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_eKeRSxcB3_ExEjOX3Lpihw_k186hs7W`
 3. In the Supabase dashboard → Authentication → URL Configuration:
-   - Set **Site URL** to the Vercel production URL.
+   - Set **Site URL** to `https://www.desajarak.my.id`. Supabase falls back to it whenever a redirect is not on the list below, so a stale value sends Google sign-in to the old domain.
+   - Add `https://www.desajarak.my.id/**` and `https://desajarak.my.id/**` to **Redirect URLs**.
    - Add `https://<project>.vercel.app/**` and `https://*-<team>.vercel.app/**` (for preview deployments) to **Redirect URLs**. Sign-up, reset-password and Google links only work for URLs on this list.
 4. Google OAuth: nothing changes in Google Cloud Console. Its callback is Supabase's (`https://sxhqfrvmdjkpbfoqdnhq.supabase.co/auth/v1/callback`), not the site's.
 

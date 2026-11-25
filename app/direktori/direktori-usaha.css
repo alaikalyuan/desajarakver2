@@ -437,7 +437,6 @@ a.card-button {
 }
 
 
-
 /* =========================
    MODAL
    ========================= */
@@ -1837,24 +1836,6 @@ a.card-button {
     }
 }
 
-
-/* =========================================
-   PENAWARAN DESA — REVISI TAMPILAN
-   ========================================= */
-
-/* Panel filter */
-#penawaran .offer-filters-panel {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 16px;
-    margin: 0 0 20px;
-    padding: 18px;
-    background: #ffffff;
-    border: 1px solid #dce7df;
-    border-radius: 12px;
-}
-
-#penawaran .offer-filters-panel[hidden],
 #penawaran .offer-empty-state[hidden] {
     display: none !important;
 }
@@ -2047,10 +2028,6 @@ a.card-button {
 }
 
 @media (max-width: 680px) {
-    #penawaran .offer-filters-panel {
-        grid-template-columns: minmax(0, 1fr);
-        padding: 14px;
-    }
 
     #penawaran .offer-filter-actions {
         align-items: stretch;
@@ -2111,7 +2088,6 @@ html {
     margin-inline: auto;
     padding: 14px 0 !important;
     box-sizing: border-box;
-    position: relative;
 }
 
 /* =========================================
@@ -2146,27 +2122,6 @@ html {
     background: #fff;
     border: 1px solid #244b37;
     color: #244b37;
-}
-
-#permintaan .request-filters-panel {
-    position: absolute;
-    top: calc(100% + 10px);
-    right: 0;
-    z-index: 100;
-    width: min(520px, calc(100vw - 32px));
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 18px;
-    padding: 16px;
-    background: #fff;
-    border: 1px solid #e0e8e2;
-    border-radius: 12px;
-    box-shadow: 0 12px 32px rgba(15, 45, 31, 0.14);
-    box-sizing: border-box;
-}
-
-#permintaan .request-filters-panel[hidden] {
-    display: none !important;
 }
 
 #permintaan .request-filter-column {
@@ -2289,36 +2244,6 @@ html {
 #penawaran #toggleOfferFilters:hover {
     background: #edf5f0;
     color: #1b5137;
-}
-
-/* 4. Samakan visual panel filter kedua tab */
-#permintaan .request-filters-panel,
-#penawaran .offer-filters-panel {
-    z-index: 100;
-    width: min(520px, calc(100vw - 32px));
-    padding: 14px;
-    border: 1px solid #e0e8e2;
-    border-radius: 12px;
-    background: #ffffff;
-    box-shadow: 0 12px 32px rgba(15, 45, 31, 0.14);
-    box-sizing: border-box;
-}
-
-#permintaan .request-filters-panel[hidden],
-#penawaran .offer-filters-panel[hidden] {
-    display: none !important;
-}
-
-/* Panel Penawaran dibuka di bawah toolbar,
-   mengikuti pola panel Permintaan Mitra. */
-#penawaran .offer-filters-panel {
-    position: absolute;
-    top: calc(100% + 8px);
-    right: clamp(20px, 3vw, 48px);
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 18px;
-    margin: 0;
 }
 
 /* Judul kolom filter */
@@ -2456,26 +2381,9 @@ html {
     #penawaran .toolbar-actions {
         min-width: 0;
     }
-
-    #penawaran .offer-filters-panel {
-        top: calc(100% + 8px);
-        right: 0;
-        width: min(520px, calc(100vw - 32px));
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 12px;
-        padding: 12px;
-    }
 }
 
 @media (max-width: 480px) {
-    #penawaran .offer-filters-panel {
-        grid-template-columns: minmax(0, 1fr);
-    }
-
-    #permintaan .request-filters-panel,
-    #penawaran .offer-filters-panel {
-        padding: 12px;
-    }
 
     #permintaan .request-filter-footer,
     #penawaran .offer-filter-actions {
@@ -2563,14 +2471,6 @@ html {
         width: 100%;
         min-width: 0;
     }
-
-    #permintaan .request-filters-panel {
-        width: min(520px, calc(100vw - 32px));
-        right: 0;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 12px;
-        padding: 12px;
-    }
 }
 
 
@@ -2619,39 +2519,6 @@ html {
 #permintaan .request-filter-wrap,
 #penawaran .offer-toolbar-wrap {
     position: relative;
-}
-
-#permintaan .request-filters-panel {
-    position: absolute;
-    top: calc(100% + 8px);
-    right: 0;
-    width: min(520px, calc(100vw - 32px));
-    z-index: 100;
-    box-sizing: border-box;
-}
-
-#penawaran .offer-filters-panel {
-    position: absolute;
-    top: calc(100% + 8px);
-    right: 0;
-    width: min(520px, calc(100vw - 32px));
-    margin: 0;
-    padding: 14px;
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    align-items: start;
-    gap: 12px 16px;
-    border: 1px solid #e0e8e2;
-    border-radius: 12px;
-    background: #ffffff;
-    box-shadow: 0 12px 30px rgba(15, 45, 31, 0.14);
-    z-index: 100;
-    box-sizing: border-box;
-}
-
-#permintaan .request-filters-panel[hidden],
-#penawaran .offer-filters-panel[hidden] {
-    display: none !important;
 }
 
 /* 3. Samakan judul dan pilihan di panel */
@@ -2802,12 +2669,6 @@ html {
 
 /* Tampilan filter di ponsel */
 @media (max-width: 480px) {
-    #permintaan .request-filters-panel,
-    #penawaran .offer-filters-panel {
-        width: min(520px, calc(100vw - 32px));
-        padding: 12px;
-        gap: 12px;
-    }
 
     #permintaan .request-filter-option,
     #penawaran .offer-filter-option {
@@ -2940,19 +2801,6 @@ body {
     flex-shrink: 0;
 }
 
-/* Panel Permintaan Mitra dan Penawaran Desa */
-#permintaan .request-filters-panel,
-#penawaran .offer-filters-panel {
-    top: calc(100% + 8px);
-    right: 0;
-    width: min(520px, calc(100vw - 32px));
-    max-width: calc(100vw - 32px);
-    margin: 0;
-    padding: 14px;
-    z-index: 100;
-    box-sizing: border-box;
-}
-
 /* Panel Penawaran mengikuti wrapper toolbar-nya */
 #penawaran .offer-toolbar-wrap {
     position: relative;
@@ -2963,19 +2811,6 @@ body {
 
 #penawaran .offer-toolbar-wrap > .toolbar {
     margin-bottom: 0;
-}
-
-#penawaran .offer-filters-panel {
-    position: absolute;
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    align-items: start;
-    gap: 12px 16px;
-}
-
-#penawaran .offer-filters-panel[hidden],
-#permintaan .request-filters-panel[hidden] {
-    display: none !important;
 }
 
 /* Tablet: judul di atas, tombol dan pencarian di baris berikutnya */
@@ -3043,18 +2878,6 @@ body {
     #penawaran .toolbar-actions .search-box {
         width: 100%;
         min-width: 0;
-    }
-
-    #permintaan .request-filters-panel,
-    #penawaran .offer-filters-panel {
-        width: min(520px, calc(100vw - 32px));
-        max-width: calc(100vw - 32px);
-        padding: 12px;
-        gap: 12px;
-    }
-
-    #penawaran .offer-filters-panel {
-        grid-template-columns: minmax(0, 1fr);
     }
 }
 
@@ -3490,20 +3313,26 @@ body {
 
 #permintaan .request-filters-panel.filter-accordion-panel,
 #penawaran .offer-filters-panel.filter-accordion-panel {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
     display: flex;
     flex-direction: column;
-    gap: 0;
-    width: min(360px, calc(100vw - 32px));
-    max-width: calc(100vw - 32px);
-    padding: 16px 18px;
+    align-items: stretch;
+    width: 300px;
+    padding: 8px 12px 0;
     border: 1px solid #e0e8e2;
     border-radius: 14px;
     background: #ffffff;
     box-shadow: 0 12px 32px rgba(15, 45, 31, 0.14);
     box-sizing: border-box;
     z-index: 100;
-    max-height: calc(100vh - 120px);
+    max-height: min(420px, calc(100vh - 120px));
     overflow-y: auto;
+}
+
+.directory-page .filter-accordion-panel[hidden] {
+    display: none !important;
 }
 
 .filter-accordion-section {
@@ -3543,10 +3372,13 @@ body {
 }
 
 .filter-accordion-chevron {
-    font-size: 12px;
-    font-weight: 700;
+    flex-shrink: 0;
     color: #163a29;
-    line-height: 1;
+    transition: transform 0.15s ease;
+}
+
+.filter-accordion-header.open .filter-accordion-chevron {
+    transform: rotate(180deg);
 }
 
 .filter-accordion-body {
@@ -3567,9 +3399,11 @@ body {
     display: flex;
     align-items: center;
     justify-content: flex-end;
+    position: sticky;
+    bottom: 0;
     gap: 10px;
-    padding-top: 14px;
-    margin-top: 2px;
+    padding: 10px 0;
+    background: #ffffff;
 }
 
 #permintaan .filter-accordion-panel #applyRequestFilters,
@@ -3581,6 +3415,57 @@ body {
     border-radius: 8px;
     font-size: 12px;
     font-weight: 600;
+}
+
+/* Phones: as wide as the toolbar, at most half the screen tall */
+@media (max-width: 680px) {
+    #permintaan .request-filter-wrap {
+        position: static;
+    }
+
+    #permintaan .request-toolbar-actions {
+        position: relative;
+    }
+
+    #permintaan .request-filters-panel.filter-accordion-panel,
+    #penawaran .offer-filters-panel.filter-accordion-panel {
+        left: 0;
+        width: auto;
+        max-height: min(50vh, 360px);
+        padding: 4px 8px 0;
+    }
+
+    .filter-accordion-section {
+        padding: 0;
+    }
+
+    .filter-accordion-header {
+        min-height: 44px;
+        padding: 6px 10px;
+    }
+
+    .filter-accordion-body {
+        gap: 0;
+        padding: 2px 0 4px;
+    }
+
+    #permintaan .filter-accordion-panel .request-filter-option,
+    #penawaran .filter-accordion-panel .offer-filter-option {
+        min-height: 44px;
+        padding: 6px 10px;
+    }
+
+    #permintaan .filter-accordion-panel .request-filter-footer,
+    #penawaran .filter-accordion-panel .offer-filter-actions {
+        padding: 8px 0;
+    }
+
+    #permintaan .filter-accordion-panel #applyRequestFilters,
+    #permintaan .filter-accordion-panel #resetRequestFilters,
+    #penawaran .filter-accordion-panel #applyOfferFilters,
+    #penawaran .filter-accordion-panel #resetOfferFilters {
+        min-height: 44px;
+    }
 }
 
 #detailModal .modal-contact-locked .card-button {

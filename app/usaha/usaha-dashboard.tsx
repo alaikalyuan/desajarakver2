@@ -9,6 +9,8 @@ import { formatTimestamp, type FormEntry } from "@/lib/forms/form-flow";
 import { closeListing, deleteDraft, type ListingInterest } from "@/lib/listings";
 import { fetchUsahaDashboard, type UsahaDashboardData } from "@/lib/dashboard-data";
 import { whatsAppUrl } from "@/lib/contact";
+import { UserMenu } from "@/components/user-menu";
+import type { UserRole } from "@/lib/auth";
 import "./usaha-dashboard.css";
 
 type RowStatus =
@@ -75,14 +77,14 @@ const STATUS_LABELS: Record<RowStatus, string> = {
 interface UsahaDashboardProps {
   userId: string;
   userName: string;
-  userRoleLabel: string;
+  userRole: UserRole;
   initialData: UsahaDashboardData;
 }
 
 export function UsahaDashboard({
   userId,
   userName,
-  userRoleLabel,
+  userRole,
   initialData,
 }: UsahaDashboardProps) {
   const router = useRouter();
@@ -193,13 +195,6 @@ export function UsahaDashboard({
     });
   }, [offerRows, searchQuery, statusFilter]);
 
-  const initials = (userName || "PU")
-    .split(" ")
-    .slice(0, 2)
-    .map((p) => p[0])
-    .join("")
-    .toUpperCase();
-
   return (
     <div className="usaha-dashboard-scope">
       <header className="topbar">
@@ -213,22 +208,7 @@ export function UsahaDashboard({
           <span>Desa Jarak</span>
         </Link>
 
-        <div className="account">
-          <div className="account-text">
-            <strong>{userName}</strong>
-            <small>{userRoleLabel}</small>
-          </div>
-          <span className="avatar" aria-hidden="true">
-            {initials}
-          </span>
-          <button
-            type="button"
-            className="topbar-logout"
-            onClick={handleLogout}
-          >
-            Keluar
-          </button>
-        </div>
+        <UserMenu name={userName} role={userRole} onLogout={handleLogout} />
       </header>
 
       <div className="layout">

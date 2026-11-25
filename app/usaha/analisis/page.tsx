@@ -79,7 +79,8 @@ const isPemasukan = (t: NormalizedTransaction) => t.tipe === "pemasukan";
 /** Running costs only. Asset purchases (kategori "aset") are an investment, not a cost of goods. */
 const isBiayaOperasional = (t: NormalizedTransaction) =>
   t.tipe === "pengeluaran" && t.kategori !== "aset";
-const produksiDate = (p: NormalizedProduksi) => p.tanggalPanen || p.tanggalTanam || "";
+/** A record counts as harvest only once its harvest date is filled in. */
+const produksiDate = (p: NormalizedProduksi) => p.tanggalPanen;
 
 /**
  * HPP = cost / quantity sold, in one unit. Mass units are converted to kg
@@ -348,6 +349,14 @@ export default function AnalisisDashboardPage() {
     };
   }, [allTransactions, allProduksi, recapYear]);
 
+  const belumPanen = allProduksi.filter((p) => !p.tanggalPanen).length;
+  const produksiNote = [
+    view.produksiNote,
+    belumPanen > 0 && `${belumPanen} catatan belum panen tidak dihitung.`,
+  ]
+    .filter(Boolean)
+    .join(" ");
+
   const hasAnyData = allTransactions.length > 0 || allProduksi.length > 0;
   const periodHasData =
     view.summary.pendapatan > 0 ||
@@ -389,6 +398,7 @@ export default function AnalisisDashboardPage() {
       <tr><td>Modal per satuan (HPP)</td><td>${e(modal)}</td></tr>
       <tr><td>Jumlah terjual</td><td>${e(formatQuantityTotals(sumByUnit(penjualan)))}</td></tr>
       <tr><td>Jumlah panen</td><td>${e(formatQuantityTotals(sumByUnit(produksi)))}</td></tr>
+      ${belumPanen > 0 ? `<tr><td>Belum panen (tidak dihitung)</td><td>${belumPanen} catatan</td></tr>` : ""}
       </tbody></table>
       <h2>Transaksi</h2><table><thead><tr><th>Tanggal</th><th>Tipe</th><th>Keterangan</th><th>Jumlah</th><th>Total</th></tr></thead><tbody>
       ${transactions
@@ -516,7 +526,7 @@ export default function AnalisisDashboardPage() {
                   dataKey="produksi"
                   label={selectedKomoditas === "all" ? "Total" : selectedKomoditas}
                   unit={view.produksiUnit}
-                  note={view.produksiNote}
+                  note={produksiNote || undefined}
                   headerAction={
                     <select
                       aria-label="Pilih komoditas panen"

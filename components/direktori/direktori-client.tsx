@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { ChevronDown } from "lucide-react";
 import type { UserProfile } from "@/lib/auth";
 import {
   expressInterest,
@@ -16,6 +17,15 @@ import { DIRECTORY_PAGE_SIZE, fetchDirectoryPage } from "@/lib/directory-data";
 import { createClient } from "@/lib/supabase/client";
 import { todayWIB } from "@/lib/format";
 import { telUrl, whatsAppUrl } from "@/lib/contact";
+
+// Opening one filter section closes the others, so the panel stays short.
+const REQ_SECTIONS_CLOSED = { jenis: false, status: false, location: false };
+const OFFER_SECTIONS_CLOSED = {
+  jenis: false,
+  availability: false,
+  status: false,
+  coverage: false,
+};
 
 /** Append a page, skipping anything already shown (a listing added meanwhile shifts the pages). */
 function mergeById<T extends { id: string }>(current: T[], next: T[]): T[] {
@@ -379,15 +389,7 @@ export function DirektoriClient({
     useState<JenisFilterKey>("semua");
   const [appliedReqStatus, setAppliedReqStatus] = useState("semua");
   const [appliedReqLocation, setAppliedReqLocation] = useState("semua");
-  const [reqOpenSections, setReqOpenSections] = useState<{
-    jenis: boolean;
-    status: boolean;
-    location: boolean;
-  }>({
-    jenis: false,
-    status: false,
-    location: false,
-  });
+  const [reqOpenSections, setReqOpenSections] = useState(REQ_SECTIONS_CLOSED);
   const reqFilterRef = useRef<HTMLDivElement>(null);
 
   // Offer search & filters
@@ -403,17 +405,7 @@ export function DirektoriClient({
   const [appliedOfferAvail, setAppliedOfferAvail] = useState("semua");
   const [appliedOfferStatus, setAppliedOfferStatus] = useState("semua");
   const [appliedOfferCoverage, setAppliedOfferCoverage] = useState("semua");
-  const [offerOpenSections, setOfferOpenSections] = useState<{
-    jenis: boolean;
-    availability: boolean;
-    status: boolean;
-    coverage: boolean;
-  }>({
-    jenis: false,
-    availability: false,
-    status: false,
-    coverage: false,
-  });
+  const [offerOpenSections, setOfferOpenSections] = useState(OFFER_SECTIONS_CLOSED);
   const offerFilterRef = useRef<HTMLDivElement>(null);
 
   // Modal state
@@ -954,18 +946,13 @@ export function DirektoriClient({
                       aria-expanded={reqOpenSections.jenis}
                       onClick={() =>
                         setReqOpenSections((prev) => ({
-                          ...prev,
+                          ...REQ_SECTIONS_CLOSED,
                           jenis: !prev.jenis,
                         }))
                       }
                     >
                       <span>Jenis</span>
-                      <span
-                        className="filter-accordion-chevron"
-                        aria-hidden="true"
-                      >
-                        {reqOpenSections.jenis ? "^" : "v"}
-                      </span>
+                      <ChevronDown className="filter-accordion-chevron" size={16} aria-hidden="true" />
                     </button>
 
                     {reqOpenSections.jenis && (
@@ -999,18 +986,13 @@ export function DirektoriClient({
                       aria-expanded={reqOpenSections.status}
                       onClick={() =>
                         setReqOpenSections((prev) => ({
-                          ...prev,
+                          ...REQ_SECTIONS_CLOSED,
                           status: !prev.status,
                         }))
                       }
                     >
                       <span>Status Permintaan</span>
-                      <span
-                        className="filter-accordion-chevron"
-                        aria-hidden="true"
-                      >
-                        {reqOpenSections.status ? "^" : "v"}
-                      </span>
+                      <ChevronDown className="filter-accordion-chevron" size={16} aria-hidden="true" />
                     </button>
 
                     {reqOpenSections.status && (
@@ -1050,18 +1032,13 @@ export function DirektoriClient({
                       aria-expanded={reqOpenSections.location}
                       onClick={() =>
                         setReqOpenSections((prev) => ({
-                          ...prev,
+                          ...REQ_SECTIONS_CLOSED,
                           location: !prev.location,
                         }))
                       }
                     >
                       <span>Lokasi Permintaan</span>
-                      <span
-                        className="filter-accordion-chevron"
-                        aria-hidden="true"
-                      >
-                        {reqOpenSections.location ? "^" : "v"}
-                      </span>
+                      <ChevronDown className="filter-accordion-chevron" size={16} aria-hidden="true" />
                     </button>
 
                     {reqOpenSections.location && (
@@ -1329,18 +1306,13 @@ export function DirektoriClient({
                   aria-expanded={offerOpenSections.jenis}
                   onClick={() =>
                     setOfferOpenSections((prev) => ({
-                      ...prev,
+                      ...OFFER_SECTIONS_CLOSED,
                       jenis: !prev.jenis,
                     }))
                   }
                 >
                   <span>Jenis</span>
-                  <span
-                    className="filter-accordion-chevron"
-                    aria-hidden="true"
-                  >
-                    {offerOpenSections.jenis ? "^" : "v"}
-                  </span>
+                  <ChevronDown className="filter-accordion-chevron" size={16} aria-hidden="true" />
                 </button>
 
                 {offerOpenSections.jenis && (
@@ -1374,18 +1346,13 @@ export function DirektoriClient({
                   aria-expanded={offerOpenSections.availability}
                   onClick={() =>
                     setOfferOpenSections((prev) => ({
-                      ...prev,
+                      ...OFFER_SECTIONS_CLOSED,
                       availability: !prev.availability,
                     }))
                   }
                 >
                   <span>Ketersediaan</span>
-                  <span
-                    className="filter-accordion-chevron"
-                    aria-hidden="true"
-                  >
-                    {offerOpenSections.availability ? "^" : "v"}
-                  </span>
+                  <ChevronDown className="filter-accordion-chevron" size={16} aria-hidden="true" />
                 </button>
 
                 {offerOpenSections.availability && (
@@ -1426,18 +1393,13 @@ export function DirektoriClient({
                   aria-expanded={offerOpenSections.status}
                   onClick={() =>
                     setOfferOpenSections((prev) => ({
-                      ...prev,
+                      ...OFFER_SECTIONS_CLOSED,
                       status: !prev.status,
                     }))
                   }
                 >
                   <span>Status Penawaran</span>
-                  <span
-                    className="filter-accordion-chevron"
-                    aria-hidden="true"
-                  >
-                    {offerOpenSections.status ? "^" : "v"}
-                  </span>
+                  <ChevronDown className="filter-accordion-chevron" size={16} aria-hidden="true" />
                 </button>
 
                 {offerOpenSections.status && (
@@ -1477,18 +1439,13 @@ export function DirektoriClient({
                   aria-expanded={offerOpenSections.coverage}
                   onClick={() =>
                     setOfferOpenSections((prev) => ({
-                      ...prev,
+                      ...OFFER_SECTIONS_CLOSED,
                       coverage: !prev.coverage,
                     }))
                   }
                 >
                   <span>Jangkauan</span>
-                  <span
-                    className="filter-accordion-chevron"
-                    aria-hidden="true"
-                  >
-                    {offerOpenSections.coverage ? "^" : "v"}
-                  </span>
+                  <ChevronDown className="filter-accordion-chevron" size={16} aria-hidden="true" />
                 </button>
 
                 {offerOpenSections.coverage && (

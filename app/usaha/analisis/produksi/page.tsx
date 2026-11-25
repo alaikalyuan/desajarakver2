@@ -33,6 +33,12 @@ function cekTanggal(tanam: string, panen: string): string | null {
   return tanam && panen && panen < tanam ? PANEN_SEBELUM_TANAM : null;
 }
 
+/** Days from planting to harvest, or null while either date is missing. */
+function lamaMasaPanen(tanam: string, panen: string): number | null {
+  if (!tanam || !panen || panen < tanam) return null;
+  return Math.round((Date.parse(panen) - Date.parse(tanam)) / 86_400_000);
+}
+
 function laporGagal(err: unknown) {
   window.alert(err instanceof Error ? err.message : "Terjadi kesalahan. Coba lagi.");
 }
@@ -44,7 +50,7 @@ export default function ProduksiPage() {
   const [jumlah, setJumlah] = useState("");
   const [satuan, setSatuan] = useState("kg");
   const [tanggalTanam, setTanggalTanam] = useState(() => todayWIB());
-  const [tanggalPanen, setTanggalPanen] = useState(() => todayWIB());
+  const [tanggalPanen, setTanggalPanen] = useState("");
   const [jumlahError, setJumlahError] = useState<string | null>(null);
 
   const [list, setList] = useState<Produksi[]>([]);
@@ -52,6 +58,7 @@ export default function ProduksiPage() {
   const [editData, setEditData] = useState<EditRow | null>(null);
   const [editError, setEditError] = useState("");
   const tanggalError = cekTanggal(tanggalTanam, tanggalPanen);
+  const masaPanen = lamaMasaPanen(tanggalTanam, tanggalPanen);
 
   useEffect(() => {
     let mounted = true;
@@ -90,6 +97,7 @@ export default function ProduksiPage() {
     setList((current) => [newItem, ...current]);
     setKomoditas("");
     setJumlah("");
+    setTanggalPanen("");
     setJumlahError(null);
   };
 
@@ -121,6 +129,10 @@ export default function ProduksiPage() {
     }
     if (jumlahBaru === null || jumlahBaru <= 0) {
       setEditError("Jumlah harus angka lebih dari 0.");
+      return;
+    }
+    if (!editData.tanggalTanam) {
+      setEditError("Tanggal tanam wajib diisi.");
       return;
     }
     const errTanggal = cekTanggal(editData.tanggalTanam, editData.tanggalPanen);
@@ -221,7 +233,10 @@ export default function ProduksiPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <fieldset className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <legend className="mb-2 text-sm font-semibold text-gray-900">
+                  Masa Panen
+                </legend>
                 <div>
                   <label htmlFor="produksi-tanam" className="block text-sm font-medium text-gray-800 mb-1">
                     Tanggal Tanam <span className="text-red-700" aria-hidden="true">*</span>
@@ -237,7 +252,7 @@ export default function ProduksiPage() {
                 </div>
                 <div>
                   <label htmlFor="produksi-panen" className="block text-sm font-medium text-gray-800 mb-1">
-                    Tanggal Panen (atau perkiraan) <span className="text-red-700" aria-hidden="true">*</span>
+                    Tanggal Panen <span className="font-normal text-gray-600">(opsional)</span>
                   </label>
                   <input
                     id="produksi-panen"
@@ -246,17 +261,22 @@ export default function ProduksiPage() {
                     min={tanggalTanam || undefined}
                     onChange={(e) => setTanggalPanen(e.target.value)}
                     aria-invalid={tanggalError ? true : undefined}
-                    aria-describedby={tanggalError ? "produksi-tanggal-error" : undefined}
+                    aria-describedby={tanggalError ? "produksi-tanggal-error" : "produksi-panen-hint"}
                     className="w-full px-3 py-2 rounded-lg border border-gray-500 text-base focus:ring-2 focus:ring-[#1b4332] focus:outline-none aria-[invalid=true]:border-red-500"
-                    required
                   />
-                  {tanggalError && (
+                  {tanggalError ? (
                     <p id="produksi-tanggal-error" role="alert" className="mt-1 text-sm text-red-700">
                       {tanggalError}
                     </p>
+                  ) : (
+                    <p id="produksi-panen-hint" className="mt-1 text-sm text-gray-600">
+                      {masaPanen === null
+                        ? "Kosongkan jika belum panen. Bisa diisi nanti lewat tombol ubah."
+                        : `Masa panen: ${formatNumber(masaPanen)} hari.`}
+                    </p>
                   )}
                 </div>
-              </div>
+              </fieldset>
 
               <button
                 type="submit"
@@ -347,6 +367,7 @@ export default function ProduksiPage() {
                                 <input
                                   type="date"
                                   aria-label="Tanggal panen"
+                                  min={editData.tanggalTanam || undefined}
                                   value={editData.tanggalPanen}
                                   onChange={(e) =>
                                     setEditData({
@@ -397,7 +418,21 @@ export default function ProduksiPage() {
                                 {formatTanggal(item.tanggalTanam)}
                               </td>
                               <td data-label="Panen" className="cell-first px-4 py-3 text-gray-700 whitespace-nowrap">
-                                {formatTanggal(item.tanggalPanen)}
+                                {item.tanggalPanen ? (
+                                  <span>
+                                    {formatTanggal(item.tanggalPanen)}
+                                    {lamaMasaPanen(item.tanggalTanam, item.tanggalPanen) !== null && (
+                                      <span className="block text-xs text-gray-600">
+                                        {formatNumber(
+                                          lamaMasaPanen(item.tanggalTanam, item.tanggalPanen)!
+                                        )}{" "}
+                                        hari
+                                      </span>
+                                    )}
+                                  </span>
+                                ) : (
+                                  "Belum panen"
+                                )}
                               </td>
                               <td className="cell-actions px-2 py-1 text-right whitespace-nowrap">
                                 <button
