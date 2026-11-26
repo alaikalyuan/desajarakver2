@@ -1896,7 +1896,7 @@ export function DirektoriClient({
                   const estAvailLabel =
                     getOfferEstimatedAvailabilityLabel(offerItem);
                   const isFarmerGroup =
-                    offerItem.providerType.toLowerCase() === "kelompok_tani" ||
+                    /^kelompok[_ ]tani$/i.test(offerItem.providerType) ||
                     offerItem.business.toLowerCase().includes("kelompok tani");
 
                   return (
@@ -1995,7 +1995,7 @@ export function DirektoriClient({
 
                             {isFarmerGroup && (
                               <>
-                                <h4>Petani yang Menyediakan</h4>
+                                <h4>Anggota yang Menyediakan</h4>
                                 <div className="modal-farmer-list">
                                   {offerItem.farmers.length > 0 ? (
                                     offerItem.farmers.map((farmer, idx) => (
@@ -2004,13 +2004,11 @@ export function DirektoriClient({
                                         className="modal-farmer-item"
                                       >
                                         <strong>{farmer.name}</strong>
-                                        <span>
-                                          {farmer.phone ? (
+                                        {farmer.phone && (
+                                          <span>
                                             <PhoneLink phone={farmer.phone} />
-                                          ) : (
-                                            "Nomor HP belum dicantumkan"
-                                          )}
-                                        </span>
+                                          </span>
+                                        )}
                                         {farmer.quantity && (
                                           <small>
                                             Pasokan:{" "}
@@ -2024,8 +2022,7 @@ export function DirektoriClient({
                                     ))
                                   ) : (
                                     <p>
-                                      Daftar petani dan nomor HP belum
-                                      dicantumkan.
+                                      Daftar anggota belum dicantumkan.
                                     </p>
                                   )}
                                 </div>

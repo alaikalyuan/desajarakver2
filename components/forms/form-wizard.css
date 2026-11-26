@@ -15,6 +15,24 @@
 @media(hover:hover){#jarak-forms .wf-choice-list>label:hover{border-color:#76a384;background:#f5f9f0}}
 @media(max-width:760px){#jarak-forms .form-wizard{margin:14px auto 25px}#jarak-forms .wf-page-heading{align-items:flex-start}#jarak-forms .wf-page-heading h1{font-size:23px}#jarak-forms .wf-role{display:none}#jarak-forms .wf-progress{padding:22px 10px 17px}#jarak-forms .wf-progress small{font-size:12px;line-height:1.3}#jarak-forms .wf-progress button>span{width:25px;height:25px}#jarak-forms .wf-progress li:not(:last-child):after{top:12px}#jarak-forms .wf-content{padding:24px 20px;min-height:300px}#jarak-forms .wf-content h2{font-size:20px}#jarak-forms .wf-two{grid-template-columns:1fr;gap:0}#jarak-forms .wf-actions{padding:16px 20px!important}#jarak-forms .wf-actions .btn{min-width:0}#jarak-forms .wf-draft{padding:0 20px 17px}#jarak-forms .wf-draft .btn{width:100%}#jarak-forms{padding:96px 12px 32px}#jarak-forms .wf-review>div{grid-template-columns:minmax(0,1fr) auto;gap:4px 10px}#jarak-forms .wf-review dt{grid-column:1/-1}#jarak-forms .wf-photo-grid{grid-template-columns:repeat(2,minmax(0,1fr))}#jarak-forms .wf-review-banner{flex-wrap:wrap}#jarak-forms .wf-review-banner .tag{margin-left:0}}
 
+/* Offer wizard: seven steps */
+#jarak-forms .wf-choice-list strong,#jarak-forms .wf-provider-list strong{font-size:15px}
+#jarak-forms .wf-choice-list small{font-size:13px;color:#4f6155}
+#jarak-forms .wf-choice-list>label:focus-within{outline:3px solid #2d6a4f}
+#jarak-forms .wf-choice-list input{min-height:0!important}
+#jarak-forms .wf-products{grid-template-columns:1fr 1fr}
+#jarak-forms .wf-provider-amount>div:first-child,#jarak-forms .wf-total{font-size:15px}
+#jarak-forms .wf-provider-amount .wf-field{margin-bottom:8px}
+#jarak-forms .wf-add-provider{margin-bottom:8px}
+#jarak-forms .wf-total+.wf-field{margin-top:18px}#jarak-forms .wf-help+.wf-field{margin-top:18px}
+@media(max-width:760px){
+#jarak-forms .wf-products{grid-template-columns:1fr}
+/* Seven labels do not fit a phone: name only the current step. */
+#jarak-forms .wf-progress ol:has(li:nth-child(6)) li:not(.current) small{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
+#jarak-forms .wf-progress ol:has(li:nth-child(6)) .current small{white-space:nowrap}
+#jarak-forms .wf-progress ol:has(li:nth-child(6)){padding:0 14px}
+}
+
 /* Phase 3: simpler wizard */
 #jarak-forms .wf-label{display:block;font-weight:600;font-size:14px;margin:0 0 8px}
 #jarak-forms .wf-notice{margin:0;padding:12px 42px 0;font-size:14px;color:#40564a;background:#fafcf8;min-height:1em}
