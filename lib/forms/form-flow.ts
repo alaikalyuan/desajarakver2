@@ -1,4 +1,11 @@
-import { POSITIVE_NUMBER_MESSAGE, positiveNumberError } from "@/lib/format";
+import {
+  formatNumber,
+  formatRupiah,
+  parseDecimal,
+  POSITIVE_NUMBER_MESSAGE,
+  positiveNumberError,
+} from "@/lib/format";
+import { isKelompokTaniName } from "./kelompok-tani";
 
 export type FormKind = "request" | "offer";
 export type EntryStatus =
@@ -42,6 +49,16 @@ export interface SelectOption {
   description?: string;
 }
 
+/** A group member whose produce is part of the offer. Public: no phone here. */
+export interface OfferProvider {
+  name: string;
+  quantity: string;
+  /** Rupiah per unit, as typed. */
+  price: string;
+}
+
+export const MAX_PROVIDERS = 10;
+
 export interface FormData {
   ownerType: string;
   ownerName: string;
@@ -64,8 +81,17 @@ export interface FormData {
   duration: string;
   description: string;
   additionalNeeds: string;
+  packaging: string;
+  providers: OfferProvider[];
   photoName: string;
   photoPreview: string;
+}
+
+/** Keys are field names, or providerErrorKey() for one member's field. */
+export type FormErrors = Partial<Record<string, string>>;
+
+export function providerErrorKey(name: string, field: "quantity" | "price"): string {
+  return `providers.${name}.${field}`;
 }
 
 export interface TargetRequestSummary {
@@ -100,11 +126,8 @@ export interface FormEntry {
 
 export interface ValidationResult {
   valid: boolean;
-  errors: Partial<Record<keyof FormData, string>>;
+  errors: FormErrors;
 }
-
-/** Index of the last (review) step; steps before it hold the fields. */
-export const REVIEW_STEP = 2;
 
 export const REQUEST_STEPS: StepConfig[] = [
   {
@@ -130,17 +153,40 @@ export const REQUEST_STEPS: StepConfig[] = [
 
 export const OFFER_STEPS: StepConfig[] = [
   {
-    id: "barang",
-    label: "Barang",
-    title: "Barang yang Anda Tawarkan",
-    description: "Tulis barang, jumlah yang sanggup dikirim, dan kapan siap.",
+    id: "jenis",
+    label: "Jenis Usaha",
+    title: "Siapa Anda?",
+    description: "Pilih jenis usaha Anda.",
   },
   {
-    id: "kontak",
-    label: "Kontak & Kirim",
-    title: "Kontak dan Cara Kirim",
-    description:
-      "Nama dan nomor HP diambil dari akun Anda. Ubah bila perlu.",
+    id: "produk",
+    label: "Produk",
+    title: "Produk apa yang ingin Anda tawarkan?",
+    description: "Pilih jenis barang, lalu tulis namanya.",
+  },
+  {
+    id: "penyedia",
+    label: "Penyedia",
+    title: "Siapa yang menyediakan produk ini?",
+    description: "Centang anggota kelompok yang produknya ikut ditawarkan.",
+  },
+  {
+    id: "jumlah",
+    label: "Jumlah & Harga",
+    title: "Berapa jumlah dan harganya?",
+    description: "Tulis jumlah yang sanggup dikirim dan harga jualnya.",
+  },
+  {
+    id: "informasi",
+    label: "Informasi",
+    title: "Lengkapi informasi penawaran",
+    description: "Nama dan nomor HP diambil dari akun Anda. Ubah bila perlu.",
+  },
+  {
+    id: "foto",
+    label: "Foto",
+    title: "Tambahkan foto produk",
+    description: "Boleh dilewati jika belum ada foto.",
   },
   {
     id: "periksa",
@@ -155,57 +201,97 @@ export function optionLabel(options: SelectOption[], value: string): string {
   return options.find((o) => o.value === value)?.label || value;
 }
 
+export const KELOMPOK_TANI_TYPE = "Kelompok Tani";
+export const PERORANGAN_TYPE = "Perorangan";
+/** Public buyer name for a private person; their own name stays in the contact. */
+export const PERORANGAN_NAME = "Pembeli Perorangan";
+
 export const REQUEST_OWNER_TYPES: SelectOption[] = [
-  {
-    value: "Mitra Pembeli",
-    label: "Mitra Pembeli",
-    description: "Pembeli langsung, distributor, atau pedagang antar daerah.",
-  },
-  {
-    value: "UMKM Pengolahan",
-    label: "UMKM Pengolahan",
-    description: "Usaha olahan pangan, dapur produksi, atau rumah kemas.",
-  },
-  {
-    value: "Ritel / Kuliner",
-    label: "Ritel / Kuliner",
-    description: "Toko bahan pangan, katering, restoran, atau warung besar.",
-  },
-  {
-    value: "Koperasi / Komunitas Usaha",
-    label: "Koperasi / Komunitas Usaha",
-    description: "Jaringan usaha yang menghimpun kebutuhan anggota.",
-  },
+  { value: "Instansi", label: "Instansi" },
+  { value: PERORANGAN_TYPE, label: "Perorangan" },
 ];
 
 export const OFFER_OWNER_TYPES: SelectOption[] = [
   {
-    value: "BUMDes",
-    label: "BUMDes",
-    description: "Unit usaha desa yang mengoordinasikan pasokan warga.",
-  },
-  {
-    value: "Kelompok Tani",
+    value: KELOMPOK_TANI_TYPE,
     label: "Kelompok Tani",
-    description: "Gabungan petani atau pekebun komoditas sejenis.",
+    description: "Ketua mengisi untuk hasil panen anggota.",
   },
   {
-    value: "UMKM Desa",
-    label: "UMKM Desa",
-    description: "Usaha warga untuk olahan, pengemasan, atau distribusi lokal.",
+    value: "Warga Tani",
+    label: "Warga Tani",
+    description: "Petani yang menjual hasil panennya sendiri.",
   },
   {
-    value: "Koperasi Desa",
-    label: "Koperasi Desa",
-    description: "Lembaga ekonomi warga untuk pemasaran bersama.",
+    value: "UMKM",
+    label: "UMKM",
+    description: "Usaha olahan, kerajinan, atau usaha mandiri.",
   },
   {
-    value: "Produsen Mandiri",
-    label: "Produsen Mandiri",
-    description:
-      "Petani, peternak, atau perajin yang memasok secara langsung.",
+    value: "BUMDes/Kopdes",
+    label: "BUMDes/Kopdes",
+    description: "Badan usaha atau koperasi milik desa.",
   },
 ];
+
+const LEGACY_OFFER_TYPES: Record<string, string> = {
+  BUMDes: "BUMDes/Kopdes",
+  "Koperasi Desa": "BUMDes/Kopdes",
+  "UMKM Desa": "UMKM",
+  "Produsen Mandiri": "Warga Tani",
+};
+
+/** Listings saved with an older list of types still open with a valid choice. */
+export function normalizeOwnerType(kind: FormKind, value: string): string {
+  const options = kind === "request" ? REQUEST_OWNER_TYPES : OFFER_OWNER_TYPES;
+  if (!value || options.some((o) => o.value === value)) return value;
+  return kind === "request" ? "Instansi" : LEGACY_OFFER_TYPES[value] || "";
+}
+
+export function isGroupOffer(kind: FormKind, data: Pick<FormData, "ownerType">): boolean {
+  return kind === "offer" && data.ownerType === KELOMPOK_TANI_TYPE;
+}
+
+/** Sum and average price (weighted by quantity) of the members' amounts. */
+export function providerTotals(providers: OfferProvider[]): {
+  quantity: number;
+  averagePrice: number | null;
+} {
+  let quantity = 0;
+  let value = 0;
+  let priced = 0;
+  for (const provider of providers) {
+    const q = parseDecimal(provider.quantity);
+    if (q === null || q <= 0) continue;
+    quantity += q;
+    const p = parseDecimal(provider.price);
+    if (p === null || p <= 0) continue;
+    value += q * p;
+    priced += q;
+  }
+  return {
+    quantity: Math.round(quantity * 1e6) / 1e6,
+    averagePrice: priced > 0 ? value / priced : null,
+  };
+}
+
+/**
+ * The data as saved and reviewed. A group offer's total and price come from
+ * its members, so every reader of quantity/priceNote keeps working.
+ */
+export function resolveFormData(kind: FormKind, data: FormData): FormData {
+  if (kind === "request") {
+    return data.ownerType === PERORANGAN_TYPE ? { ...data, ownerName: PERORANGAN_NAME } : data;
+  }
+  if (!isGroupOffer(kind, data)) return { ...data, providers: [] };
+  const { quantity, averagePrice } = providerTotals(data.providers);
+  return {
+    ...data,
+    position: data.position.trim() || "Ketua Kelompok",
+    quantity: quantity > 0 ? formatNumber(quantity, 6).replace(/\./g, "") : "",
+    priceNote: averagePrice === null ? "" : `${formatRupiah(averagePrice)}/${data.unit} (rata-rata)`,
+  };
+}
 
 export const PRODUCT_OPTIONS: SelectOption[] = [
   { value: "Beras & Gabah", label: "Beras & Gabah" },
@@ -331,11 +417,14 @@ export function createEmptyFormData(
       phone: "",
       email: "",
       location: "",
-      productType: targetRequest?.productType || "Beras & Gabah",
+      // No default: the seller picks one of the known types.
+      productType: PRODUCT_OPTIONS.some((o) => o.value === targetRequest?.productType)
+        ? targetRequest!.productType
+        : "",
       variety: targetRequest?.variety || "",
       grade: "Sortir Standar Pasar",
       quantity: "",
-      unit: targetRequest?.unit || "ton",
+      unit: targetRequest?.unit || "kg",
       frequency: targetRequest?.frequency || "Mingguan",
       neededDate: "",
       priceNote: "",
@@ -347,13 +436,15 @@ export function createEmptyFormData(
       duration: "1 musim panen (3 bulan)",
       description: "",
       additionalNeeds: "",
+      packaging: "",
+      providers: [],
       photoName: "",
       photoPreview: "",
     };
   }
 
   return {
-    ownerType: "Mitra Pembeli",
+    ownerType: "Instansi",
     ownerName: "",
     contactName: "",
     position: "",
@@ -374,13 +465,19 @@ export function createEmptyFormData(
     duration: "1 musim panen (3 bulan)",
     description: "",
     additionalNeeds: "",
+    packaging: "",
+    providers: [],
     photoName: "",
     photoPreview: "",
   };
 }
 
-export function getSteps(kind: FormKind): StepConfig[] {
-  return kind === "request" ? REQUEST_STEPS : OFFER_STEPS;
+/** Only a kelompok tani picks members, so other sellers skip that step. */
+export function getSteps(kind: FormKind, ownerType: string): StepConfig[] {
+  if (kind === "request") return REQUEST_STEPS;
+  return ownerType === KELOMPOK_TANI_TYPE
+    ? OFFER_STEPS
+    : OFFER_STEPS.filter((step) => step.id !== "penyedia");
 }
 
 /** Phone number check shared by the wizard: digits, spaces, +, - and () only. */
@@ -397,50 +494,99 @@ export function phoneError(raw: string): string | null {
   return null;
 }
 
+type CheckedField = Exclude<keyof FormData, "providers">;
+
+const STEP_FIELDS: Record<FormKind, Record<string, CheckedField[]>> = {
+  request: {
+    barang: ["productType", "variety", "quantity", "unit", "frequency", "neededDate"],
+    kontak: [
+      "ownerType", "ownerName", "contactName", "phone", "location",
+      "partnershipScheme", "paymentMethod", "deliveryType", "description", "email",
+    ],
+  },
+  offer: {
+    jenis: ["ownerType", "ownerName"],
+    produk: ["productType", "variety"],
+    jumlah: ["quantity", "unit", "frequency"],
+    informasi: [
+      "description", "neededDate", "location", "contactName", "phone",
+      "partnershipScheme", "paymentMethod", "deliveryType", "email",
+    ],
+  },
+};
+
+function requiredMessages(kind: FormKind): Partial<Record<CheckedField, string>> {
+  const request = kind === "request";
+  return {
+    productType: "Pilih jenis barang.",
+    variety: request
+      ? "Tulis barang yang Anda cari, misalnya \"Beras medium IR64\"."
+      : "Tulis barang yang Anda tawarkan, misalnya \"Beras Ciherang\".",
+    quantity: request ? "Tulis jumlah yang dibutuhkan." : "Tulis jumlah yang sanggup dikirim.",
+    unit: "Pilih satuan.",
+    frequency: "Pilih seberapa sering.",
+    neededDate: request ? "Pilih tanggal barang dibutuhkan." : "Pilih bulan barang siap dikirim.",
+    ownerName: request ? "Tulis nama instansi atau usaha Anda." : "Tulis nama usaha Anda.",
+    ownerType: request ? "Pilih jenis pembeli." : "Pilih jenis usaha.",
+    contactName: "Tulis nama orang yang bisa dihubungi.",
+    location: request
+      ? "Tulis alamat atau kecamatan tujuan kirim."
+      : "Tulis dusun atau tempat barang diambil.",
+    partnershipScheme: "Pilih cara kerja sama.",
+    paymentMethod: "Pilih cara bayar.",
+    deliveryType: "Pilih cara barang diserahkan.",
+    description: request
+      ? "Jelaskan singkat barang yang Anda terima (mutu, kemasan, jadwal)."
+      : "Jelaskan singkat kondisi barang (asal panen, kemasan, kesiapan kirim).",
+  };
+}
+
 /**
- * Step 0 (Barang) and step 1 (Kontak & Kirim) hold the fields; step 2 is the
- * review. `today` (YYYY-MM-DD) is used to refuse a date in the past.
+ * Checks the fields of one step (by step id). `today` (YYYY-MM-DD) is used to
+ * refuse a date in the past.
  */
 export function validateStep(
   kind: FormKind,
-  stepIndex: number,
+  stepId: string,
   data: FormData,
   today?: string
 ): ValidationResult {
-  const errors: Partial<Record<keyof FormData, string>> = {};
+  const errors: FormErrors = {};
+  const group = isGroupOffer(kind, data);
+  const messages = requiredMessages(kind);
+  const perorangan = kind === "request" && data.ownerType === PERORANGAN_TYPE;
 
-  const requireField = (key: keyof FormData, message: string) => {
-    if (!String(data[key] ?? "").trim()) {
-      errors[key] = message;
+  for (const field of STEP_FIELDS[kind][stepId] || []) {
+    const value = data[field].trim();
+
+    if (field === "ownerName" && perorangan) continue;
+    // A group's amounts are checked per member below.
+    if (field === "quantity" && group) continue;
+
+    if (field === "ownerName" && group) {
+      if (!isKelompokTaniName(data.ownerName)) errors.ownerName = "Pilih nama kelompok tani.";
+      continue;
     }
-  };
-
-  if (stepIndex === 0) {
-    requireField("productType", "Pilih jenis barang.");
-    requireField(
-      "variety",
-      kind === "request"
-        ? "Tulis barang yang Anda cari, misalnya \"Beras medium IR64\"."
-        : "Tulis barang yang Anda tawarkan, misalnya \"Beras Ciherang\"."
-    );
-    requireField(
-      "quantity",
-      kind === "request" ? "Tulis jumlah yang dibutuhkan." : "Tulis jumlah yang sanggup dikirim."
-    );
-    requireField("unit", "Pilih satuan.");
-    requireField("frequency", "Pilih seberapa sering.");
-    requireField(
-      "neededDate",
-      kind === "request" ? "Pilih tanggal barang dibutuhkan." : "Pilih bulan barang siap dikirim."
-    );
-
-    if (data.quantity.trim() && positiveNumberError(data.quantity)) {
+    if (field === "phone") {
+      const message = phoneError(data.phone);
+      if (message) errors.phone = message;
+      continue;
+    }
+    if (!value) {
+      const message = messages[field];
+      if (message) errors[field] = message;
+      continue;
+    }
+    if (field === "quantity" && positiveNumberError(value)) {
       errors.quantity = POSITIVE_NUMBER_MESSAGE;
     }
-    const iso = neededDateToInput(kind, data.neededDate);
-    if (today && iso) {
+    if (field === "email" && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+      errors.email = "Alamat email belum benar. Contoh: nama@gmail.com";
+    }
+    if (field === "neededDate" && today) {
+      const iso = neededDateToInput(kind, value);
       const pastLimit = kind === "request" ? today : today.slice(0, 7);
-      if (iso < pastLimit) {
+      if (iso && iso < pastLimit) {
         errors.neededDate =
           kind === "request"
             ? "Tanggal sudah lewat. Pilih hari ini atau sesudahnya."
@@ -449,37 +595,16 @@ export function validateStep(
     }
   }
 
-  if (stepIndex === 1) {
-    requireField(
-      "ownerName",
-      kind === "request"
-        ? "Tulis nama usaha atau toko Anda."
-        : "Tulis nama usaha, kelompok tani, atau BUMDes Anda."
-    );
-    requireField("ownerType", "Pilih jenis usaha.");
-    requireField("contactName", "Tulis nama orang yang bisa dihubungi.");
-    const phoneMessage = phoneError(data.phone);
-    if (phoneMessage) errors.phone = phoneMessage;
-    requireField(
-      "location",
-      kind === "request"
-        ? "Tulis alamat atau kecamatan tujuan kirim."
-        : "Tulis dusun atau tempat barang diambil."
-    );
-    requireField("partnershipScheme", "Pilih cara kerja sama.");
-    requireField("paymentMethod", "Pilih cara bayar.");
-    requireField("deliveryType", "Pilih cara barang diserahkan.");
-    requireField(
-      "description",
-      kind === "request"
-        ? "Jelaskan singkat barang yang Anda terima (mutu, kemasan, jadwal)."
-        : "Jelaskan singkat kondisi barang (asal panen, kemasan, kesiapan kirim)."
-    );
-    if (
-      data.email.trim() &&
-      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email.trim())
-    ) {
-      errors.email = "Alamat email belum benar. Contoh: nama@gmail.com";
+  if (group && stepId === "penyedia" && data.providers.length === 0) {
+    errors.providers = "Pilih minimal satu anggota.";
+  }
+  if (group && stepId === "jumlah") {
+    for (const provider of data.providers) {
+      for (const field of ["quantity", "price"] as const) {
+        if (positiveNumberError(provider[field])) {
+          errors[providerErrorKey(provider.name, field)] = POSITIVE_NUMBER_MESSAGE;
+        }
+      }
     }
   }
 
@@ -553,15 +678,15 @@ export function validateAllSteps(
 ): {
   valid: boolean;
   firstInvalidStep: number | null;
-  errors: Partial<Record<keyof FormData, string>>;
+  errors: FormErrors;
 } {
-  const mergedErrors: Partial<Record<keyof FormData, string>> = {};
+  const mergedErrors: FormErrors = {};
   let firstInvalidStep: number | null = null;
 
-  for (let step = 0; step < REVIEW_STEP; step += 1) {
-    const result = validateStep(kind, step, data, today);
+  for (const [index, step] of getSteps(kind, data.ownerType).entries()) {
+    const result = validateStep(kind, step.id, data, today);
     if (!result.valid && firstInvalidStep === null) {
-      firstInvalidStep = step;
+      firstInvalidStep = index;
     }
     Object.assign(mergedErrors, result.errors);
   }

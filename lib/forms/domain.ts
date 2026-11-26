@@ -2,6 +2,7 @@ import {
   FormData,
   FormEntry,
   FormKind,
+  isGroupOffer,
   TargetRequestSummary,
 } from "./form-flow";
 
@@ -24,7 +25,7 @@ export interface ReadinessItem {
   label: string;
   value: string;
   ready: boolean;
-  stepIndex: number;
+  stepId: string;
 }
 
 export interface CompatibilityNote {
@@ -103,6 +104,8 @@ export function buildReadinessItems(
   kind: FormKind,
   data: FormData
 ): ReadinessItem[] {
+  const request = kind === "request";
+  const group = isGroupOffer(kind, data);
   return [
     {
       label: "Barang",
@@ -111,39 +114,46 @@ export function buildReadinessItems(
           ? `${data.productType} - ${data.variety}`
           : "Jenis barang belum lengkap",
       ready: Boolean(data.productType.trim() && data.variety.trim()),
-      stepIndex: 0,
+      stepId: request ? "barang" : "produk",
     },
     {
-      label: "Jumlah & waktu",
-      value:
-        data.quantity && data.neededDate
-          ? `${data.quantity} ${data.unit} - ${data.frequency} - ${data.neededDate}`
-          : "Jumlah atau waktu belum diisi",
-      ready: Boolean(data.quantity.trim() && data.neededDate.trim()),
-      stepIndex: 0,
+      label: "Jumlah",
+      value: data.quantity ? `${data.quantity} ${data.unit}` : "Jumlah belum diisi",
+      ready: Boolean(data.quantity.trim()),
+      stepId: request ? "barang" : group && data.providers.length === 0 ? "penyedia" : "jumlah",
+    },
+    {
+      label: "Waktu",
+      value: data.neededDate || "Waktu belum diisi",
+      ready: Boolean(data.neededDate.trim()),
+      stepId: request ? "barang" : "informasi",
+    },
+    {
+      label: request ? "Nama pembeli" : "Nama usaha",
+      value: data.ownerName || "Belum diisi",
+      ready: Boolean(data.ownerName.trim()),
+      stepId: request ? "kontak" : "jenis",
     },
     {
       label: "Nama & nomor HP",
       value:
-        data.ownerName && data.contactName && data.phone
-          ? `${data.ownerName} - ${data.contactName} (${data.phone})`
-          : "Nama usaha, nama orang, atau nomor HP belum lengkap",
-      ready: Boolean(
-        data.ownerName.trim() && data.contactName.trim() && data.phone.trim()
-      ),
-      stepIndex: 1,
+        data.contactName && data.phone
+          ? `${data.contactName} (${data.phone})`
+          : "Nama orang atau nomor HP belum lengkap",
+      ready: Boolean(data.contactName.trim() && data.phone.trim()),
+      stepId: request ? "kontak" : "informasi",
     },
     {
       label: kind === "request" ? "Alamat tujuan" : "Tempat barang diambil",
       value: data.location.trim() || "Belum diisi",
       ready: Boolean(data.location.trim()),
-      stepIndex: 1,
+      stepId: request ? "kontak" : "informasi",
     },
     {
       label: "Keterangan",
       value: data.description.trim() || "Belum ditulis",
       ready: Boolean(data.description.trim()),
-      stepIndex: 1,
+      stepId: request ? "kontak" : "informasi",
     },
   ];
 }

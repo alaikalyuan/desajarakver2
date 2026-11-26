@@ -1,8 +1,10 @@
-import { parseIndonesianDate } from "@/lib/format";
+import { formatNumber, formatRupiah, parseDecimal, parseIndonesianDate } from "@/lib/format";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
 import {
   type EntryStatus,
+  normalizeOwnerType,
+  type OfferProvider,
   type FormData,
   type FormEntry,
   type FormKind,
@@ -171,9 +173,19 @@ function mapCollaborationType(scheme = ""): string {
 function mapBusinessType(ownerType = ""): string {
   const lower = ownerType.toLowerCase();
   if (lower.includes("kelompok") || lower.includes("gapoktan")) return "Kelompok Tani";
-  if (lower.includes("bumdes") || lower.includes("koperasi") || lower.includes("kdmp")) return "BUMDes/Koperasi";
+  if (lower.includes("bumdes") || lower.includes("koperasi") || lower.includes("kopdes") || lower.includes("kdmp")) return "BUMDes/Koperasi";
   if (lower.includes("umkm")) return "UMKM";
+  if (lower.includes("warga tani")) return "Warga Tani";
   return "Usaha Mandiri";
+}
+
+/** Group members stored on an offer; anything malformed is dropped. */
+function readProviders(value: unknown): OfferProvider[] {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map((p) => (p || {}) as Record<string, unknown>)
+    .map((p) => ({ name: str(p.name), quantity: str(p.quantity), price: str(p.price) }))
+    .filter((p) => p.name);
 }
 
 function str(value: unknown): string {
@@ -454,6 +466,7 @@ export function mapRowToDirectoryOffer(row: Record<string, unknown>): DirectoryO
   const specs = [
     variety ? `Varietas / bentuk produk: ${variety}` : "",
     grade ? `Kualitas sortir: ${grade}` : "",
+    rawData.packaging ? `Kemasan: ${str(rawData.packaging)}` : "",
     priceNote ? `Acuan harga: ${priceNote}` : "",
   ].filter(Boolean);
 
@@ -488,7 +501,12 @@ export function mapRowToDirectoryOffer(row: Record<string, unknown>): DirectoryO
       photoUrl ||
       normalizeAssetUrl(String(rawData.photoPreview || ""), DEFAULT_OFFER_IMAGE),
     location: String(rawData.location || "Desa Jarak, Plosoklaten"),
-    farmers: [],
+    farmers: readProviders(rawData.providers).map((p) => ({
+      name: p.name,
+      quantity: formatNumber(parseDecimal(p.quantity) ?? 0, 6),
+      unit,
+      price: `${formatRupiah(parseDecimal(p.price))}/${unit}`,
+    })),
     specs: specs.length > 0 ? specs : ["Mutu sesuai standar pasar"],
     terms: terms.length > 0 ? terms : ["Siap bekerja sama dengan mitra"],
     contact: {
@@ -512,14 +530,17 @@ export function rowToFormEntry(row: Record<string, unknown>): FormEntry {
     : String(rawData.photoPreview || "");
 
   const mergedData: FormData = {
-    ownerType: String(rawData.ownerType || ""),
+    ownerType: normalizeOwnerType(
+      (row.kind as FormKind) || "request",
+      String(rawData.ownerType || "")
+    ),
     ownerName: String(rawData.ownerName || rawData.company || rawData.business || ""),
     contactName: String(contact.contactName || contact.pic || rawData.contactName || ""),
     position: String(contact.position || contact.role || rawData.position || ""),
     phone: String(contact.phone || rawData.phone || ""),
     email: String(contact.email || rawData.email || ""),
     location: String(rawData.location || ""),
-    productType: String(rawData.productType || rawData.category || "Beras & Gabah"),
+    productType: String(rawData.productType || rawData.category || (row.kind === "offer" ? "" : "Beras & Gabah")),
     variety: String(rawData.variety || rawData.title || ""),
     grade: String(rawData.grade || "Sortir Standar Pasar"),
     quantity: String(rawData.quantity || rawData.volume || rawData.capacity || ""),
@@ -533,6 +554,8 @@ export function rowToFormEntry(row: Record<string, unknown>): FormEntry {
     duration: String(rawData.duration || "1 musim panen (3 bulan)"),
     description: String(rawData.description || rawData.summary || ""),
     additionalNeeds: String(rawData.additionalNeeds || ""),
+    packaging: String(rawData.packaging || ""),
+    providers: readProviders(rawData.providers),
     photoName: String(rawData.photoName || ""),
     photoPreview: photoUrl,
   };

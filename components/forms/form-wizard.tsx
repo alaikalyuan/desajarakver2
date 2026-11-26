@@ -12,9 +12,24 @@ import {
 } from "react";
 import Link from "next/link";
 import { NumberInput } from "@/components/forms/number-input";
-import { parseDecimal, todayWIB } from "@/lib/format";
+import { formatNumber, formatRupiah, parseDecimal, todayWIB } from "@/lib/format";
 import { resizePhoto } from "@/lib/image-resize";
-import { ArrowLeft, ArrowRight, Bookmark, Check, ImagePlus, Send, Trash2 } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Bookmark,
+  Building2,
+  Check,
+  ImagePlus,
+  Leaf,
+  Package,
+  Plus,
+  Send,
+  Store,
+  Trash2,
+  User,
+  type LucideIcon,
+} from "lucide-react";
 import {
   createEmptyFormData,
   createReference,
@@ -26,18 +41,26 @@ import {
   type FormKind,
   formatTimestamp,
   FREQUENCY_OPTIONS,
+  type FormErrors,
   getSteps,
   GRADE_OPTIONS,
   isEditableStatus,
+  isGroupOffer,
+  MAX_PROVIDERS,
   neededDateFromInput,
   neededDateToInput,
+  normalizeOwnerType,
   OFFER_OWNER_TYPES,
   optionLabel,
+  PERORANGAN_NAME,
+  PERORANGAN_TYPE,
   PARTNERSHIP_OPTIONS,
   PAYMENT_OPTIONS,
   PRODUCT_OPTIONS,
   REQUEST_OWNER_TYPES,
-  REVIEW_STEP,
+  providerErrorKey,
+  providerTotals,
+  resolveFormData,
   type SelectOption,
   submittedStatus,
   type TargetRequestSummary,
@@ -46,6 +69,7 @@ import {
   validateStep,
 } from "@/lib/forms/form-flow";
 import { buildOfferCompatibility, buildReadinessItems, getRoleMeta } from "@/lib/forms/domain";
+import { isKelompokTaniName, KELOMPOK_TANI, KELOMPOK_TANI_NAMES } from "@/lib/forms/kelompok-tani";
 import {
   findMyOfferForRequest,
   getTargetRequestById,
@@ -70,12 +94,25 @@ interface FormWizardProps {
 
 interface StoredProgress {
   data: FormData;
-  stepIndex: number;
+  stepId?: string;
   savedAt: string;
 }
 
 /** Photos larger than this are refused before resizing (protects old phones' memory). */
 const MAX_SOURCE_PHOTO_BYTES = 25 * 1024 * 1024;
+
+const OWNER_TYPE_ICONS: Record<string, LucideIcon> = {
+  "Kelompok Tani": Leaf,
+  "Warga Tani": User,
+  UMKM: Store,
+  "BUMDes/Kopdes": Building2,
+};
+
+const PRODUCT_IMAGES: Record<string, string> = {
+  "Beras & Gabah": "/assets/Images/Gambar Padi Beras Desa Jarak.jpg",
+  "Jagung Pipil": "/assets/Images/Gambar Jagung Desa Jarak.jpg",
+  "Cabai & Sayur Dataran Rendah": "/assets/form-kemitraan/sayuran.jpg",
+};
 
 function storageKey(kind: FormKind, entryId: string | null, requestId: string | null) {
   return `jarak-form:${kind}:${entryId || (requestId ? `req-${requestId}` : "baru")}`;
@@ -126,7 +163,9 @@ export function FormWizard({
 
   const [stepIndex, setStepIndex] = useState(0);
   const [data, setData] = useState<FormData>(() => withProfile(createEmptyFormData(kind, null), profile));
-  const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({});
+  const [errors, setErrors] = useState<FormErrors>({});
+  const [productSearch, setProductSearch] = useState("");
+  const [newProvider, setNewProvider] = useState("");
   const [consent, setConsent] = useState(false);
   const [consentError, setConsentError] = useState("");
   const [submitNotice, setSubmitNotice] = useState("");
@@ -141,7 +180,12 @@ export function FormWizard({
     { reason: "duplicate"; reference: string } | { reason: "closed" } | null
   >(null);
 
-  const steps = useMemo(() => getSteps(kind), [kind]);
+  const steps = useMemo(() => getSteps(kind, data.ownerType), [kind, data.ownerType]);
+  const reviewStep = steps.length - 1;
+  const group = isGroupOffer(kind, data);
+  // What will be saved: for a group, totals come from its members.
+  const resolved = useMemo(() => resolveFormData(kind, data), [kind, data]);
+  const totals = useMemo(() => providerTotals(data.providers), [data.providers]);
   const roleMeta = useMemo(() => getRoleMeta(kind), [kind]);
   const ownerOptions = kind === "request" ? REQUEST_OWNER_TYPES : OFFER_OWNER_TYPES;
   const progressKey = storageKey(kind, initialEntryId, initialRequestId);
@@ -238,8 +282,11 @@ export function FormWizard({
         JSON.stringify(stored.data) !== currentJson &&
         (!baseUpdatedAt || stored.savedAt > baseUpdatedAt)
       ) {
-        setData({ ...current, ...stored.data });
-        setStepIndex(Math.min(Math.max(0, stored.stepIndex || 0), REVIEW_STEP));
+        const restored = { ...current, ...stored.data };
+        restored.ownerType = normalizeOwnerType(kind, restored.ownerType);
+        setData(restored);
+        const storedStep = getSteps(kind, restored.ownerType).findIndex((s) => s.id === stored.stepId);
+        setStepIndex(Math.max(0, storedStep));
         setRestoredNotice(true);
       }
       setReady(true);
@@ -266,11 +313,11 @@ export function FormWizard({
     const timer = window.setTimeout(() => {
       writeProgress(
         progressKey,
-        dirty ? { data, stepIndex, savedAt: new Date().toISOString() } : null
+        dirty ? { data, stepId: steps[stepIndex]?.id, savedAt: new Date().toISOString() } : null
       );
     }, 400);
     return () => window.clearTimeout(timer);
-  }, [data, stepIndex, dirty, ready, submittedEntry, progressKey]);
+  }, [data, steps, stepIndex, dirty, ready, submittedEntry, progressKey]);
 
   // Warn before leaving with unsaved work.
   useEffect(() => {
@@ -308,6 +355,57 @@ export function FormWizard({
     setSubmitNotice("");
   }, []);
 
+  function chooseOwnerType(value: string) {
+    if (value === data.ownerType) return;
+    updateField("ownerType", value);
+    // A group or "Pembeli Perorangan" is not the name of another kind of seller or buyer.
+    if (isKelompokTaniName(data.ownerName) || data.ownerName === PERORANGAN_NAME) {
+      updateField("ownerName", profile?.businessName || profile?.fullName || "");
+      updateField("providers", []);
+    }
+  }
+
+  function chooseGroup(name: string) {
+    if (name !== data.ownerName) updateField("providers", []);
+    updateField("ownerName", name);
+  }
+
+  function toggleProvider(name: string) {
+    const selected = data.providers.some((p) => p.name === name);
+    updateField(
+      "providers",
+      selected
+        ? data.providers.filter((p) => p.name !== name)
+        : [...data.providers, { name, quantity: "", price: "" }]
+    );
+  }
+
+  function addProvider() {
+    const name = newProvider.trim().replace(/\s+/g, " ");
+    const known = memberNames.find((m) => m.toLowerCase() === name.toLowerCase());
+    let problem = "";
+    if (!name) problem = "Tulis nama anggota dulu.";
+    else if (data.providers.some((p) => p.name === known)) problem = "Nama ini sudah dipilih.";
+    else if (data.providers.length >= MAX_PROVIDERS) problem = `Maksimal ${MAX_PROVIDERS} anggota.`;
+
+    setErrors((current) => ({ ...current, newProvider: problem || undefined }));
+    if (problem) return;
+    toggleProvider(known ?? name);
+    setNewProvider("");
+  }
+
+  function updateProvider(name: string, field: "quantity" | "price", value: string) {
+    updateField(
+      "providers",
+      data.providers.map((p) => (p.name === name ? { ...p, [field]: value } : p))
+    );
+    setErrors((current) => ({ ...current, [providerErrorKey(name, field)]: undefined }));
+  }
+
+  function goToStepId(id: string) {
+    goToStep(steps.findIndex((step) => step.id === id));
+  }
+
   function focusStepHeading() {
     requestAnimationFrame(() => {
       stepHeadingRef.current?.focus();
@@ -325,7 +423,7 @@ export function FormWizard({
 
     // Moving forward: every step on the way must be complete.
     for (let step = stepIndex; step < targetIndex; step += 1) {
-      const validation = validateStep(kind, step, data, today);
+      const validation = validateStep(kind, steps[step].id, data, today);
       if (!validation.valid) {
         setErrors(validation.errors);
         setStepIndex(step);
@@ -351,14 +449,14 @@ export function FormWizard({
       targetRequest: kind === "offer" ? targetRequest : null,
       createdAt: createdAtRef.current,
       updatedAt: new Date().toISOString(),
-      data: { ...data, quantity: normalizeQuantity(data.quantity) },
+      data: { ...resolved, quantity: normalizeQuantity(resolved.quantity) },
     };
   }
 
   async function handleSaveDraft() {
     if (!data.variety.trim() && !data.ownerName.trim()) {
       setErrors({ variety: "Tulis nama barang dulu supaya draf mudah dikenali." });
-      setStepIndex(0);
+      setStepIndex(Math.max(0, steps.findIndex((step) => step.id === productStep)));
       setFocusErrorTick((n) => n + 1);
       return;
     }
@@ -384,7 +482,7 @@ export function FormWizard({
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
-    if (stepIndex < REVIEW_STEP) {
+    if (stepIndex < reviewStep) {
       goToStep(stepIndex + 1);
       return;
     }
@@ -476,14 +574,28 @@ export function FormWizard({
     [entries, kind, activeEntry]
   );
 
-  const readinessItems = useMemo(() => buildReadinessItems(kind, data), [kind, data]);
+  const readinessItems = useMemo(() => buildReadinessItems(kind, resolved), [kind, resolved]);
 
   const compatibilityItems = useMemo(
-    () => (kind === "offer" && targetRequest ? buildOfferCompatibility(data, targetRequest) : []),
-    [kind, data, targetRequest]
+    () => (kind === "offer" && targetRequest ? buildOfferCompatibility(resolved, targetRequest) : []),
+    [kind, resolved, targetRequest]
   );
 
-  const activeStep = steps[stepIndex];
+  const activeStep = steps[Math.min(stepIndex, reviewStep)];
+
+  const productMatches = PRODUCT_OPTIONS.filter((option) =>
+    option.label.toLowerCase().includes(productSearch.trim().toLowerCase())
+  );
+  const listedMembers = KELOMPOK_TANI[data.ownerName] || [];
+  const memberNames = [
+    ...listedMembers,
+    ...data.providers.map((p) => p.name).filter((name) => !listedMembers.includes(name)),
+  ];
+  const isRequest = kind === "request";
+  const productStep = isRequest ? "barang" : "produk";
+  const amountStep = isRequest ? "barang" : "jumlah";
+  const ownerStep = isRequest ? "kontak" : "jenis";
+  const infoStep = isRequest ? "kontak" : "informasi";
 
   if (submittedEntry) {
     return (
@@ -540,6 +652,289 @@ export function FormWizard({
       </main>
     );
   }
+
+  const productTypeField = (
+    <Field label="Jenis Barang" error={errors.productType}>
+      <select
+        value={data.productType}
+        aria-invalid={Boolean(errors.productType)}
+        onChange={(e) => updateField("productType", e.target.value)}
+      >
+        <Options options={PRODUCT_OPTIONS} />
+      </select>
+    </Field>
+  );
+  const varietyField = (
+    <Field
+      label={kind === "request" ? "Nama Barang yang Dicari" : "Nama Barang"}
+      hint={kind === "request" ? "Contoh: Beras medium IR64" : "Contoh: Beras Ciherang, karung 50 kg"}
+      error={errors.variety}
+    >
+      <input
+        type="text"
+        value={data.variety}
+        aria-invalid={Boolean(errors.variety)}
+        autoComplete="off"
+        onChange={(e) => updateField("variety", e.target.value)}
+      />
+    </Field>
+  );
+  const quantityField = (
+    <Field
+      label={kind === "request" ? "Jumlah yang Dibutuhkan" : "Jumlah yang Sanggup Dikirim"}
+      hint="Angka saja, misalnya 3 atau 2,5."
+      error={errors.quantity}
+    >
+      <NumberInput
+        value={data.quantity}
+        error={errors.quantity}
+        showMessage={false}
+        onValueChange={(value) => updateField("quantity", value)}
+      />
+    </Field>
+  );
+  const unitField = (
+    <Field label="Satuan" error={errors.unit}>
+      <select
+        value={data.unit}
+        aria-invalid={Boolean(errors.unit)}
+        onChange={(e) => updateField("unit", e.target.value)}
+      >
+        <Options options={UNIT_OPTIONS} />
+      </select>
+    </Field>
+  );
+  const frequencyField = (
+    <Field
+      label={kind === "request" ? "Seberapa Sering" : "Seberapa Sering Bisa Kirim"}
+      error={errors.frequency}
+    >
+      <select
+        value={data.frequency}
+        aria-invalid={Boolean(errors.frequency)}
+        onChange={(e) => updateField("frequency", e.target.value)}
+      >
+        <Options options={FREQUENCY_OPTIONS} />
+      </select>
+    </Field>
+  );
+  const neededDateField = (
+    <Field
+      label={kind === "request" ? "Dibutuhkan Mulai Tanggal" : "Siap Dikirim Mulai Bulan"}
+      error={errors.neededDate}
+    >
+      <input
+        type={kind === "request" ? "date" : "month"}
+        value={neededDateToInput(kind, data.neededDate)}
+        min={kind === "request" ? today : today.slice(0, 7)}
+        aria-invalid={Boolean(errors.neededDate)}
+        onChange={(e) => updateField("neededDate", neededDateFromInput(kind, e.target.value))}
+      />
+    </Field>
+  );
+  const priceNoteField = (
+    <Field
+      label={kind === "request" ? "Harga yang Anda Tawarkan" : "Harga Jual"}
+      optional
+      hint="Contoh: Rp12.000/kg, atau Rp11.800 - Rp12.300/kg"
+    >
+      <input
+        type="text"
+        value={data.priceNote}
+        onChange={(e) => updateField("priceNote", e.target.value)}
+      />
+    </Field>
+  );
+  const gradeField = (
+    <Field label="Mutu Barang" optional>
+      <select value={data.grade} onChange={(e) => updateField("grade", e.target.value)}>
+        <Options options={GRADE_OPTIONS} />
+      </select>
+    </Field>
+  );
+  const ownerNameField = (
+    <Field
+      label={kind === "request" ? "Nama Instansi / Usaha" : "Nama Usaha"}
+      error={errors.ownerName}
+    >
+      <input
+        type="text"
+        value={data.ownerName}
+        aria-invalid={Boolean(errors.ownerName)}
+        autoComplete="organization"
+        onChange={(e) => updateField("ownerName", e.target.value)}
+      />
+    </Field>
+  );
+  const ownerTypeField = (
+    <Field label="Jenis Pembeli" error={errors.ownerType}>
+      <select
+        value={data.ownerType}
+        aria-invalid={Boolean(errors.ownerType)}
+        onChange={(e) => chooseOwnerType(e.target.value)}
+      >
+        <Options options={ownerOptions} />
+      </select>
+    </Field>
+  );
+  const contactNameField = (
+    <Field label={group ? "Nama Ketua Kelompok" : "Nama yang Bisa Dihubungi"} error={errors.contactName}>
+      <input
+        type="text"
+        value={data.contactName}
+        aria-invalid={Boolean(errors.contactName)}
+        autoComplete="name"
+        onChange={(e) => updateField("contactName", e.target.value)}
+      />
+    </Field>
+  );
+  const phoneField = (
+    <Field label="Nomor HP / WhatsApp" hint="Contoh: 0812 3456 7890" error={errors.phone}>
+      <input
+        type="tel"
+        inputMode="tel"
+        autoComplete="tel"
+        value={data.phone}
+        aria-invalid={Boolean(errors.phone)}
+        onChange={(e) => updateField("phone", e.target.value)}
+      />
+    </Field>
+  );
+  const locationField = (
+    <Field
+      label={kind === "request" ? "Alamat Tujuan Kirim" : "Tempat Barang Diambil"}
+      hint={kind === "request" ? "Contoh: Kecamatan Pare, Kediri" : "Contoh: Dusun Krajan, Desa Jarak"}
+      error={errors.location}
+    >
+      <input
+        type="text"
+        value={data.location}
+        aria-invalid={Boolean(errors.location)}
+        onChange={(e) => updateField("location", e.target.value)}
+      />
+    </Field>
+  );
+  const partnershipSchemeField = (
+    <Field label="Cara Kerja Sama" error={errors.partnershipScheme}>
+      <select
+        value={data.partnershipScheme}
+        aria-invalid={Boolean(errors.partnershipScheme)}
+        onChange={(e) => updateField("partnershipScheme", e.target.value)}
+      >
+        <Options options={PARTNERSHIP_OPTIONS} />
+      </select>
+    </Field>
+  );
+  const paymentMethodField = (
+    <Field label="Cara Bayar" error={errors.paymentMethod}>
+      <select
+        value={data.paymentMethod}
+        aria-invalid={Boolean(errors.paymentMethod)}
+        onChange={(e) => updateField("paymentMethod", e.target.value)}
+      >
+        <Options options={PAYMENT_OPTIONS} />
+      </select>
+    </Field>
+  );
+  const deliveryTypeField = (
+    <Field label="Cara Barang Diserahkan" error={errors.deliveryType}>
+      <select
+        value={data.deliveryType}
+        aria-invalid={Boolean(errors.deliveryType)}
+        onChange={(e) => updateField("deliveryType", e.target.value)}
+      >
+        <Options options={DELIVERY_OPTIONS} />
+      </select>
+    </Field>
+  );
+  const durationField = (
+    <Field label="Lama Kerja Sama" optional>
+      <select value={data.duration} onChange={(e) => updateField("duration", e.target.value)}>
+        <Options options={DURATION_OPTIONS} />
+      </select>
+    </Field>
+  );
+  const descriptionField = (
+    <Field
+      label="Keterangan"
+      hint={
+        kind === "request"
+          ? "Mutu, kemasan, atau jadwal ambil. Contoh: beras bersih, karung 50 kg, diambil tiap Selasa."
+          : "Asal panen, kemasan, kesiapan kirim. Contoh: panen 18 petani Dusun Krajan, digiling H-2."
+      }
+      error={errors.description}
+    >
+      <textarea
+        rows={3}
+        value={data.description}
+        aria-invalid={Boolean(errors.description)}
+        onChange={(e) => updateField("description", e.target.value)}
+      />
+    </Field>
+  );
+  const positionField = (
+    <Field label="Jabatan" optional hint="Contoh: Ketua Kelompok, Bagian Pembelian">
+      <input
+        type="text"
+        value={data.position}
+        onChange={(e) => updateField("position", e.target.value)}
+      />
+    </Field>
+  );
+  const emailField = (
+    <Field label="Email" optional error={errors.email}>
+      <input
+        type="email"
+        autoComplete="email"
+        value={data.email}
+        aria-invalid={Boolean(errors.email)}
+        onChange={(e) => updateField("email", e.target.value)}
+      />
+    </Field>
+  );
+  const additionalNeedsField = (
+    <Field label="Catatan Lain" optional>
+      <textarea
+        rows={2}
+        value={data.additionalNeeds}
+        onChange={(e) => updateField("additionalNeeds", e.target.value)}
+      />
+    </Field>
+  );
+  const photoField = (
+    <div className="wf-field">
+      <p className="wf-label" id="wf-photo-label">
+        {kind === "request" ? "Foto Contoh Barang" : "Foto Barang"} <span>(opsional)</span>
+      </p>
+      <label className="wf-upload" aria-labelledby="wf-photo-label">
+        <ImagePlus size={22} aria-hidden="true" />
+        <strong>
+          {photoBusy ? "Mengecilkan foto…" : data.photoName || "Pilih foto dari galeri atau kamera"}
+        </strong>
+        <span>Foto otomatis dikecilkan agar hemat kuota.</span>
+        <input type="file" accept="image/*" onChange={handlePhotoUpload} disabled={photoBusy} />
+      </label>
+
+      {data.photoPreview && (
+        <div className="wf-photo-grid">
+          <div className="wf-photo">
+            <img src={data.photoPreview} alt={data.photoName || "Foto barang"} />
+            <span>{data.photoName}</span>
+            <button
+              type="button"
+              aria-label="Hapus foto"
+              onClick={() => {
+                updateField("photoName", "");
+                updateField("photoPreview", "");
+              }}
+            >
+              <Trash2 size={16} aria-hidden="true" />
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 
   return (
     <main id="jarak-forms">
@@ -639,340 +1034,396 @@ export function FormWizard({
             </h2>
             <p className="wf-subtitle">{activeStep.description}</p>
 
-            {stepIndex === 0 && (
+            {activeStep.id === "barang" && (
               <fieldset className="wf-all">
                 <legend className="wf-sr-only">Barang</legend>
                 <div className="wf-two">
-                  <Field label="Jenis Barang" error={errors.productType}>
-                    <select
-                      value={data.productType}
-                      aria-invalid={Boolean(errors.productType)}
-                      onChange={(e) => updateField("productType", e.target.value)}
-                    >
-                      <Options options={PRODUCT_OPTIONS} />
-                    </select>
-                  </Field>
-
-                  <Field
-                    label={kind === "request" ? "Nama Barang yang Dicari" : "Nama Barang"}
-                    hint={kind === "request" ? "Contoh: Beras medium IR64" : "Contoh: Beras Ciherang, karung 50 kg"}
-                    error={errors.variety}
-                  >
-                    <input
-                      type="text"
-                      value={data.variety}
-                      aria-invalid={Boolean(errors.variety)}
-                      autoComplete="off"
-                      onChange={(e) => updateField("variety", e.target.value)}
-                    />
-                  </Field>
+                  {productTypeField}
+                  {varietyField}
                 </div>
-
                 <div className="wf-two">
-                  <Field
-                    label={kind === "request" ? "Jumlah yang Dibutuhkan" : "Jumlah yang Sanggup Dikirim"}
-                    hint="Angka saja, misalnya 3 atau 2,5."
-                    error={errors.quantity}
-                  >
-                    <NumberInput
-                      value={data.quantity}
-                      error={errors.quantity}
-                      showMessage={false}
-                      onValueChange={(value) => updateField("quantity", value)}
-                    />
-                  </Field>
-
-                  <Field label="Satuan" error={errors.unit}>
-                    <select
-                      value={data.unit}
-                      aria-invalid={Boolean(errors.unit)}
-                      onChange={(e) => updateField("unit", e.target.value)}
-                    >
-                      <Options options={UNIT_OPTIONS} />
-                    </select>
-                  </Field>
+                  {quantityField}
+                  {unitField}
                 </div>
-
                 <div className="wf-two">
-                  <Field
-                    label={kind === "request" ? "Seberapa Sering" : "Seberapa Sering Bisa Kirim"}
-                    error={errors.frequency}
-                  >
-                    <select
-                      value={data.frequency}
-                      aria-invalid={Boolean(errors.frequency)}
-                      onChange={(e) => updateField("frequency", e.target.value)}
-                    >
-                      <Options options={FREQUENCY_OPTIONS} />
-                    </select>
-                  </Field>
-
-                  <Field
-                    label={kind === "request" ? "Dibutuhkan Mulai Tanggal" : "Siap Dikirim Mulai Bulan"}
-                    error={errors.neededDate}
-                  >
-                    <input
-                      type={kind === "request" ? "date" : "month"}
-                      value={neededDateToInput(kind, data.neededDate)}
-                      min={kind === "request" ? today : today.slice(0, 7)}
-                      aria-invalid={Boolean(errors.neededDate)}
-                      onChange={(e) => updateField("neededDate", neededDateFromInput(kind, e.target.value))}
-                    />
-                  </Field>
+                  {frequencyField}
+                  {neededDateField}
                 </div>
-
                 <div className="wf-two">
-                  <Field
-                    label={kind === "request" ? "Harga yang Anda Tawarkan" : "Harga Jual"}
-                    optional
-                    hint="Contoh: Rp12.000/kg, atau Rp11.800 - Rp12.300/kg"
-                  >
-                    <input
-                      type="text"
-                      value={data.priceNote}
-                      onChange={(e) => updateField("priceNote", e.target.value)}
-                    />
-                  </Field>
-
-                  <Field label="Mutu Barang" optional>
-                    <select value={data.grade} onChange={(e) => updateField("grade", e.target.value)}>
-                      <Options options={GRADE_OPTIONS} />
-                    </select>
-                  </Field>
+                  {priceNoteField}
+                  {gradeField}
                 </div>
-
-                <div className="wf-field">
-                  <p className="wf-label" id="wf-photo-label">
-                    {kind === "request" ? "Foto Contoh Barang" : "Foto Barang"} <span>(opsional)</span>
-                  </p>
-                  <label className="wf-upload" aria-labelledby="wf-photo-label">
-                    <ImagePlus size={22} aria-hidden="true" />
-                    <strong>
-                      {photoBusy ? "Mengecilkan foto…" : data.photoName || "Pilih foto dari galeri atau kamera"}
-                    </strong>
-                    <span>Foto otomatis dikecilkan agar hemat kuota.</span>
-                    <input type="file" accept="image/*" onChange={handlePhotoUpload} disabled={photoBusy} />
-                  </label>
-
-                  {data.photoPreview && (
-                    <div className="wf-photo-grid">
-                      <div className="wf-photo">
-                        <img src={data.photoPreview} alt={data.photoName || "Foto barang"} />
-                        <span>{data.photoName}</span>
-                        <button
-                          type="button"
-                          aria-label="Hapus foto"
-                          onClick={() => {
-                            updateField("photoName", "");
-                            updateField("photoPreview", "");
-                          }}
-                        >
-                          <Trash2 size={16} aria-hidden="true" />
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
+                {photoField}
               </fieldset>
             )}
 
-            {stepIndex === 1 && (
+            {activeStep.id === "kontak" && (
               <fieldset className="wf-all">
                 <legend className="wf-sr-only">Kontak dan cara kirim</legend>
+                {data.ownerType === PERORANGAN_TYPE ? (
+                  ownerTypeField
+                ) : (
+                  <div className="wf-two">
+                    {ownerTypeField}
+                    {ownerNameField}
+                  </div>
+                )}
                 <div className="wf-two">
-                  <Field
-                    label={kind === "request" ? "Nama Usaha / Toko" : "Nama Usaha / Kelompok"}
-                    error={errors.ownerName}
-                  >
-                    <input
-                      type="text"
-                      value={data.ownerName}
-                      aria-invalid={Boolean(errors.ownerName)}
-                      autoComplete="organization"
-                      onChange={(e) => updateField("ownerName", e.target.value)}
-                    />
-                  </Field>
-
-                  <Field label="Jenis Usaha" error={errors.ownerType}>
-                    <select
-                      value={data.ownerType}
-                      aria-invalid={Boolean(errors.ownerType)}
-                      onChange={(e) => updateField("ownerType", e.target.value)}
-                    >
-                      <Options options={ownerOptions} />
-                    </select>
-                  </Field>
+                  {contactNameField}
+                  {phoneField}
                 </div>
-
+                {locationField}
                 <div className="wf-two">
-                  <Field label="Nama yang Bisa Dihubungi" error={errors.contactName}>
-                    <input
-                      type="text"
-                      value={data.contactName}
-                      aria-invalid={Boolean(errors.contactName)}
-                      autoComplete="name"
-                      onChange={(e) => updateField("contactName", e.target.value)}
-                    />
-                  </Field>
-
-                  <Field label="Nomor HP / WhatsApp" hint="Contoh: 0812 3456 7890" error={errors.phone}>
-                    <input
-                      type="tel"
-                      inputMode="tel"
-                      autoComplete="tel"
-                      value={data.phone}
-                      aria-invalid={Boolean(errors.phone)}
-                      onChange={(e) => updateField("phone", e.target.value)}
-                    />
-                  </Field>
+                  {partnershipSchemeField}
+                  {paymentMethodField}
                 </div>
-
-                <Field
-                  label={kind === "request" ? "Alamat Tujuan Kirim" : "Tempat Barang Diambil"}
-                  hint={kind === "request" ? "Contoh: Kecamatan Pare, Kediri" : "Contoh: Dusun Krajan, Desa Jarak"}
-                  error={errors.location}
-                >
-                  <input
-                    type="text"
-                    value={data.location}
-                    aria-invalid={Boolean(errors.location)}
-                    onChange={(e) => updateField("location", e.target.value)}
-                  />
-                </Field>
-
                 <div className="wf-two">
-                  <Field label="Cara Kerja Sama" error={errors.partnershipScheme}>
-                    <select
-                      value={data.partnershipScheme}
-                      aria-invalid={Boolean(errors.partnershipScheme)}
-                      onChange={(e) => updateField("partnershipScheme", e.target.value)}
-                    >
-                      <Options options={PARTNERSHIP_OPTIONS} />
-                    </select>
-                  </Field>
-
-                  <Field label="Cara Bayar" error={errors.paymentMethod}>
-                    <select
-                      value={data.paymentMethod}
-                      aria-invalid={Boolean(errors.paymentMethod)}
-                      onChange={(e) => updateField("paymentMethod", e.target.value)}
-                    >
-                      <Options options={PAYMENT_OPTIONS} />
-                    </select>
-                  </Field>
+                  {deliveryTypeField}
+                  {durationField}
                 </div>
-
-                <div className="wf-two">
-                  <Field label="Cara Barang Diserahkan" error={errors.deliveryType}>
-                    <select
-                      value={data.deliveryType}
-                      aria-invalid={Boolean(errors.deliveryType)}
-                      onChange={(e) => updateField("deliveryType", e.target.value)}
-                    >
-                      <Options options={DELIVERY_OPTIONS} />
-                    </select>
-                  </Field>
-
-                  <Field label="Lama Kerja Sama" optional>
-                    <select value={data.duration} onChange={(e) => updateField("duration", e.target.value)}>
-                      <Options options={DURATION_OPTIONS} />
-                    </select>
-                  </Field>
-                </div>
-
-                <Field
-                  label="Keterangan"
-                  hint={
-                    kind === "request"
-                      ? "Mutu, kemasan, atau jadwal ambil. Contoh: beras bersih, karung 50 kg, diambil tiap Selasa."
-                      : "Asal panen, kemasan, kesiapan kirim. Contoh: panen 18 petani Dusun Krajan, digiling H-2."
-                  }
-                  error={errors.description}
-                >
-                  <textarea
-                    rows={3}
-                    value={data.description}
-                    aria-invalid={Boolean(errors.description)}
-                    onChange={(e) => updateField("description", e.target.value)}
-                  />
-                </Field>
-
+                {descriptionField}
                 <details className="wf-extra" open={Boolean(data.email || data.position || data.additionalNeeds)}>
                   <summary>Tambahan (opsional): jabatan, email, catatan</summary>
                   <div className="wf-two">
-                    <Field label="Jabatan" optional hint="Contoh: Ketua Kelompok, Bagian Pembelian">
-                      <input
-                        type="text"
-                        value={data.position}
-                        onChange={(e) => updateField("position", e.target.value)}
-                      />
-                    </Field>
-                    <Field label="Email" optional error={errors.email}>
-                      <input
-                        type="email"
-                        autoComplete="email"
-                        value={data.email}
-                        aria-invalid={Boolean(errors.email)}
-                        onChange={(e) => updateField("email", e.target.value)}
-                      />
-                    </Field>
+                    {positionField}
+                    {emailField}
                   </div>
-                  <Field label="Catatan Lain" optional>
-                    <textarea
-                      rows={2}
-                      value={data.additionalNeeds}
-                      onChange={(e) => updateField("additionalNeeds", e.target.value)}
-                    />
-                  </Field>
+                  {additionalNeedsField}
                 </details>
               </fieldset>
             )}
 
-            {stepIndex === REVIEW_STEP && (
+            {activeStep.id === "jenis" && (
+              <fieldset className="wf-all">
+                <legend className="wf-sr-only">Jenis usaha</legend>
+                <div className="wf-choice-list wf-business-types" role="radiogroup" aria-label="Jenis usaha" aria-invalid={Boolean(errors.ownerType)}>
+                  {OFFER_OWNER_TYPES.map((option) => {
+                    const Icon = OWNER_TYPE_ICONS[option.value] || Store;
+                    const selected = data.ownerType === option.value;
+                    return (
+                      <label key={option.value} className={selected ? "selected" : undefined}>
+                        <input
+                          type="radio"
+                          name="ownerType"
+                          checked={selected}
+                          onChange={() => chooseOwnerType(option.value)}
+                        />
+                        <Icon size={22} aria-hidden="true" />
+                        <span>
+                          <strong>{option.label}</strong>
+                          <small>{option.description}</small>
+                        </span>
+                        <span className="wf-radio-mark" aria-hidden="true">
+                          {selected && <Check size={12} />}
+                        </span>
+                      </label>
+                    );
+                  })}
+                </div>
+                {errors.ownerType && (
+                  <p className="wf-error" role="alert">
+                    {errors.ownerType}
+                  </p>
+                )}
+                {group ? (
+                  <Field label="Nama Kelompok Tani" error={errors.ownerName}>
+                    <select
+                      value={isKelompokTaniName(data.ownerName) ? data.ownerName : ""}
+                      aria-invalid={Boolean(errors.ownerName)}
+                      onChange={(e) => chooseGroup(e.target.value)}
+                    >
+                      <option value="">Pilih kelompok tani</option>
+                      {KELOMPOK_TANI_NAMES.map((name) => (
+                        <option key={name} value={name}>
+                          {name}
+                        </option>
+                      ))}
+                    </select>
+                  </Field>
+                ) : (
+                  ownerNameField
+                )}
+              </fieldset>
+            )}
+
+            {activeStep.id === "produk" && (
+              <fieldset className="wf-all">
+                <legend className="wf-sr-only">Produk</legend>
+                <Field label="Cari Jenis Barang" optional>
+                  <input
+                    type="search"
+                    value={productSearch}
+                    onChange={(e) => setProductSearch(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") e.preventDefault();
+                    }}
+                  />
+                </Field>
+                <div className="wf-choice-list wf-products" role="radiogroup" aria-label="Jenis barang" aria-invalid={Boolean(errors.productType)}>
+                  {productMatches.map((option) => {
+                    const selected = data.productType === option.value;
+                    const image = PRODUCT_IMAGES[option.value];
+                    return (
+                      <label key={option.value} className={selected ? "selected" : undefined}>
+                        <input
+                          type="radio"
+                          name="productType"
+                          checked={selected}
+                          onChange={() => updateField("productType", option.value)}
+                        />
+                        {image ? (
+                          <img src={image} alt="" loading="lazy" />
+                        ) : (
+                          <span className="wf-product-symbol" aria-hidden="true">
+                            <Package size={22} />
+                          </span>
+                        )}
+                        <strong>{option.label}</strong>
+                        <span className="wf-radio-mark" aria-hidden="true">
+                          {selected && <Check size={12} />}
+                        </span>
+                      </label>
+                    );
+                  })}
+                  {productMatches.length === 0 && <p>Jenis barang tidak ditemukan. Coba kata lain.</p>}
+                </div>
+                {errors.productType && (
+                  <p className="wf-error" role="alert">
+                    {errors.productType}
+                  </p>
+                )}
+                {varietyField}
+              </fieldset>
+            )}
+
+            {activeStep.id === "penyedia" && (
+              <fieldset className="wf-all">
+                <legend className="wf-sr-only">Anggota penyedia</legend>
+                <div className="wf-provider-list">
+                  {memberNames.map((name) => {
+                    const selected = data.providers.some((p) => p.name === name);
+                    return (
+                      <label key={name} className={selected ? "selected" : undefined}>
+                        <input
+                          type="checkbox"
+                          checked={selected}
+                          disabled={!selected && data.providers.length >= MAX_PROVIDERS}
+                          aria-invalid={errors.providers ? true : undefined}
+                          aria-describedby={errors.providers ? "wf-providers-error" : undefined}
+                          onChange={() => toggleProvider(name)}
+                        />
+                        <span className="wf-initials" aria-hidden="true">
+                          {initials(name)}
+                        </span>
+                        <strong>{name}</strong>
+                      </label>
+                    );
+                  })}
+                </div>
+                {errors.providers && (
+                  <p id="wf-providers-error" className="wf-error" role="alert">
+                    {errors.providers}
+                  </p>
+                )}
+                <div className="wf-add-provider">
+                  <Field
+                    label="Nama Anggota Lain"
+                    optional
+                    hint={`Tambahkan bila namanya belum ada di daftar. Maksimal ${MAX_PROVIDERS} anggota.`}
+                    error={errors.newProvider}
+                  >
+                    <input
+                      type="text"
+                      value={newProvider}
+                      maxLength={60}
+                      autoComplete="off"
+                      aria-invalid={Boolean(errors.newProvider)}
+                      onChange={(e) => setNewProvider(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          addProvider();
+                        }
+                      }}
+                    />
+                  </Field>
+                  <button type="button" className="btn outline" onClick={addProvider}>
+                    <Plus size={16} aria-hidden="true" /> Tambah Anggota
+                  </button>
+                </div>
+              </fieldset>
+            )}
+
+            {activeStep.id === "jumlah" && (
+              <fieldset className="wf-all">
+                <legend className="wf-sr-only">Jumlah dan harga</legend>
+                {group ? (
+                  <>
+                    {unitField}
+                    {data.providers.map((provider) => {
+                      const quantityError = errors[providerErrorKey(provider.name, "quantity")];
+                      const priceError = errors[providerErrorKey(provider.name, "price")];
+                      return (
+                        <div key={provider.name} className="wf-provider-amount" role="group" aria-label={provider.name}>
+                          <div>
+                            <span className="wf-initials" aria-hidden="true">
+                              {initials(provider.name)}
+                            </span>
+                            <strong>{provider.name}</strong>
+                          </div>
+                          <div className="wf-two">
+                            <Field label={`Jumlah (${data.unit})`} error={quantityError}>
+                              <NumberInput
+                                value={provider.quantity}
+                                error={quantityError}
+                                showMessage={false}
+                                onValueChange={(value) => updateProvider(provider.name, "quantity", value)}
+                              />
+                            </Field>
+                            <Field label={`Harga per ${data.unit} (Rp)`} error={priceError}>
+                              <NumberInput
+                                value={provider.price}
+                                error={priceError}
+                                showMessage={false}
+                                onValueChange={(value) => updateProvider(provider.name, "price", value)}
+                              />
+                            </Field>
+                          </div>
+                        </div>
+                      );
+                    })}
+                    <div className="wf-total">
+                      <span>Total tersedia</span>
+                      <strong>
+                        {formatNumber(totals.quantity, 6)} {data.unit}
+                      </strong>
+                    </div>
+                    {totals.averagePrice !== null && (
+                      <p className="wf-help">
+                        Harga rata-rata {formatRupiah(totals.averagePrice)} per {data.unit}, dihitung dari jumlah tiap
+                        anggota.
+                      </p>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <div className="wf-two">
+                      {quantityField}
+                      {unitField}
+                    </div>
+                    {priceNoteField}
+                  </>
+                )}
+                {frequencyField}
+              </fieldset>
+            )}
+
+            {activeStep.id === "informasi" && (
+              <fieldset className="wf-all">
+                <legend className="wf-sr-only">Informasi penawaran</legend>
+                {descriptionField}
+                <div className="wf-two">
+                  {neededDateField}
+                  {locationField}
+                </div>
+                <div className="wf-two">
+                  {gradeField}
+                  <Field label="Kemasan" optional hint="Contoh: karung 50 kg">
+                    <input
+                      type="text"
+                      value={data.packaging}
+                      onChange={(e) => updateField("packaging", e.target.value)}
+                    />
+                  </Field>
+                </div>
+                <div className="wf-two">
+                  {contactNameField}
+                  {phoneField}
+                </div>
+                <div className="wf-two">
+                  {partnershipSchemeField}
+                  {paymentMethodField}
+                </div>
+                <div className="wf-two">
+                  {deliveryTypeField}
+                  {durationField}
+                </div>
+                <details className="wf-extra" open={Boolean(data.email || data.position || data.additionalNeeds)}>
+                  <summary>Tambahan (opsional): jabatan, email, catatan</summary>
+                  <div className="wf-two">
+                    {positionField}
+                    {emailField}
+                  </div>
+                  {additionalNeedsField}
+                </details>
+              </fieldset>
+            )}
+
+            {activeStep.id === "foto" && (
+              <fieldset className="wf-all">
+                <legend className="wf-sr-only">Foto produk</legend>
+                {photoField}
+              </fieldset>
+            )}
+
+            {activeStep.id === "periksa" && (
               <div>
                 <div className="wf-review-banner">
                   <div>
                     <strong>{data.variety || data.productType}</strong>
                     <p>
-                      {data.quantity || "0"} {data.unit}, {optionLabel(FREQUENCY_OPTIONS, data.frequency)} -{" "}
-                      {data.ownerName || "Nama usaha belum diisi"}
+                      {resolved.quantity || "0"} {data.unit}, {optionLabel(FREQUENCY_OPTIONS, data.frequency)} -{" "}
+                      {resolved.ownerName || "Nama usaha belum diisi"}
                     </p>
                   </div>
                   <span className="tag green">{reference}</span>
                 </div>
 
                 <dl className="wf-review">
-                  <ReviewRow label="Barang" onEdit={() => goToStep(0)}>
+                  <ReviewRow label="Barang" onEdit={() => goToStepId(productStep)}>
                     {data.productType} - {data.variety || "-"} ({optionLabel(GRADE_OPTIONS, data.grade)})
                   </ReviewRow>
-                  <ReviewRow label="Jumlah & Waktu" onEdit={() => goToStep(0)}>
-                    {data.quantity || "-"} {data.unit} - {optionLabel(FREQUENCY_OPTIONS, data.frequency)} -{" "}
+                  <ReviewRow label="Jumlah" onEdit={() => goToStepId(amountStep)}>
+                    {resolved.quantity || "-"} {data.unit} - {optionLabel(FREQUENCY_OPTIONS, data.frequency)}
+                  </ReviewRow>
+                  <ReviewRow label="Waktu" onEdit={() => goToStepId(isRequest ? "barang" : "informasi")}>
                     {data.neededDate || "-"}
                   </ReviewRow>
-                  <ReviewRow label="Harga" onEdit={() => goToStep(0)}>
-                    {data.priceNote || "Sesuai kesepakatan"}
+                  {group && (
+                    <ReviewRow label="Anggota" onEdit={() => goToStepId("penyedia")}>
+                      {data.providers
+                        .map(
+                          (p) =>
+                            `${p.name}: ${p.quantity || "-"} ${data.unit} @ ${formatRupiah(parseDecimal(p.price))}`
+                        )
+                        .join("\n") || "-"}
+                    </ReviewRow>
+                  )}
+                  <ReviewRow label="Harga" onEdit={() => goToStepId(amountStep)}>
+                    {resolved.priceNote || "Sesuai kesepakatan"}
                   </ReviewRow>
-                  <ReviewRow label="Usaha" onEdit={() => goToStep(1)}>
-                    {data.ownerName || "-"} ({optionLabel(ownerOptions, data.ownerType) || "-"})
+                  <ReviewRow label={isRequest ? "Pembeli" : "Usaha"} onEdit={() => goToStepId(ownerStep)}>
+                    {resolved.ownerName || "-"} ({optionLabel(ownerOptions, data.ownerType) || "-"})
                   </ReviewRow>
-                  <ReviewRow label="Kontak" onEdit={() => goToStep(1)}>
+                  <ReviewRow label="Kontak" onEdit={() => goToStepId(infoStep)}>
                     {data.contactName || "-"}
-                    {data.position ? ` - ${data.position}` : ""}
+                    {resolved.position ? ` - ${resolved.position}` : ""}
                     {"\n"}
                     {data.phone || "-"}
                     {data.email ? ` | ${data.email}` : ""}
                     {"\n"}
                     {data.location || "-"}
                   </ReviewRow>
-                  <ReviewRow label="Kerja Sama" onEdit={() => goToStep(1)}>
+                  <ReviewRow label="Kerja Sama" onEdit={() => goToStepId(infoStep)}>
                     {optionLabel(PARTNERSHIP_OPTIONS, data.partnershipScheme)}
                     {"\n"}
                     {optionLabel(PAYMENT_OPTIONS, data.paymentMethod)}
                     {"\n"}
                     {optionLabel(DELIVERY_OPTIONS, data.deliveryType)}, {optionLabel(DURATION_OPTIONS, data.duration)}
                   </ReviewRow>
-                  <ReviewRow label="Keterangan" onEdit={() => goToStep(1)}>
+                  <ReviewRow label="Keterangan" onEdit={() => goToStepId(infoStep)}>
                     {data.description || "-"}
+                    {data.packaging ? `\nKemasan: ${data.packaging}` : ""}
                     {data.additionalNeeds ? `\n${data.additionalNeeds}` : ""}
                   </ReviewRow>
                 </dl>
@@ -1020,6 +1471,8 @@ export function FormWizard({
                     {kind === "request"
                       ? " dan oleh pelaku usaha yang penawarannya saya terima."
                       : " dan oleh pembeli yang menerima penawaran saya."}
+                    {group &&
+                      " Anggota yang dipilih sudah setuju nama, jumlah, dan harganya ditampilkan untuk umum."}
                   </span>
                 </label>
                 {consentError && (
@@ -1036,7 +1489,7 @@ export function FormWizard({
                         .filter((item) => !item.ready)
                         .map((item) => (
                           <li key={item.label}>
-                            <button type="button" className="wf-linkbutton" onClick={() => goToStep(item.stepIndex)}>
+                            <button type="button" className="wf-linkbutton" onClick={() => goToStepId(item.stepId)}>
                               {item.label}: {item.value}
                             </button>
                           </li>
@@ -1062,7 +1515,7 @@ export function FormWizard({
               <ArrowLeft size={16} aria-hidden="true" /> Kembali
             </button>
 
-            {stepIndex < REVIEW_STEP ? (
+            {stepIndex < reviewStep ? (
               <button type="submit" className="btn primary" disabled={saving || photoBusy}>
                 Lanjut <ArrowRight size={16} aria-hidden="true" />
               </button>
@@ -1104,6 +1557,16 @@ function withProfile(data: FormData, profile: WizardProfile | null): FormData {
     contactName: data.contactName || profile.fullName || "",
     phone: data.phone || profile.phone || "",
   };
+}
+
+function initials(name: string): string {
+  return name
+    .split(" ")
+    .filter(Boolean)
+    .map((word) => word[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
 }
 
 function Options({ options }: { options: SelectOption[] }) {
